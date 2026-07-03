@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hybrid-photonic-mi-bci"
+version = "0.1.0"
+description = "Modular software baseline for hybrid photonic motor-imagery BCI experiments."
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+]
+viz = [
+    "matplotlib>=3.8",
+]
+
+[tool.setuptools.packages.find]
+include = ["hybrid_photonic_mi_bci*"]

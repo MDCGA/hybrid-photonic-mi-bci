@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Keep raw datasets local. They are large and should be downloaded/extracted
+# separately according to Dataset/README.md.
+Dataset/BCICIV_1_asc/
+Dataset/*.zip
+
+# Keep generated figures, but ignore transient scratch outputs if added later.
+artifacts/tmp/
