@@ -128,7 +128,7 @@ def plot_system_block_diagram(output_dir: Path, formats: tuple[str, ...]) -> lis
     ax.text(
         9.1,
         9.8,
-        "Hybrid Photonic MI-BCI Implementation Flow on BCICIV_1_asc",
+        "Hybrid Photonic MI-BCI Algorithm Implementation on BCICIV_1_asc",
         ha="center",
         va="center",
         fontsize=16,
@@ -178,7 +178,7 @@ def plot_system_block_diagram(output_dir: Path, formats: tuple[str, ...]) -> lis
             "#cffafe",
         ),
         (
-            "Feature x\nlog(var + 1e-8)\nshape: (8,)",
+            "Feature method\nlog-bandpower only\nno CSP/FBCSP",
             11.35,
             7.55,
             2.15,
@@ -199,10 +199,10 @@ def plot_system_block_diagram(output_dir: Path, formats: tuple[str, ...]) -> lis
     calibration_boxes = [
         ("Train split\n120/file = 840\npooled first", 0.55, 5.12, 2.2, 0.95, "#fef3c7"),
         ("Standardizer.fit\nmu, sigma from\ntrain only", 3.1, 5.12, 2.1, 0.95, "#fde68a"),
-        ("Least-squares W0\n8-D -> 2-D\ntriangle targets", 5.55, 5.12, 2.25, 0.95, "#fed7aa"),
+        ("Projection fit\nnp.linalg.lstsq\n8-D -> 2-D W0", 5.55, 5.12, 2.25, 0.95, "#fed7aa"),
         ("ProjectionLibrary\n32 x (2 x 8)\nperturb noise=0.02", 8.15, 5.12, 2.35, 0.95, "#fef08a"),
-        ("Candidate prototypes\nclass means in 2-D\nper candidate", 10.85, 5.12, 2.35, 0.95, "#e9d5ff"),
-        ("Decision config\ntemp=0.8\nreject=0.34", 13.55, 5.12, 1.95, 0.95, "#fecaca"),
+        ("Classifier state\n2-D class prototypes\nno SVM/CNN", 10.85, 5.12, 2.35, 0.95, "#e9d5ff"),
+        ("Reject rule\nconfidence < 0.34\nor margin threshold", 13.55, 5.12, 1.95, 0.95, "#fecaca"),
     ]
     _draw_box_chain(ax, calibration_boxes)
 
@@ -211,8 +211,8 @@ def plot_system_block_diagram(output_dir: Path, formats: tuple[str, ...]) -> lis
         ("Standardizer.transform\nx_std = (x - mu)/sigma", 3.15, 2.65, 2.25, 1.0, "#ddd6fe"),
         ("Candidate weights\nW[0:31]\nshape: (32,2,8)", 5.75, 2.65, 2.25, 1.0, "#fef3c7"),
         ("MVMBackend.scan\nNumPy: W @ x_std\nreturn: (32,2)", 8.35, 2.65, 2.4, 1.0, "#fdba74"),
-        ("PrototypeDecisionHead\nsoftmax distances\nclass prob + margin", 11.1, 2.65, 2.45, 1.0, "#fbcfe8"),
-        ("ProbabilityFusionSelector\nvalue-weighted fusion\nonline reward update", 13.9, 2.65, 2.55, 1.0, "#c4b5fd"),
+        ("PrototypeDecisionHead\nnearest-prototype softmax\nclass prob + margin", 11.1, 2.65, 2.45, 1.0, "#fbcfe8"),
+        ("ProbabilityFusionSelector\nfuse 32 candidates\nonline reward update", 13.9, 2.65, 2.55, 1.0, "#c4b5fd"),
     ]
     _draw_box_chain(ax, online_boxes)
 
@@ -280,17 +280,26 @@ def plot_system_block_diagram(output_dir: Path, formats: tuple[str, ...]) -> lis
     _arrow(ax, 16.2, 2.62, 16.2, 1.42, color="#7c3aed")
     _arrow(ax, 14.75, 2.58, 9.6, 5.05, color="#7c3aed", connectionstyle="arc3,rad=0.22")
 
-    notes = [
-        ("Implementation files:", 0.55, 0.95, "#334155", "bold"),
-        ("datasets/bciciv_1_asc.py", 0.55, 0.65, "#475569", "normal"),
-        ("experiment.py", 3.15, 0.65, "#475569", "normal"),
-        ("projection_library.py", 5.2, 0.65, "#475569", "normal"),
-        ("backends.py", 8.85, 0.23, "#475569", "normal"),
-        ("decision.py + calibration.py", 11.1, 0.23, "#475569", "normal"),
-        ("run_bciciv_replay.py", 15.85, 0.23, "#475569", "normal"),
+    _rounded_box(
+        ax,
+        0.55,
+        0.44,
+        6.45,
+        0.72,
+        "Algorithm summary\nFeature: CAR + 8-30 Hz + log-bandpower, not CSP\nClassifier: least-squares 2-D projection + prototype softmax, not SVM",
+        "#ffffff",
+        edge="#64748b",
+        fontsize=7.1,
+    )
+    file_notes = [
+        ("datasets/bciciv_1_asc.py", 0.7, 0.24),
+        ("experiment.py", 3.05, 0.24),
+        ("backends.py", 8.85, 0.23),
+        ("decision.py + calibration.py", 11.1, 0.23),
+        ("run_bciciv_replay.py", 15.85, 0.23),
     ]
-    for text, x, y, color, weight in notes:
-        ax.text(x, y, text, ha="left", va="center", fontsize=8.2, color=color, weight=weight)
+    for text, x, y in file_notes:
+        ax.text(x, y, text, ha="left", va="center", fontsize=8.0, color="#475569")
 
     return _save_figure(fig, output_dir, "bciciv_system_block_diagram", formats)
 
