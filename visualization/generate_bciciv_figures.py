@@ -120,73 +120,178 @@ def main() -> None:
 
 
 def plot_system_block_diagram(output_dir: Path, formats: tuple[str, ...]) -> list[Path]:
-    fig, ax = plt.subplots(figsize=(14.2, 5.8))
+    fig, ax = plt.subplots(figsize=(16.8, 9.2))
     ax.set_axis_off()
-    ax.set_xlim(0, 16.6)
-    ax.set_ylim(0, 6)
-
-    blocks = [
-        ("BCICIV\nEEG trials", 0.35, 3.25, 1.55, 1.0, "#dbeafe"),
-        ("CAR + bandpass\n8-30 Hz", 2.35, 3.25, 1.75, 1.0, "#e0f2fe"),
-        ("8-D log-variance\nC3/C4/Cz...", 4.55, 3.25, 1.9, 1.0, "#dcfce7"),
-        ("Candidate library\nW1...WN", 6.95, 3.25, 1.85, 1.0, "#fef3c7"),
-        ("MVMBackend.scan\nz_i = W_i x", 9.3, 3.25, 2.05, 1.0, "#fde68a"),
-        ("Probability fusion\nor bandit select", 11.85, 3.25, 1.95, 1.0, "#ede9fe"),
-        ("Output\nleft/right/foot/reject", 14.25, 3.25, 1.7, 1.0, "#fee2e2"),
-    ]
-    for text, x, y, w, h, color in blocks:
-        _rounded_box(ax, x, y, w, h, text, color)
-
-    for i in range(len(blocks) - 1):
-        x0 = blocks[i][1] + blocks[i][3]
-        y0 = blocks[i][2] + blocks[i][4] / 2
-        x1 = blocks[i + 1][1]
-        y1 = blocks[i + 1][2] + blocks[i + 1][4] / 2
-        _arrow(ax, x0 + 0.08, y0, x1 - 0.08, y1)
-
-    _rounded_box(
-        ax,
-        9.0,
-        1.25,
-        2.75,
-        0.9,
-        "Future photonic\n2 x 8 MVM driver",
-        "#ffedd5",
-        edge="#ea580c",
-    )
-    _arrow(ax, 10.38, 2.15, 10.38, 3.22, color="#ea580c")
-
-    _rounded_box(
-        ax,
-        12.15,
-        1.25,
-        3.0,
-        0.9,
-        "Online feedback\ncandidate values, thresholds",
-        "#f3e8ff",
-        edge="#7c3aed",
-    )
-    _arrow(ax, 13.0, 3.2, 13.35, 2.18, color="#7c3aed")
-    _arrow(ax, 12.15, 1.7, 7.8, 3.2, color="#7c3aed", connectionstyle="arc3,rad=0.2")
+    ax.set_xlim(0, 18.2)
+    ax.set_ylim(0, 10.2)
 
     ax.text(
-        8.3,
-        5.45,
-        "Hybrid photonic MI-BCI on pooled BCICIV_1_asc",
+        9.1,
+        9.8,
+        "Hybrid Photonic MI-BCI Implementation Flow on BCICIV_1_asc",
         ha="center",
         va="center",
-        fontsize=15,
+        fontsize=16,
         weight="bold",
     )
+
+    sections = [
+        (0.25, 7.1, 17.65, 1.85, "Dataset and 8-D Feature Extraction", "#eff6ff"),
+        (0.25, 4.75, 17.65, 1.75, "Offline Calibration and Candidate Library", "#fffbeb"),
+        (0.25, 2.15, 17.65, 1.95, "Online Replay: One EEG Decision Window", "#f5f3ff"),
+        (0.25, 0.35, 17.65, 1.25, "Outputs, Metrics, and Hardware Boundary", "#f8fafc"),
+    ]
+    for x, y, w, h, label, face in sections:
+        _section_band(ax, x, y, w, h, label, face)
+
+    feature_boxes = [
+        (
+            "ASCII files\ncnt/mrk/nfo a-g\n200 trials/file",
+            0.55,
+            7.55,
+            2.25,
+            1.0,
+            "#dbeafe",
+        ),
+        (
+            "Label pooling\nlocal +/-1 -> nfo\nleft/right/foot",
+            3.15,
+            7.55,
+            2.25,
+            1.0,
+            "#e0f2fe",
+        ),
+        (
+            "Trial window\nmarker + 1.0-4.0 s\n8 motor channels",
+            5.75,
+            7.55,
+            2.35,
+            1.0,
+            "#dcfce7",
+        ),
+        (
+            "Preprocess\nCAR + 4th-order SOS\n8-30 Hz sosfiltfilt",
+            8.5,
+            7.55,
+            2.45,
+            1.0,
+            "#cffafe",
+        ),
+        (
+            "Feature x\nlog(var + 1e-8)\nshape: (8,)",
+            11.35,
+            7.55,
+            2.15,
+            1.0,
+            "#bbf7d0",
+        ),
+        (
+            "Pooled arrays\nfeatures: (1400,8)\nlabels: (1400,)",
+            13.95,
+            7.55,
+            2.45,
+            1.0,
+            "#dcfce7",
+        ),
+    ]
+    _draw_box_chain(ax, feature_boxes)
+
+    calibration_boxes = [
+        ("Train split\n120/file = 840\npooled first", 0.55, 5.12, 2.2, 0.95, "#fef3c7"),
+        ("Standardizer.fit\nmu, sigma from\ntrain only", 3.1, 5.12, 2.1, 0.95, "#fde68a"),
+        ("Least-squares W0\n8-D -> 2-D\ntriangle targets", 5.55, 5.12, 2.25, 0.95, "#fed7aa"),
+        ("ProjectionLibrary\n32 x (2 x 8)\nperturb noise=0.02", 8.15, 5.12, 2.35, 0.95, "#fef08a"),
+        ("Candidate prototypes\nclass means in 2-D\nper candidate", 10.85, 5.12, 2.35, 0.95, "#e9d5ff"),
+        ("Decision config\ntemp=0.8\nreject=0.34", 13.55, 5.12, 1.95, 0.95, "#fecaca"),
+    ]
+    _draw_box_chain(ax, calibration_boxes)
+
+    online_boxes = [
+        ("Replay split\n80/file = 560\none window at a time", 0.55, 2.65, 2.25, 1.0, "#ede9fe"),
+        ("Standardizer.transform\nx_std = (x - mu)/sigma", 3.15, 2.65, 2.25, 1.0, "#ddd6fe"),
+        ("Candidate weights\nW[0:31]\nshape: (32,2,8)", 5.75, 2.65, 2.25, 1.0, "#fef3c7"),
+        ("MVMBackend.scan\nNumPy: W @ x_std\nreturn: (32,2)", 8.35, 2.65, 2.4, 1.0, "#fdba74"),
+        ("PrototypeDecisionHead\nsoftmax distances\nclass prob + margin", 11.1, 2.65, 2.45, 1.0, "#fbcfe8"),
+        ("ProbabilityFusionSelector\nvalue-weighted fusion\nonline reward update", 13.9, 2.65, 2.55, 1.0, "#c4b5fd"),
+    ]
+    _draw_box_chain(ax, online_boxes)
+
+    _rounded_box(
+        ax,
+        7.85,
+        0.55,
+        2.85,
+        0.82,
+        "Photonic backend slot\nsame scan() contract\n(32,2,8) x (8,) -> (32,2)",
+        "#ffedd5",
+        edge="#ea580c",
+        fontsize=7.7,
+    )
+    _rounded_box(
+        ax,
+        10.98,
+        0.55,
+        2.35,
+        0.82,
+        "Hardware hides\nweight programming\nreadout/correction",
+        "#fff7ed",
+        edge="#ea580c",
+        fontsize=7.6,
+    )
+    _arrow(ax, 9.28, 1.38, 9.58, 2.58, color="#ea580c")
+    _arrow(ax, 10.76, 0.96, 10.94, 0.96, color="#ea580c")
+
+    _rounded_box(
+        ax,
+        13.95,
+        0.55,
+        1.65,
+        0.82,
+        "Output\nleft/right/foot/reject",
+        "#fee2e2",
+        fontsize=8.3,
+    )
+    _rounded_box(
+        ax,
+        15.95,
+        0.55,
+        1.75,
+        0.82,
+        "Metrics/Figures\naccuracy, confusion,\nreject curves",
+        "#e2e8f0",
+        fontsize=7.8,
+    )
+    _arrow(ax, 16.45, 2.58, 14.78, 1.42, color="#7c3aed", connectionstyle="arc3,rad=-0.18")
+    _arrow(ax, 15.62, 0.96, 15.9, 0.96)
+
     ax.text(
-        8.3,
-        0.45,
-        "Current backend uses NumPy MVM; the backend boundary is the future photonic-chip integration point.",
+        15.15,
+        7.24,
+        "One pooled matrix is split into calibration and replay blocks below.",
         ha="center",
         va="center",
-        fontsize=10,
+        fontsize=8.0,
         color="#475569",
     )
+    _arrow(ax, 4.15, 5.1, 4.15, 3.68, color="#64748b")
+    _arrow(ax, 9.35, 5.1, 6.85, 3.68, color="#b45309", connectionstyle="arc3,rad=0.1")
+    _arrow(ax, 12.0, 5.1, 12.35, 3.68, color="#be185d")
+    _arrow(ax, 14.5, 5.1, 12.95, 3.68, color="#be123c", connectionstyle="arc3,rad=-0.1")
+    _arrow(ax, 16.2, 2.62, 16.2, 1.42, color="#7c3aed")
+    _arrow(ax, 14.75, 2.58, 9.6, 5.05, color="#7c3aed", connectionstyle="arc3,rad=0.22")
+
+    notes = [
+        ("Implementation files:", 0.55, 0.95, "#334155", "bold"),
+        ("datasets/bciciv_1_asc.py", 0.55, 0.65, "#475569", "normal"),
+        ("experiment.py", 3.15, 0.65, "#475569", "normal"),
+        ("projection_library.py", 5.2, 0.65, "#475569", "normal"),
+        ("backends.py", 8.85, 0.23, "#475569", "normal"),
+        ("decision.py + calibration.py", 11.1, 0.23, "#475569", "normal"),
+        ("run_bciciv_replay.py", 15.85, 0.23, "#475569", "normal"),
+    ]
+    for text, x, y, color, weight in notes:
+        ax.text(x, y, text, ha="left", va="center", fontsize=8.2, color=color, weight=weight)
+
     return _save_figure(fig, output_dir, "bciciv_system_block_diagram", formats)
 
 
@@ -598,6 +703,7 @@ def _rounded_box(
     text: str,
     face: str,
     edge: str = "#334155",
+    fontsize: float = 9.5,
 ) -> None:
     box = FancyBboxPatch(
         (x, y),
@@ -609,7 +715,53 @@ def _rounded_box(
         facecolor=face,
     )
     ax.add_patch(box)
-    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=9.5)
+    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=fontsize)
+
+
+def _section_band(
+    ax: plt.Axes,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    label: str,
+    face: str,
+) -> None:
+    band = FancyBboxPatch(
+        (x, y),
+        w,
+        h,
+        boxstyle="round,pad=0.04,rounding_size=0.06",
+        linewidth=0.9,
+        edgecolor="#cbd5e1",
+        facecolor=face,
+        alpha=0.85,
+    )
+    ax.add_patch(band)
+    ax.text(
+        x + 0.18,
+        y + h - 0.23,
+        label,
+        ha="left",
+        va="center",
+        fontsize=9,
+        weight="bold",
+        color="#334155",
+    )
+
+
+def _draw_box_chain(
+    ax: plt.Axes,
+    boxes: list[tuple[str, float, float, float, float, str]],
+) -> None:
+    for text, x, y, w, h, color in boxes:
+        _rounded_box(ax, x, y, w, h, text, color, fontsize=8.4)
+    for i in range(len(boxes) - 1):
+        x0 = boxes[i][1] + boxes[i][3]
+        y0 = boxes[i][2] + boxes[i][4] / 2
+        x1 = boxes[i + 1][1]
+        y1 = boxes[i + 1][2] + boxes[i + 1][4] / 2
+        _arrow(ax, x0 + 0.06, y0, x1 - 0.06, y1)
 
 
 def _arrow(
