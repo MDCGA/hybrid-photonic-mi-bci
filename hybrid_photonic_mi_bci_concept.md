@@ -1,473 +1,677 @@
-# 光电混合 EEG-MI BCI 项目构想
+# 光电混合 EEG-MI BCI 设计稿
 
-日期：2026-06-10
+日期：2026-07-05
 
-## 1. 核心想法
+## 1. 目标
 
-构建一个面向左手、右手、脚三分类运动想象 EEG-BCI 的光电混合嵌入式系统。
-
-现有光芯片核心能力是 `2 x 8` 矩阵乘。这个规模如果只用于一次普通分类推理，计算量太小，很难体现光计算价值。因此更合理的定位是：让光芯片作为在线校准环节中的低功耗、高速矩阵乘协处理器，用于快速评估多个候选校准投影矩阵。
-
-核心结构：
+构建一个面向运动想象 EEG 的光电混合在线校准系统，输出四类决策：
 
 ```text
-8维 EEG 特征 x
-  -> 多个候选 2 x 8 投影矩阵 W_i
-  -> 光芯片计算 z_i = W_i x
-  -> 数字端分类 / 融合 / 拒识
-  -> 强化学习或 contextual bandit 在线校准
+左手 / 右手 / 脚 / 拒识
 ```
 
-光芯片的价值不是“算一次 16 个乘加”，而是“在每个 EEG 决策窗口内低功耗快速扫描多个候选校准器”。
-
-## 2. 系统定位
-
-这个项目不应表述为：
+核心目标不是证明光计算可以替代数字 EEG 解码，而是证明：
 
 ```text
-没有光计算就无法完成 EEG-MI 解码
+在标准 FBCSP 解码框架下，
+利用可 tiled 的光矩阵乘单元快速扫描经验库中的候选校准器，
+从而支持新被试快速特化、在线校准和低功耗嵌入式部署。
 ```
 
-因为三分类 MI 的基础模型很小，MCU 也能计算一次 `2 x 8` 矩阵乘。
-
-更合理的表述是：
-
-> 面向小型嵌入式 EEG-MI BCI 的光电混合在线校准架构：利用 `2 x 8` 光矩阵乘核心，对多候选判别投影进行高速评估，并通过数字端安全在线校准实现受试者自适应。
-
-也就是说：
-
-- 数字端负责 EEG 预处理、特征提取、安全策略、在线策略更新。
-- 光芯片负责重复密集线性投影计算。
-- RL / contextual bandit 根据当前受试者反馈选择、加权或微调候选投影。
-
-## 3. 目标任务
-
-三分类运动想象 EEG：
-
-- 左手
-- 右手
-- 脚
-
-以及：
-
-- 拒识 / 不确定
-
-拒识状态很重要。MI 信号噪声大、个体差异明显，如果每个低置信窗口都强行输出三类之一，会导致在线校准更不稳定。
-
-## 4. 基线信号流程
-
-推荐第一版流程：
+主线系统：
 
 ```text
-EEG 采集
-  -> 工频陷波
-  -> 8-30 Hz 带通滤波
-  -> CAR 或 Laplacian 参考
-  -> 1.5-3.0 s 滑动窗口
-  -> 特征提取
-  -> 光芯片投影
-  -> 数字端分类与在线校准
+FBCSP + 小型网络 embedding + 经验库检索 + 光计算多候选线性头扫描
 ```
 
-候选 8 维特征：
-
-1. CSP log-variance 特征。
-2. Filter-bank CSP 压缩后的 8 维特征。
-3. Riemannian tangent-space 压缩后的 8 维特征。
-4. C3、C4、Cz 及邻近通道的频带能量特征。
-
-推荐第一版：
+传统参考基线：
 
 ```text
-8个运动区相关通道：
-C3, C4, Cz, FC3, FC4, CP3, CP4, CPz
-
-8维特征：
-x = CSP / log-bandpower / Riemannian 压缩特征
+FBCSP + shrinkage LDA
 ```
 
-## 5. 为什么 2 x 8 适合三分类 MI
-
-三分类不一定需要 3 个输出维度。对于 LDA 这类判别投影，`K` 类最多只需要 `K - 1` 个判别维度。
-
-因此：
+低复杂度消融：
 
 ```text
-3类 -> 2维判别空间
+log-bandpower + LDA
 ```
 
-这和光芯片的 `2 x 8` 矩阵乘天然匹配：
+普通 log-bandpower 仅保留为调试或消融对照，不作为主线或正式参考基线。
+
+## 2. 总体架构
+
+系统分为五个核心层：
 
 ```text
-x in R^8 -> z in R^2
+EEG 数据
+  -> FBCSP 特征层
+  -> 小型网络 embedding / 特征重加权
+  -> 经验库检索与候选校准器生成
+  -> 光计算多候选线性头扫描
+  -> 数字端融合、拒识、在线特化和经验库回写
 ```
 
-三类 MI 可以在二维判别空间里形成三个簇或三个决策区域。
-
-数字端后处理可以使用：
-
-- 最近质心
-- LDA 决策边界
-- 基于距离的 softmax
-- 置信度阈值
-- 拒识区间
-- 时间平滑
-
-## 6. 如何体现光计算价值
-
-单次矩阵乘：
+新被试首次使用或需要重新校准时：
 
 ```text
-z = W x, W in R^(2 x 8)
+少量校准 trial
+  -> 提取 FBCSP 特征
+  -> 小型网络生成 subject/session embedding
+  -> 从经验库检索 top-K 相似模板
+  -> 初始化候选校准器集合
+  -> 光计算多候选线性头扫描
+  -> 数字端融合 / reject / bandit 更新
+  -> 稳定后将新 session 写回经验库
 ```
 
-计算量太小，不足以体现光芯片优势。
+## 3. FBCSP 特征与传统参考基线
 
-需要把它扩展为候选矩阵库：
+### 3.1 预处理
+
+推荐第一版处理流程：
 
 ```text
-z_i = W_i x, i = 1...N
+EEG
+  -> 工频陷波，按数据集情况启用
+  -> CAR 或 Laplacian
+  -> trial window，例如 marker 后 1.0-4.0 s
+  -> filter bank
 ```
 
-每个 `W_i` 代表一种候选校准状态，例如：
+所有参数必须只在训练段拟合。replay / test 段不得用于：
 
-- 不同受试者模板
-- 不同 session 模板
-- 不同频带权重
-- 不同空间滤波状态
-- 不同正则化强度
-- 不同判别边界
+- CSP 协方差估计
+- 特征选择
+- 归一化参数拟合
+- LDA / 网络训练
+
+### 3.2 Filter Bank
+
+第一版建议覆盖 mu / beta 节律：
+
+```text
+8-12 Hz
+12-16 Hz
+16-20 Hz
+20-24 Hz
+24-28 Hz
+28-32 Hz
+```
+
+后续可评估重叠频带，但第一版优先控制复杂度和过拟合风险。
+
+### 3.3 多分类 CSP
+
+三分类任务推荐使用 one-vs-rest CSP：
+
+```text
+left  vs rest
+right vs rest
+foot  vs rest
+```
+
+每个频带、每个 one-vs-rest 任务：
+
+```text
+训练段协方差估计
+  -> shrinkage / 正则化
+  -> 广义特征值分解
+  -> 选择前后 m 对 CSP filters
+  -> log-variance features
+```
+
+原始 FBCSP 特征维度：
+
+```text
+D_raw = n_bands * n_ovr_tasks * 2m
+```
 
 示例：
 
 ```text
-N = 32 个候选矩阵
-每个 W_i 都是 2 x 8
-每个 EEG 窗口内进行 32 次光矩阵乘
-数字端选择或融合结果
+n_bands = 6
+n_ovr_tasks = 3
+m = 2
+D_raw = 6 * 3 * 4 = 72
 ```
 
-更强版本：
+### 3.4 特征选择
+
+FBCSP 特征维度较高，需要训练段内完成特征选择。可选方法：
+
+- mutual information
+- Fisher score
+- mRMR
+- cross-validation feature selection
+- LDA shrinkage 辅助稳定估计
+
+建议实验点：
 
 ```text
-6个频带 x 32个候选矩阵 = 每个决策窗口 192 次 2 x 8 投影
+D_sel = 8, 16, 24, 32
 ```
 
-这样光芯片就不再是象征性模块，而是在线校准中的重复线性代数引擎。
+`D_sel = 8` 便于直观映射单个 `2 x 8` tile；`D_sel > 8` 更贴近 FBCSP 实际性能需求，通过 tiled MVM 支持。
 
-## 7. 在线校准策略
+### 3.5 分类器
 
+主分类器采用 shrinkage LDA：
 
 ```text
-离线预训练候选矩阵库
-在线阶段由 RL / contextual bandit 选择或加权候选矩阵
-数字端小幅更新阈值、类别先验、质心和拒识区间
+score = A x + b
 ```
 
-可选 action：
-
-- 选择某个候选矩阵 `W_i`
-- 调整候选矩阵权重 `alpha_i`
-- 调整类别偏置
-- 调整 reject 阈值
-- 调整时间平滑窗口
-- 调整置信度阈值
-- 小幅更新二维空间中的类别质心
-
-可选 state：
-
-- 当前二维投影 `z`
-- 候选模型置信度
-- 信号质量指标
-- 最近正确率
-- 最近类别分布
-- 当前拒识率
-- 当前受试者 / session 状态
-
-可选 reward：
+其中：
 
 ```text
-分类正确：+1
-分类错误：-1
-高置信错误：更大惩罚
-低置信拒识：小惩罚
-连续稳定正确：额外奖励
-拒识过多：惩罚
+x in R^D_sel
+A in R^(3 x D_sel)
+b in R^3
 ```
 
-这个方向更接近安全在线自适应，而不是无约束强化学习。
-
-## 8. 候选矩阵库来源
-
-候选 `W_i` 可以来自：
-
-1. 不同受试者训练出的投影矩阵。
-2. 同一受试者不同 session 的投影矩阵。
-3. 不同频带的投影矩阵。
-4. 不同特征归一化状态。
-5. 不同正则化强度。
-6. 围绕 subject-independent baseline 的小扰动。
-7. 不同训练子集得到的 CSP / Riemannian / LDA 投影。
-
-在线学习器不需要搜索任意连续矩阵空间，只需要在受限候选库里选择或加权：
+光计算负责：
 
 ```text
-W_online = sum_i alpha_i W_i
+A x
 ```
 
-或：
+数字端负责：
+
+- bias `b`
+- softmax / probability calibration
+- reject threshold
+- temporal smoothing
+- candidate fusion
+- online adaptation
+
+SVM、logistic regression、Riemannian tangent-space classifier 可作为对照，不作为主线系统。
+
+## 4. FBCSP 后的小型网络
+
+本项目需要小型网络，而不是大型端到端深度模型。小型网络的作用：
+
+- 对 FBCSP 特征进行非线性重加权
+- 学习 subject/session embedding
+- 辅助经验库 top-K 模板检索
+- 生成适合候选线性头扫描的低维表示
+
+推荐结构：
 
 ```text
-W_online = W_argmax
+FBCSP features
+  -> normalization
+  -> small encoder
+  -> embedding h
+  -> candidate linear heads A_i h + b_i
 ```
 
-光芯片负责快速评估多个 `W_i`，数字端决定哪些输出可信。
-
-## 9. 光芯片映射方式
-
-`2 x 8` 光矩阵乘核心计算：
+光计算负责候选线性头：
 
 ```text
-y0 = w00*x0 + w01*x1 + ... + w07*x7
-y1 = w10*x0 + w11*x1 + ... + w17*x7
+A_i h
 ```
 
-需要注意：
+### 4.1 FBCSP-MLP
 
-- 如果光芯片权重只能为非负，需要差分编码：`W = W+ - W-`。
-- 如果输入特征存在负值，需要偏置编码或差分输入编码。
-- bias 可以放在数字端补偿。
-- 权重量化和漂移需要标定表。
-- ADC / DAC 开销必须计入延迟和能耗。
+小型网络第一实现：
 
-数字端应负责补偿光芯片非理想性：
+```text
+FBCSP vector x
+  -> LayerNorm / BatchNorm
+  -> Linear(D, 64)
+  -> GELU / ReLU
+  -> Dropout(0.1-0.3)
+  -> Linear(64, 32)
+  -> embedding h
+```
 
-- 输出归一化
-- 增益补偿
-- 偏置校正
-- 温漂校正
-- 置信度校准
+建议参数规模：
 
-## 10. 最小演示路线
+```text
+1k - 20k parameters
+```
 
-阶段 1：纯软件基线
+### 4.2 Band-Attention FBCSP Network
 
-- 用公开 MI 数据集构建三分类解码器。
-- 训练 8 维特征和 2 维判别投影。
-- 输出离线准确率、balanced accuracy 和混淆矩阵。
+保留 FBCSP 的频带结构：
 
-阶段 2：多候选校准仿真
+```text
+X_fbcsp in R^(n_bands x n_tasks x n_csp_features)
+```
 
-- 生成 `W_1...W_N`。
-- 在 held-out session 上模拟在线校准。
-- 比较固定 `W`、候选选择、候选加权。
+网络结构：
 
-阶段 3：光芯片非理想仿真
+```text
+每个频带 CSP 特征
+  -> shared band encoder
+  -> band attention weights
+  -> weighted aggregation
+  -> embedding h
+```
 
-- 用量化、噪声、漂移、非负权重约束模拟光芯片输出。
-- 比较理想数字矩阵乘和光芯片近似矩阵乘的准确率差异。
+用途：
 
-阶段 4：硬件在环 demo
+- 学习新被试更依赖 mu 还是 beta 频段
+- 形成可解释的频带偏好
+- 将 attention pattern 作为经验库检索特征
 
-- PC 或嵌入式端回放公开 EEG 数据。
-- 数字端提取 8 维特征。
-- 将特征和候选矩阵送入光芯片。
-- 光芯片输出二维投影。
-- 数字端完成融合、拒识、在线校准和三分类输出。
+### 4.3 Metric Embedding Network
 
-## 11. 评估指标
+用于经验库检索：
 
-BCI 性能：
+```text
+FBCSP features
+  -> small encoder
+  -> normalized embedding h
+  -> 与经验库 embedding 比较
+  -> top-K 模板检索
+```
 
-- 三分类准确率
-- balanced accuracy
-- 混淆矩阵
-- 信息传输率 ITR
-- 拒识率
-- 在线适应速度
-- 跨 session 准确率
-- 个体差异
+可选训练损失：
 
-校准性能：
+- supervised contrastive loss
+- triplet loss
+- prototypical loss
+- classification loss + metric loss
 
-- 达到稳定准确率所需 trial 数
-- 相比固定模型的提升幅度
-- 对噪声反馈的鲁棒性
-- 类别不平衡下的稳定性
+## 5. 经验库
 
-硬件性能：
+经验库是系统特化能力的核心。它不只存原始 EEG，而是存可复用校准经验。
 
-- 单次 MVM 延迟
-- 单次 MVM 能耗
-- 单次决策总能耗
+### 5.1 经验条目
+
+一个经验条目 `E_i` 包含：
+
+```text
+E_i = {
+  subject_id / session_id,
+  dataset / device metadata,
+  channel set,
+  preprocessing config,
+  filter bank config,
+  CSP filters,
+  selected feature indices,
+  feature normalization parameters,
+  small-network encoder version,
+  subject/session embedding,
+  LDA score matrix A_i,
+  LDA bias b_i,
+  optional neural linear head,
+  reject calibration parameters,
+  performance metrics
+}
+```
+
+### 5.2 候选生成
+
+新被试校准时，从经验库生成候选集合：
+
+```text
+新被试少量 trial
+  -> FBCSP features
+  -> embedding h_new
+  -> 检索 top-K 相似经验条目
+  -> 得到候选校准器 C_1...C_K
+```
+
+候选来源：
+
+- 相似 subject/session 模板
+- 不同 filter bank 配置
+- 不同 CSP 正则化强度
+- 不同 feature subset
+- 不同 LDA shrinkage 参数
+- bootstrap / cross-validation 子模型
+- subject-independent 模板加 subject-specific 微调
+
+候选不是随机扰动矩阵，而应来自真实训练过程或真实历史经验。
+
+### 5.3 经验库回写
+
+新 session 满足稳定性要求后写回经验库：
+
+```text
+稳定 accuracy
+合理 reject rate
+无明显数据质量异常
+校准 trial 数达到最低要求
+```
+
+回写内容包括：
+
+- 新 subject/session embedding
+- 更新后的特征统计
+- 校准后的线性头
+- reject 参数
+- 在线表现指标
+
+## 6. 光计算多候选线性头扫描
+
+本文中的“光计算多候选线性头扫描”指：
+
+```text
+对经验库检索出的 K 个候选校准器，
+使用光计算 tile 快速计算每个候选线性头的矩阵乘部分。
+```
+
+若当前 EEG 窗口的小型网络 embedding 为 `h`，第 `i` 个候选线性头为：
+
+```text
+score_i = A_i h + b_i
+```
+
+则光计算负责批量计算：
+
+```text
+A_1 h, A_2 h, ..., A_K h
+```
+
+数字端负责：
+
+```text
+b_i
+softmax / probability calibration
+reject
+candidate fusion
+contextual bandit update
+```
+
+这个过程不是只运行一个固定分类器，而是在每个 EEG 决策窗口内评估多个来自经验库的候选校准器。
+
+`2 x 8` 是光计算 tile，不是算法维度上限。
+
+目标计算：
+
+```text
+y = W x
+W in R^(M x D)
+x in R^D
+```
+
+使用 `2 x 8` tile 时，单个候选需要：
+
+```text
+tile_count = ceil(M / 2) * ceil(D / 8)
+```
+
+N 个候选需要：
+
+```text
+total_tiles = N * ceil(M / 2) * ceil(D / 8)
+```
+
+示例：FBCSP-LDA score matrix
+
+```text
+N = 32
+M = 3
+D = 24
+total_tiles = 32 * ceil(3/2) * ceil(24/8)
+            = 192 tile evaluations / decision window
+```
+
+数字端保留：
+
+- bias
+- softmax
+- reject
+- fusion
+- partial sum accumulation
+- calibration compensation
+
+硬件非理想性需要评估：
+
+- weight quantization
+- input quantization
+- non-negative weight constraint
+- differential encoding
+- detector noise
+- gain / bias drift
+- tile accumulation error
 - ADC / DAC 开销
-- 多候选矩阵吞吐率
-- 光芯片非理想性导致的准确率下降
 
-关键对比不应是：
+## 7. 在线特化
 
-```text
-一次光学 2 x 8 MVM vs 一次 MCU 2 x 8 MVM
-```
+在线更新不直接无约束修改完整分类器，而是在经验库候选集合内选择、加权和小幅校正。
 
-而应是：
+推荐第一版：
 
 ```text
-在线校准中的多候选投影扫描
-光芯片 MVM 循环/阵列 vs MCU 顺序计算
+contextual bandit
 ```
 
-## 12. 主要风险
+Action：
 
-风险 1：MI 信号质量主导系统表现。
+- 选择候选 `C_i`
+- 调整候选权重 `alpha_i`
+- 调整 reject threshold
+- 调整类别 bias
+- 调整 temporal smoothing
+- 调整 fusion temperature
 
-缓解：
+State：
 
-- 使用 reject 状态。
-- 先用公开数据集验证架构。
-- 先使用稳定可解释特征。
-- 避免过激在线学习。
+- FBCSP 特征统计
+- 小型网络 embedding
+- 候选 confidence
+- 候选间分歧
+- 当前 reject rate
+- rolling accuracy
+- 类别分布
+- 信号质量指标
 
-风险 2：`2 x 8` 计算量太小，难以支撑光计算优势。
-
-缓解：
-
-- 使用候选矩阵库。
-- 使用 filter-bank 扩展。
-- 使用在线校准中的重复候选评估。
-- 按完整候选扫描报告能耗和延迟。
-
-风险 3：在线 RL 不稳定。
-
-缓解：
-
-- 先用 contextual bandit。
-- 限制 action 空间。
-- 优先更新阈值和候选权重，而不是直接更新分类器主体。
-- 保留固定 baseline 作为安全回退。
-
-风险 4：光芯片非理想性降低准确率。
-
-缓解：
-
-- bias 和最终决策留在数字端。
-- 标定光输出。
-- 使用低维鲁棒判别规则。
-- 用实测芯片噪声模型评估。
-
-## 13. 核心研究问题
-
-一个 `2 x 8` 光矩阵乘核心，能否通过加速多候选在线校准，而不是加速单个固定分类器，在小型嵌入式 EEG-MI BCI 中体现实际价值？
-
-更具体地说：
-
-> 在三分类 EEG-MI BCI 中，能否利用 `2 x 8` 光矩阵乘核心快速评估一组受试者自适应判别投影，并由数字端 contextual bandit 策略选择或加权这些投影，从而提升在线校准速度和跨 session 鲁棒性？
-
-## 14. 当前推荐架构
+Reward：
 
 ```text
-EEG
-  -> 模拟前端与 ADC
-  -> 数字预处理
-  -> 8维特征提取
-  -> 光芯片 2 x 8 MVM 候选投影库
-  -> 数字概率融合
-  -> reject / 平滑 / 安全逻辑
-  -> contextual bandit 在线校准
-  -> 三分类 MI 指令
+正确分类：+1
+错误分类：-1
+高置信错误：额外惩罚
+合理拒识：小惩罚
+过度拒识：惩罚
+候选高分歧时谨慎输出：低惩罚或小奖励
 ```
 
-## 15. 公开数据集是否足够
+## 8. 实验设计
 
-公开数据集足够支持：
-
-- 算法 baseline 验证
-- 三分类 MI 特征工程
-- 候选投影矩阵库构建
-- 跨受试者和跨 session 仿真
-- 在线校准 replay 实验
-- 光芯片在环仿真
-- 基于记录 EEG 流的硬件计算价值评估
-
-公开数据集不足以独立证明：
-
-- 消费级干电极现场可靠性
-- 真实用户闭环体验
-- 人和 BCI feedback 的实时共适应效果
-- 电极接触变化、运动伪迹、佩戴误差下的鲁棒性
-
-推荐数据集组合：
-
-1. BCI Competition IV 2a：主三分类 benchmark，使用左手、右手、脚，去掉舌头。
-2. PhysioNet EEG Motor Movement/Imagery：受试者多，适合跨受试者候选库预训练。
-3. High-Gamma Dataset：trial 多、通道多，适合模型压力测试。
-4. 多天 / 多 session MI 数据集：适合验证在线校准和跨天漂移。
-
-第一阶段可以采用：
+### 8.1 主线系统
 
 ```text
-公开 EEG 数据
-  -> replay 在线校准
-  -> 光矩阵乘仿真 / 硬件在环
+FBCSP
+  -> small MLP / band attention embedding
+  -> experience library top-K retrieval
+  -> candidate linear heads
+  -> 光计算多候选线性头扫描
+  -> fusion / reject / online specialization
 ```
 
-需要明确边界：
+指标：
+
+- accuracy
+- balanced accuracy
+- per-class recall
+- confusion matrix
+- reject rate
+- calibration trial 敏感性
+- top-K 检索收益
+- 候选权重演化
+- 新 session 回写后的经验库增益
+
+### 8.2 传统参考基线
 
 ```text
-公开数据阶段验证混合解码架构和在线校准机制。
-真实干电极现场实验用于最终验证可穿戴/消费级应用。
+FBCSP + shrinkage LDA
 ```
 
-## 16. 下一步讨论重点
+作用：
 
-1. 第一版 baseline 选择 CSP-LDA、Riemannian-LDA，还是 EEGNet 压缩特征。
-2. 如何从公开数据集中生成 `W_i` 候选矩阵库。
-3. 在线校准算法选择：epsilon-greedy、LinUCB、Thompson sampling，还是安全 RL。
-4. 如何定义最能体现光芯片价值的硬件指标。
-5. 先完成软件仿真，再进入光芯片硬件在环。
+- 提供标准 MI 算法参照
+- 评估主线系统相对传统 FBCSP-LDA 的增益
+- 检查小型网络、经验库和候选扫描是否真正带来价值
 
-## 17. 相关论文线索
+指标：
 
-直接相关的 MI + RL / 在线自适应文献：
+- accuracy
+- balanced accuracy
+- per-class recall
+- confusion matrix
+- reject-free performance
 
-1. Liu et al., "Online Adaptive Decoding of Motor Imagery Based on Reinforcement Learning", ICIEA 2019.
-   - 关键词：motor imagery, online adaptive decoding, reinforcement learning。
-   - 适合参考如何把 MI 在线解码写成 RL 问题。
-
-2. Luo et al., "Latent Belief Reinforcement Learning for Online Motor Imagery Classification", Pattern Recognition 2026.
-   - 关键词：online MI classification, POMDP, latent belief, adaptive halting。
-   - 适合参考如何把在线 MI 分类写成部分可观测决策过程。
-
-3. Aung et al., "EEG_RL-Net: Enhancing EEG MI Classification through Reinforcement Learning-Optimised Graph Neural Networks", arXiv 2024 / ICMLA 2024.
-   - 关键词：MI classification, Dueling DQN, GNN, PhysioNet。
-   - 更偏深度学习分类增强，不完全是安全在线校准，但可作为 RL+MI 的近期案例。
-
-4. Fidencio et al., "Error-related Potential driven Reinforcement Learning for adaptive Brain-Computer Interfaces", arXiv 2025.
-   - 关键词：ErrP, reinforcement learning, adaptive BCI, motor imagery。
-   - 适合参考如何用错误相关电位作为隐式反馈信号。
-
-强相关的 co-adaptive / calibration 文献：
-
-5. Acqualagna et al., "Large-Scale Assessment of a Fully Automatic Co-Adaptive Motor Imagery-Based Brain Computer Interface", PLOS ONE 2016.
-   - 关键词：co-adaptive SMR-BCI, large-scale, online feedback。
-   - 证明 co-adaptive MI-BCI 在大样本新手用户中的可行性，也提醒存在 BCI illiteracy / performance variability。
-
-6. Abu-Rmileh et al., "Co-adaptive Training Improves Efficacy of a Multi-Day EEG-Based Motor Imagery BCI Training", Frontiers in Human Neuroscience 2019.
-   - 关键词：multi-day MI training, co-adaptation, fixed classifier comparison。
-   - 适合支撑本项目的跨天在线校准动机。
-
-7. Škola et al., "Progressive Training for Motor Imagery Brain-Computer Interfaces Using Gamification and Virtual Reality Embodiment", Frontiers in Human Neuroscience 2019.
-   - 关键词：MI-BCI training, co-adaptive event-driven training, gamification, VR embodiment。
-   - 适合参考反馈设计和用户训练设计。
-
-8. "A Transfer Learning Algorithm to Reduce Brain-Computer Interface Calibration Time for Long-Term Users", Frontiers in Neuroergonomics 2022.
-   - 关键词：calibration time reduction, long-term users, transfer learning, inter-session non-stationarity。
-   - 适合支撑为什么需要在线校准和候选模型库。
-
-对本项目最有用的结论：
+### 8.3 小型网络消融
 
 ```text
-直接套复杂 RL 训练完整 MI 分类器风险较高；
-更稳的是把 RL / bandit 用于在线选择、加权、拒识和阈值调节；
-候选模型库 + 光芯片快速扫描，是更适合当前 2 x 8 光矩阵乘核心的路线。
+FBCSP + small MLP
+FBCSP + band attention
+FBCSP + metric embedding
 ```
+
+指标：
+
+- 分类性能
+- embedding 可视化
+- band attention 权重
+- 参数量
+- calibration trial 敏感性
+
+### 8.4 经验库消融
+
+对比：
+
+- 无经验库
+- 随机候选
+- 全库候选
+- top-K 相似模板候选
+- top-K + online bandit
+
+指标：
+
+- 少样本校准性能
+- 达到稳定准确率所需 trial 数
+- top-K 命中率
+- 候选权重演化
+- 新 session 回写后的经验库增益
+
+### 8.5 光计算仿真
+
+对比：
+
+- ideal digital MVM
+- tiled MVM
+- quantized tiled MVM
+- non-negative / differential encoded MVM
+- noisy / drifting photonic MVM
+
+指标：
+
+- 每窗口 tile 数
+- 估计延迟
+- 估计能耗
+- accuracy drop
+- reject rate change
+
+## 9. 数据集策略
+
+### 9.1 主 benchmark
+
+优先使用 BCI Competition IV 2a：
+
+- 原生四类 MI
+- 可选择 `left/right/foot` 三类，去掉 tongue
+- 更适合 FBCSP 主实验
+
+### 9.2 原型 replay
+
+BCICIV_1_asc 可继续用于：
+
+- 快速原型验证
+- 经验库流程演示
+- 候选检索 / 融合 / reject 机制验证
+
+注意：
+
+- `a-g` 文件本身是局部二分类
+- 合并三分类时必须严格按 `nfo` 标签映射
+- FBCSP 参数只能使用训练段估计
+
+### 9.3 经验库扩展
+
+后续可加入：
+
+- PhysioNet EEG Motor Movement/Imagery
+- 多 session / 多天 MI 数据集
+- High-Gamma Dataset
+
+用途：
+
+- 增加 subject/session 多样性
+- 构建跨被试经验库
+- 验证模型特化和跨 session 鲁棒性
+
+## 10. 实施路线
+
+阶段 1：传统参考基线
+
+- 实现 one-vs-rest FBCSP
+- 实现 feature selection
+- 实现 shrinkage LDA
+- 输出标准分类指标和可视化
+
+阶段 2：主线小型网络
+
+- 实现 FBCSP-MLP
+- 实现 band-attention network
+- 输出 embedding 和 band attention 可视化
+
+阶段 3：经验库
+
+- 设计经验库数据结构
+- 存储 subject/session 模板
+- 实现 embedding top-K 检索
+- 实现新 session 回写策略
+
+阶段 4：候选扫描与在线特化
+
+- 从经验库生成候选校准器
+- 实现光计算多候选线性头扫描的软件接口
+- 实现 candidate fusion
+- 实现 contextual bandit
+- 输出 rolling accuracy、reject rate、候选权重曲线
+
+阶段 5：光计算 tiled MVM 仿真
+
+- 将候选线性头映射到 `2 x 8` tile
+- 统计 tile 数、延迟、能耗
+- 加入量化、噪声、漂移和差分编码
+
+阶段 6：硬件在环
+
+- 数字端完成 FBCSP 和小型网络
+- 光芯片完成多候选线性头 MVM
+- 数字端完成 bias、fusion、reject 和在线更新
+
+## 11. 系统框图必须体现
+
+系统框图应明确标出：
+
+```text
+Filter Bank
+  -> OVR CSP
+  -> log-variance
+  -> feature selection
+  -> small MLP / band attention embedding
+  -> experience library top-K retrieval
+  -> candidate linear heads
+  -> 光计算多候选线性头扫描
+  -> digital bias / softmax / reject
+  -> fusion / contextual bandit
+  -> experience library write-back
+```
+
+必须明确：
+
+```text
+2 x 8 是光计算 tile，不是算法维度上限。
+```
+
+## 12. 修正后的研究问题
+
+在标准 FBCSP 解码框架下，能否利用小型网络和经验库实现新被试快速特化，并利用可 tiled 的 `2 x 8` 光计算单元高吞吐扫描候选线性头，从而在在线校准、跨 session 鲁棒性和嵌入式能效方面优于固定数字模型？
