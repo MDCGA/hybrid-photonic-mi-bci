@@ -19,6 +19,9 @@ dev = [
 viz = [
     "matplotlib>=3.8",
 ]
+torch = [
+    "torch>=2.0",
+]
 
 [tool.setuptools.packages.find]
 include = ["hybrid_photonic_mi_bci*"]

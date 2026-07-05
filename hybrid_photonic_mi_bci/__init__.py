@@ -14,15 +14,22 @@ from .calibration import (
 )
 from .decision import DecisionConfig, PrototypeDecisionHead
 from .experiment import PipelineBuildConfig, build_pipeline_from_features, run_replay, warmup_selector
+from .fbcsp import DEFAULT_FILTER_BANK, FBCSPFeatureSet, FilterBankCSP
 from .features import Standardizer
+from .linear_models import FeatureStandardizer, LinearHead, ShrinkageLDA
 from .pipeline import HybridBCIPipeline, PipelineOutput
 from .projection_library import ProjectionCandidate, ProjectionLibrary
 
 __all__ = [
     "DecisionConfig",
+    "DEFAULT_FILTER_BANK",
     "ConfidenceSelector",
     "EpsilonGreedyBandit",
+    "FBCSPFeatureSet",
+    "FeatureStandardizer",
+    "FilterBankCSP",
     "HybridBCIPipeline",
+    "LinearHead",
     "MVMBackend",
     "NumpyMVMBackend",
     "OnlineAdaptationState",
@@ -33,6 +40,7 @@ __all__ = [
     "ProjectionCandidate",
     "ProjectionLibrary",
     "PrototypeDecisionHead",
+    "ShrinkageLDA",
     "Standardizer",
     "TiledMVMBackend",
     "build_pipeline_from_features",

@@ -1,0 +1,55 @@
+{
+  "dataset": "BCICIV_1_asc",
+  "design": "FBCSP mainline with compact embedding and experience-library candidate scan",
+  "rows": [
+    {
+      "line": "FBCSP + shrinkage LDA",
+      "total": 560,
+      "command_accuracy": 0.7125,
+      "balanced_command_accuracy": 0.7323779668607254,
+      "accepted_accuracy": 0.7228260869565217,
+      "reject_rate": 0.014285714285714285,
+      "raw_fbcsp_dim": 72,
+      "selected_features": 32,
+      "reject_threshold": 0.47147279602762643,
+      "calibration_trials": 0,
+      "tile_evaluations_per_window": 0
+    },
+    {
+      "line": "FBCSP + small MLP embedding",
+      "total": 560,
+      "command_accuracy": 0.7428571428571429,
+      "balanced_command_accuracy": 0.7180922525750112,
+      "accepted_accuracy": 0.7969348659003831,
+      "reject_rate": 0.06785714285714285,
+      "raw_fbcsp_dim": 72,
+      "selected_features": 32,
+      "embedding_dim": 32,
+      "mlp_epochs": 220,
+      "reject_threshold": 0.6789994599085493,
+      "calibration_trials": 0,
+      "tile_evaluations_per_window": 0
+    },
+    {
+      "line": "FBCSP + MLP embedding + library + photonic scan",
+      "total": 518,
+      "command_accuracy": 0.750965250965251,
+      "balanced_command_accuracy": 0.7287533414356216,
+      "accepted_accuracy": 0.7826961770623743,
+      "reject_rate": 0.04054054054054054,
+      "raw_fbcsp_dim": 72,
+      "selected_features": 32,
+      "embedding_dim": 32,
+      "experience_entries": 66,
+      "top_k": 8,
+      "anchor_prior": 5.0,
+      "calibration_trials": 42,
+      "tile_shape": [
+        2,
+        8
+      ],
+      "tile_evaluations_per_window": 64,
+      "reject_threshold": 0.5580804574571339
+    }
+  ]
+}

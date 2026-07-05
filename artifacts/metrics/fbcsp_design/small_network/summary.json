@@ -1,0 +1,130 @@
+{
+  "line": "FBCSP + small MLP embedding",
+  "summary": {
+    "line": "FBCSP + small MLP embedding",
+    "total": 560,
+    "command_accuracy": 0.7428571428571429,
+    "balanced_command_accuracy": 0.7180922525750112,
+    "accepted_accuracy": 0.7969348659003831,
+    "reject_rate": 0.06785714285714285,
+    "raw_fbcsp_dim": 72,
+    "selected_features": 32,
+    "embedding_dim": 32,
+    "mlp_epochs": 220,
+    "reject_threshold": 0.6789994599085493,
+    "calibration_trials": 0,
+    "tile_evaluations_per_window": 0
+  },
+  "history_final": {
+    "loss": 0.0791937644992556,
+    "accuracy": 0.9761904761904762
+  },
+  "config": {
+    "data_dir": "Dataset\\BCICIV_1_asc",
+    "metrics_dir": "artifacts\\metrics\\fbcsp_design",
+    "subjects": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g"
+    ],
+    "channels": [
+      "C3",
+      "C4",
+      "Cz",
+      "FC3",
+      "FC4",
+      "CP3",
+      "CP4",
+      "CPz"
+    ],
+    "window": [
+      1.0,
+      4.0
+    ],
+    "bands": [
+      [
+        8.0,
+        12.0
+      ],
+      [
+        12.0,
+        16.0
+      ],
+      [
+        16.0,
+        20.0
+      ],
+      [
+        20.0,
+        24.0
+      ],
+      [
+        24.0,
+        28.0
+      ],
+      [
+        28.0,
+        32.0
+      ]
+    ],
+    "n_train_per_subject": 120,
+    "calibration_trials_per_subject": 6,
+    "csp_components": 2,
+    "csp_shrinkage": 0.1,
+    "selected_features": 32,
+    "reject_target_rate": 0.02,
+    "fixed_reject_threshold": null,
+    "margin_threshold": 0.0,
+    "seed": 13,
+    "mlp_epochs": 220,
+    "mlp_hidden_dim": 64,
+    "mlp_embedding_dim": 32,
+    "mlp_dropout": 0.2,
+    "experience_entries": 64,
+    "experience_top_k": 8,
+    "experience_sample_fraction": 0.75,
+    "experience_anchor_prior": 5.0,
+    "tile_shape": [
+      2,
+      8
+    ]
+  },
+  "metrics": {
+    "total": 560,
+    "correct": 416,
+    "rejected": 38,
+    "accepted_accuracy": 0.7969348659003831,
+    "command_accuracy": 0.7428571428571429,
+    "balanced_command_accuracy": 0.7180922525750112,
+    "reject_rate": 0.06785714285714285,
+    "confusion": [
+      [
+        220,
+        25,
+        14,
+        21
+      ],
+      [
+        39,
+        146,
+        4,
+        14
+      ],
+      [
+        21,
+        3,
+        50,
+        3
+      ]
+    ],
+    "per_class_recall": [
+      0.7857142857142857,
+      0.7192118226600985,
+      0.6493506493506493
+    ]
+  }
+}

@@ -17,8 +17,8 @@ Dataset/
     BCICIV_calib_ds1g_nfo.txt
 ```
 
-The default replay command expects `Dataset/BCICIV_1_asc` to exist locally:
+The current FBCSP design comparison expects `Dataset/BCICIV_1_asc` to exist locally:
 
 ```bash
-python examples/run_bciciv_replay.py
+python examples/run_fbcsp_design_comparison.py
 ```

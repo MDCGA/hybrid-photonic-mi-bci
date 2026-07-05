@@ -1,0 +1,330 @@
+{
+  "line": "FBCSP + shrinkage LDA",
+  "summary": {
+    "line": "FBCSP + shrinkage LDA",
+    "total": 560,
+    "command_accuracy": 0.7125,
+    "balanced_command_accuracy": 0.7323779668607254,
+    "accepted_accuracy": 0.7228260869565217,
+    "reject_rate": 0.014285714285714285,
+    "raw_fbcsp_dim": 72,
+    "selected_features": 32,
+    "reject_threshold": 0.47147279602762643,
+    "calibration_trials": 0,
+    "tile_evaluations_per_window": 0
+  },
+  "config": {
+    "data_dir": "Dataset\\BCICIV_1_asc",
+    "metrics_dir": "artifacts\\metrics\\fbcsp_design",
+    "subjects": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g"
+    ],
+    "channels": [
+      "C3",
+      "C4",
+      "Cz",
+      "FC3",
+      "FC4",
+      "CP3",
+      "CP4",
+      "CPz"
+    ],
+    "window": [
+      1.0,
+      4.0
+    ],
+    "bands": [
+      [
+        8.0,
+        12.0
+      ],
+      [
+        12.0,
+        16.0
+      ],
+      [
+        16.0,
+        20.0
+      ],
+      [
+        20.0,
+        24.0
+      ],
+      [
+        24.0,
+        28.0
+      ],
+      [
+        28.0,
+        32.0
+      ]
+    ],
+    "n_train_per_subject": 120,
+    "calibration_trials_per_subject": 6,
+    "csp_components": 2,
+    "csp_shrinkage": 0.1,
+    "selected_features": 32,
+    "reject_target_rate": 0.02,
+    "fixed_reject_threshold": null,
+    "margin_threshold": 0.0,
+    "seed": 13,
+    "mlp_epochs": 220,
+    "mlp_hidden_dim": 64,
+    "mlp_embedding_dim": 32,
+    "mlp_dropout": 0.2,
+    "experience_entries": 64,
+    "experience_top_k": 8,
+    "experience_sample_fraction": 0.75,
+    "experience_anchor_prior": 5.0,
+    "tile_shape": [
+      2,
+      8
+    ]
+  },
+  "dataset": {
+    "name": "BCICIV_1_asc",
+    "subjects": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g"
+    ],
+    "classes": [
+      "left",
+      "right",
+      "foot"
+    ],
+    "channels": [
+      "C3",
+      "C4",
+      "Cz",
+      "FC3",
+      "FC4",
+      "CP3",
+      "CP4",
+      "CPz"
+    ],
+    "fs": 100.0,
+    "window": [
+      1.0,
+      4.0
+    ],
+    "train_trials": 840,
+    "replay_trials": 560,
+    "train_class_counts": {
+      "left": 420,
+      "right": 297,
+      "foot": 123
+    },
+    "replay_class_counts": {
+      "left": 280,
+      "right": 203,
+      "foot": 77
+    }
+  },
+  "feature_ranking": [
+    {
+      "rank": 1,
+      "index": 6,
+      "feature": "8-12Hz_right_csp2"
+    },
+    {
+      "rank": 2,
+      "index": 7,
+      "feature": "8-12Hz_right_csp3"
+    },
+    {
+      "rank": 3,
+      "index": 4,
+      "feature": "8-12Hz_right_csp0"
+    },
+    {
+      "rank": 4,
+      "index": 1,
+      "feature": "8-12Hz_left_csp1"
+    },
+    {
+      "rank": 5,
+      "index": 3,
+      "feature": "8-12Hz_left_csp3"
+    },
+    {
+      "rank": 6,
+      "index": 11,
+      "feature": "8-12Hz_foot_csp3"
+    },
+    {
+      "rank": 7,
+      "index": 12,
+      "feature": "12-16Hz_left_csp0"
+    },
+    {
+      "rank": 8,
+      "index": 0,
+      "feature": "8-12Hz_left_csp0"
+    },
+    {
+      "rank": 9,
+      "index": 19,
+      "feature": "12-16Hz_right_csp3"
+    },
+    {
+      "rank": 10,
+      "index": 30,
+      "feature": "16-20Hz_right_csp2"
+    },
+    {
+      "rank": 11,
+      "index": 67,
+      "feature": "28-32Hz_right_csp3"
+    },
+    {
+      "rank": 12,
+      "index": 17,
+      "feature": "12-16Hz_right_csp1"
+    },
+    {
+      "rank": 13,
+      "index": 35,
+      "feature": "16-20Hz_foot_csp3"
+    },
+    {
+      "rank": 14,
+      "index": 33,
+      "feature": "16-20Hz_foot_csp1"
+    },
+    {
+      "rank": 15,
+      "index": 47,
+      "feature": "20-24Hz_foot_csp3"
+    },
+    {
+      "rank": 16,
+      "index": 8,
+      "feature": "8-12Hz_foot_csp0"
+    },
+    {
+      "rank": 17,
+      "index": 23,
+      "feature": "12-16Hz_foot_csp3"
+    },
+    {
+      "rank": 18,
+      "index": 28,
+      "feature": "16-20Hz_right_csp0"
+    },
+    {
+      "rank": 19,
+      "index": 31,
+      "feature": "16-20Hz_right_csp3"
+    },
+    {
+      "rank": 20,
+      "index": 45,
+      "feature": "20-24Hz_foot_csp1"
+    },
+    {
+      "rank": 21,
+      "index": 16,
+      "feature": "12-16Hz_right_csp0"
+    },
+    {
+      "rank": 22,
+      "index": 68,
+      "feature": "28-32Hz_foot_csp0"
+    },
+    {
+      "rank": 23,
+      "index": 55,
+      "feature": "24-28Hz_right_csp3"
+    },
+    {
+      "rank": 24,
+      "index": 15,
+      "feature": "12-16Hz_left_csp3"
+    },
+    {
+      "rank": 25,
+      "index": 56,
+      "feature": "24-28Hz_foot_csp0"
+    },
+    {
+      "rank": 26,
+      "index": 9,
+      "feature": "8-12Hz_foot_csp1"
+    },
+    {
+      "rank": 27,
+      "index": 40,
+      "feature": "20-24Hz_right_csp0"
+    },
+    {
+      "rank": 28,
+      "index": 59,
+      "feature": "24-28Hz_foot_csp3"
+    },
+    {
+      "rank": 29,
+      "index": 29,
+      "feature": "16-20Hz_right_csp1"
+    },
+    {
+      "rank": 30,
+      "index": 52,
+      "feature": "24-28Hz_right_csp0"
+    },
+    {
+      "rank": 31,
+      "index": 42,
+      "feature": "20-24Hz_right_csp2"
+    },
+    {
+      "rank": 32,
+      "index": 20,
+      "feature": "12-16Hz_foot_csp0"
+    }
+  ],
+  "metrics": {
+    "total": 560,
+    "correct": 399,
+    "rejected": 8,
+    "accepted_accuracy": 0.7228260869565217,
+    "command_accuracy": 0.7125,
+    "balanced_command_accuracy": 0.7323779668607254,
+    "reject_rate": 0.014285714285714285,
+    "confusion": [
+      [
+        192,
+        46,
+        37,
+        5
+      ],
+      [
+        54,
+        146,
+        2,
+        1
+      ],
+      [
+        11,
+        3,
+        61,
+        2
+      ]
+    ],
+    "per_class_recall": [
+      0.6857142857142857,
+      0.7192118226600985,
+      0.7922077922077922
+    ]
+  }
+}

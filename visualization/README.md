@@ -1,22 +1,38 @@
 # Visualization Scripts
 
-Run the full figure set from the project root:
+The current design figures are generated from saved FBCSP design metrics.
+Plotting scripts do not retrain models.
+
+Generate all current figures from the project root:
 
 ```bash
-python visualization/generate_bciciv_figures.py
+python visualization/generate_fbcsp_design_figures.py
 ```
 
 Default output:
 
 ```text
-artifacts/figures/bciciv_1_asc/
+artifacts/figures/fbcsp_design/
 ```
 
-Generated figures cover:
+Figure modules:
 
-- BCICIV system block diagram
-- BCICIV feature diagnostics
-- BCICIV projection fit
-- BCICIV online replay curves
-- BCICIV subject summary
-- BCICIV `left/right/foot/reject` confusion matrix
+```text
+visualization/fbcsp_design/
+  plot_system_diagram.py
+  plot_reference.py
+  plot_small_network.py
+  plot_experience_photonic.py
+  plot_summary.py
+```
+
+Generated figure groups:
+
+- `system`: detailed implementation block diagram.
+- `reference`: FBCSP + shrinkage LDA diagnostics.
+- `small_network`: compact MLP training and embedding diagnostics.
+- `experience_photonic`: experience retrieval and tiled candidate-scan diagnostics.
+- `summary`: final line comparison.
+
+The older `generate_bciciv_figures.py` script is retained for the legacy
+log-bandpower ablation path only.

@@ -1,0 +1,143 @@
+{
+  "line": "FBCSP + small-network embedding + experience retrieval + photonic scan",
+  "summary": {
+    "line": "FBCSP + MLP embedding + library + photonic scan",
+    "total": 518,
+    "command_accuracy": 0.750965250965251,
+    "balanced_command_accuracy": 0.7287533414356216,
+    "accepted_accuracy": 0.7826961770623743,
+    "reject_rate": 0.04054054054054054,
+    "raw_fbcsp_dim": 72,
+    "selected_features": 32,
+    "embedding_dim": 32,
+    "experience_entries": 66,
+    "top_k": 8,
+    "anchor_prior": 5.0,
+    "calibration_trials": 42,
+    "tile_shape": [
+      2,
+      8
+    ],
+    "tile_evaluations_per_window": 64,
+    "reject_threshold": 0.5580804574571339
+  },
+  "calibration_protocol": {
+    "calibration_trials_per_subject": 6,
+    "calibration_trials_total": 42,
+    "online_evaluation_trials": 518,
+    "note": "Calibration windows query the experience library; online metrics exclude them."
+  },
+  "selected_entries": [
+    {
+      "entry_id": "anchor_mlp_classifier",
+      "source": "small_network_classifier",
+      "train_accuracy": 0.9952380952380953,
+      "calibration_accuracy": 0.7857142857142857,
+      "calibration_confidence": 0.8002756357331745,
+      "weight": 0.45471932077843163,
+      "distance": 1.4357367614421328
+    },
+    {
+      "entry_id": "anchor_embedding_lda",
+      "source": "global_embedding_lda",
+      "train_accuracy": 0.9571428571428572,
+      "calibration_accuracy": 0.8333333333333334,
+      "calibration_confidence": 0.8045797103371664,
+      "weight": 0.5108715060852149,
+      "distance": 1.4357367614421328
+    },
+    {
+      "entry_id": "bootstrap_057",
+      "source": "bootstrap",
+      "train_accuracy": 0.9427662957074722,
+      "calibration_accuracy": 0.8333333333333334,
+      "calibration_confidence": 0.8051600477818546,
+      "weight": 0.006471127040929683,
+      "distance": 1.0807047760464075
+    },
+    {
+      "entry_id": "bootstrap_047",
+      "source": "bootstrap",
+      "train_accuracy": 0.9507154213036566,
+      "calibration_accuracy": 0.8333333333333334,
+      "calibration_confidence": 0.8043511909183766,
+      "weight": 0.006342319871801253,
+      "distance": 1.094902799375579
+    },
+    {
+      "entry_id": "bootstrap_043",
+      "source": "bootstrap",
+      "train_accuracy": 0.9554848966613673,
+      "calibration_accuracy": 0.8095238095238095,
+      "calibration_confidence": 0.7961033541060751,
+      "weight": 0.005889547891838603,
+      "distance": 1.0960590809991273
+    },
+    {
+      "entry_id": "bootstrap_027",
+      "source": "bootstrap",
+      "train_accuracy": 0.9507154213036566,
+      "calibration_accuracy": 0.8333333333333334,
+      "calibration_confidence": 0.8061997736809249,
+      "weight": 0.006070239864619266,
+      "distance": 1.1196720911306806
+    },
+    {
+      "entry_id": "bootstrap_023",
+      "source": "bootstrap",
+      "train_accuracy": 0.9554848966613673,
+      "calibration_accuracy": 0.8095238095238095,
+      "calibration_confidence": 0.8086783552700767,
+      "weight": 0.004842909805538503,
+      "distance": 1.207787821933027
+    },
+    {
+      "entry_id": "bootstrap_035",
+      "source": "bootstrap",
+      "train_accuracy": 0.9570747217806042,
+      "calibration_accuracy": 0.8095238095238095,
+      "calibration_confidence": 0.8080907839898882,
+      "weight": 0.00479302866162608,
+      "distance": 1.2140128567359392
+    }
+  ],
+  "library": {
+    "entries": 66,
+    "train_accuracy_mean": 0.9582080170315465,
+    "train_accuracy_std": 0.009677837959816683
+  },
+  "metrics": {
+    "total": 518,
+    "correct": 389,
+    "rejected": 21,
+    "accepted_accuracy": 0.7826961770623743,
+    "command_accuracy": 0.750965250965251,
+    "balanced_command_accuracy": 0.7287533414356216,
+    "reject_rate": 0.04054054054054054,
+    "confusion": [
+      [
+        212,
+        23,
+        17,
+        7
+      ],
+      [
+        45,
+        127,
+        2,
+        12
+      ],
+      [
+        18,
+        3,
+        50,
+        2
+      ]
+    ],
+    "per_class_recall": [
+      0.8185328185328186,
+      0.6827956989247311,
+      0.684931506849315
+    ]
+  }
+}

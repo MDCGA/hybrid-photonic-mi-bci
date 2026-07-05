@@ -6,12 +6,30 @@ Current layout:
 
 ```text
 artifacts/
+  metrics/
+    fbcsp_design/
+      summary.json
+      reference/
+      small_network/
+      experience_photonic/
   figures/
-    bciciv_1_asc/        BCICIV_1_asc replay visualizations.
+    fbcsp_design/
+      system/
+      reference/
+      small_network/
+      experience_photonic/
+      summary/
+    bciciv_1_asc/        Legacy log-bandpower ablation figures, if generated.
 ```
 
-Regenerate figures with:
+Regenerate the current FBCSP design metrics:
 
 ```bash
-python visualization/generate_bciciv_figures.py
+python examples/run_fbcsp_design_comparison.py
+```
+
+Regenerate the current FBCSP design figures:
+
+```bash
+python visualization/generate_fbcsp_design_figures.py
 ```

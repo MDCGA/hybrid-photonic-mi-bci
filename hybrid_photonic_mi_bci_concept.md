@@ -648,7 +648,55 @@ BCICIV_1_asc 可继续用于：
 - 光芯片完成多候选线性头 MVM
 - 数字端完成 bias、fusion、reject 和在线更新
 
-## 11. 系统框图必须体现
+## 11. 当前工程实现状态
+
+当前仓库已经实现三条线：
+
+```text
+1. FBCSP + shrinkage LDA
+2. FBCSP + 小型 MLP embedding
+3. FBCSP + 小型 MLP embedding + 经验库检索 + tiled 候选线性头扫描
+```
+
+当前默认配置：
+
+```text
+数据集：BCICIV_1_asc, a-g 合并
+训练：120 trials/file
+replay：80 trials/file
+新 session 校准查询：6 replay trials/file
+FBCSP：6 个频带，one-vs-rest CSP，raw 72D
+特征选择：Fisher score, 32D
+小型网络：32 -> 64 -> 32 embedding
+经验库：64 个 bootstrap 线性头 + 2 个全局 anchor 头
+候选扫描：top-K = 8
+光计算 tile：2 x 8
+每窗口 tile 评估数：8 * ceil(3/2) * ceil(32/8) = 64
+```
+
+当前 BCICIV_1_asc 默认结果：
+
+```text
+FBCSP + shrinkage LDA:
+  command accuracy = 0.713
+  balanced accuracy = 0.732
+  reject rate = 0.014
+
+FBCSP + 小型 MLP embedding:
+  command accuracy = 0.743
+  balanced accuracy = 0.718
+  reject rate = 0.068
+
+FBCSP + embedding + 经验库 + 光候选扫描:
+  command accuracy = 0.751
+  balanced accuracy = 0.729
+  reject rate = 0.041
+  tile evaluations/window = 64
+```
+
+主线结果不包含用于经验库查询的 42 个校准窗口。
+
+## 12. 系统框图必须体现
 
 系统框图应明确标出：
 
@@ -672,6 +720,6 @@ Filter Bank
 2 x 8 是光计算 tile，不是算法维度上限。
 ```
 
-## 12. 修正后的研究问题
+## 13. 修正后的研究问题
 
 在标准 FBCSP 解码框架下，能否利用小型网络和经验库实现新被试快速特化，并利用可 tiled 的 `2 x 8` 光计算单元高吞吐扫描候选线性头，从而在在线校准、跨 session 鲁棒性和嵌入式能效方面优于固定数字模型？

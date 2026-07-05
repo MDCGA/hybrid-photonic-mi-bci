@@ -47,6 +47,20 @@ class BCICIVFeatures:
     band: tuple[float, float]
 
 
+@dataclass(frozen=True)
+class BCICIVTrials:
+    """Windowed trial epochs for feature extractors such as FBCSP."""
+
+    subject: str
+    trials: FloatArray
+    labels: IntArray
+    class_names: tuple[str, ...]
+    channel_names: tuple[str, ...]
+    marker_positions: IntArray
+    fs: float
+    window: tuple[float, float]
+
+
 def load_calibration_recording(
     data_dir: str | Path,
     subject: str = "a",
@@ -172,6 +186,144 @@ def load_pooled_subject_features(
     )
 
 
+def load_subject_trials(
+    data_dir: str | Path,
+    subject: str = "a",
+    channels: Iterable[str] = DEFAULT_MOTOR_CHANNELS,
+    window: tuple[float, float] = DEFAULT_WINDOW,
+) -> BCICIVTrials:
+    """Load one subject and return windowed EEG trial epochs.
+
+    The returned trials have shape ``(n_trials, n_channels, n_samples)``.
+    Common-average reference is computed on all available channels before
+    selecting the requested channel subset.
+    """
+
+    recording = load_calibration_recording(data_dir=data_dir, subject=subject)
+    return extract_trials(recording=recording, channels=channels, window=window)
+
+
+def load_pooled_subject_trials(
+    data_dir: str | Path,
+    subjects: Iterable[str] = DEFAULT_SUBJECTS,
+    n_train_per_subject: int = 120,
+    channels: Iterable[str] = DEFAULT_MOTOR_CHANNELS,
+    window: tuple[float, float] = DEFAULT_WINDOW,
+) -> BCICIVTrials:
+    """Load multiple BCICIV files as one pooled three-class trial dataset.
+
+    The returned order matches :func:`load_pooled_subject_features`: all
+    per-subject training trials first, then all per-subject replay trials.
+    """
+
+    subject_list = tuple(_normalize_subject(subject) for subject in subjects)
+    if not subject_list:
+        raise ValueError("at least one subject is required")
+
+    global_class_names = ("left", "right", "foot")
+    global_class_to_index = {name: index for index, name in enumerate(global_class_names)}
+    train_trials = []
+    train_labels = []
+    train_positions = []
+    replay_trials = []
+    replay_labels = []
+    replay_positions = []
+    channel_names: tuple[str, ...] | None = None
+    fs: float | None = None
+    for subject in subject_list:
+        subject_trials = load_subject_trials(
+            data_dir=data_dir,
+            subject=subject,
+            channels=channels,
+            window=window,
+        )
+        if not 0 < n_train_per_subject < len(subject_trials.labels):
+            raise ValueError(
+                "n_train_per_subject must leave replay samples for every subject, "
+                f"got {n_train_per_subject}"
+            )
+        if channel_names is None:
+            channel_names = subject_trials.channel_names
+        elif channel_names != subject_trials.channel_names:
+            raise ValueError("all pooled subjects must use the same channels")
+        if fs is None:
+            fs = subject_trials.fs
+        elif fs != subject_trials.fs:
+            raise ValueError("all pooled subjects must use the same sampling rate")
+
+        mapped_labels = _map_local_to_global_labels(
+            subject_trials.labels,
+            subject_trials.class_names,
+            global_class_to_index,
+        )
+        train_slice = slice(0, n_train_per_subject)
+        replay_slice = slice(n_train_per_subject, None)
+        train_trials.append(subject_trials.trials[train_slice])
+        train_labels.append(mapped_labels[train_slice])
+        train_positions.append(subject_trials.marker_positions[train_slice])
+        replay_trials.append(subject_trials.trials[replay_slice])
+        replay_labels.append(mapped_labels[replay_slice])
+        replay_positions.append(subject_trials.marker_positions[replay_slice])
+
+    return BCICIVTrials(
+        subject=f"pooled_{''.join(subject_list)}",
+        trials=np.concatenate([*train_trials, *replay_trials], axis=0),
+        labels=np.concatenate([*train_labels, *replay_labels], axis=0),
+        class_names=global_class_names,
+        channel_names=channel_names or tuple(),
+        marker_positions=np.concatenate([*train_positions, *replay_positions], axis=0),
+        fs=float(fs or 0.0),
+        window=window,
+    )
+
+
+def extract_trials(
+    recording: BCICIVRecording,
+    channels: Iterable[str] = DEFAULT_MOTOR_CHANNELS,
+    window: tuple[float, float] = DEFAULT_WINDOW,
+) -> BCICIVTrials:
+    """Extract CAR-referenced trial epochs for the selected channels."""
+
+    selected_channels = tuple(channels)
+    if not selected_channels:
+        raise ValueError("at least one channel is required")
+    if not 0 <= window[0] < window[1]:
+        raise ValueError(f"invalid trial window {window}")
+
+    indices = _channel_indices(recording.channel_names, selected_channels)
+    referenced = recording.samples - recording.samples.mean(axis=1, keepdims=True)
+    selected = referenced[:, indices]
+    start_offset = int(round(window[0] * recording.fs))
+    stop_offset = int(round(window[1] * recording.fs))
+
+    trials = []
+    labels = []
+    positions = []
+    for position, marker_code in zip(recording.marker_positions, recording.marker_codes):
+        onset = int(position) - 1
+        start = onset + start_offset
+        stop = onset + stop_offset
+        if start < 0 or stop > selected.shape[0]:
+            continue
+        trials.append(selected[start:stop].T)
+        labels.append(_marker_to_label(marker_code))
+        positions.append(position)
+
+    if not trials:
+        raise ValueError("no valid trials were extracted")
+
+    return BCICIVTrials(
+        subject=recording.subject,
+        trials=np.asarray(trials, dtype=np.float64),
+        labels=np.asarray(labels, dtype=int),
+        class_names=recording.class_names,
+        channel_names=selected_channels,
+        marker_positions=np.asarray(positions, dtype=int),
+        fs=recording.fs,
+        window=window,
+    )
+
+
 def extract_log_bandpower_features(
     recording: BCICIVRecording,
     channels: Iterable[str] = DEFAULT_MOTOR_CHANNELS,
@@ -267,9 +419,9 @@ def _bandpass(samples: FloatArray, fs: float, band: tuple[float, float]) -> Floa
 
 
 def _marker_to_label(marker_code: int) -> int:
-    if marker_code == 1:
-        return 0
     if marker_code == -1:
+        return 0
+    if marker_code == 1:
         return 1
     raise ValueError(f"unexpected marker code {marker_code}; expected +1 or -1")
 
