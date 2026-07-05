@@ -5,7 +5,7 @@ interface so the first software baseline can use NumPy while a future photonic
 driver can plug into the same pipeline.
 """
 
-from .backends import MVMBackend, NumpyMVMBackend, PhotonicMVMBackendStub
+from .backends import MVMBackend, NumpyMVMBackend, PhotonicMVMBackendStub, TiledMVMBackend
 from .calibration import (
     ConfidenceSelector,
     EpsilonGreedyBandit,
@@ -34,6 +34,7 @@ __all__ = [
     "ProjectionLibrary",
     "PrototypeDecisionHead",
     "Standardizer",
+    "TiledMVMBackend",
     "build_pipeline_from_features",
     "run_replay",
     "warmup_selector",

@@ -22,18 +22,27 @@ class ProjectionCandidate:
 
     def __post_init__(self) -> None:
         weights = np.asarray(self.weights, dtype=np.float64)
-        if weights.shape != (2, 8):
-            raise ValueError(f"candidate weights must have shape (2, 8), got {weights.shape}")
+        if weights.ndim != 2:
+            raise ValueError(f"candidate weights must have shape (M, D), got {weights.shape}")
         object.__setattr__(self, "weights", weights)
 
 
 class ProjectionLibrary:
-    """A collection of candidate ``2 x 8`` matrices scanned per EEG window."""
+    """A collection of candidate matrices scanned per EEG window.
+
+    The current BCICIV baseline uses ``2 x 8`` matrices because it compresses
+    eight EEG features into a two-dimensional discriminant space. That is an
+    algorithm choice, not a hard limit of the photonic backend.
+    """
 
     def __init__(self, candidates: Iterable[ProjectionCandidate]):
         self._candidates = tuple(candidates)
         if not self._candidates:
             raise ValueError("ProjectionLibrary requires at least one candidate")
+        first_shape = self._candidates[0].weights.shape
+        for candidate in self._candidates:
+            if candidate.weights.shape != first_shape:
+                raise ValueError("all projection candidates must have the same matrix shape")
 
     @property
     def candidates(self) -> tuple[ProjectionCandidate, ...]:
@@ -65,8 +74,8 @@ class ProjectionLibrary:
         metadata: Iterable[Mapping[str, object]] | None = None,
     ) -> "ProjectionLibrary":
         weights_arr = np.asarray(weights, dtype=np.float64)
-        if weights_arr.ndim != 3 or weights_arr.shape[1:] != (2, 8):
-            raise ValueError(f"weights must have shape (N, 2, 8), got {weights_arr.shape}")
+        if weights_arr.ndim != 3:
+            raise ValueError(f"weights must have shape (N, M, D), got {weights_arr.shape}")
 
         labels_tuple = tuple(labels) if labels is not None else tuple(
             f"candidate_{i:03d}" for i in range(weights_arr.shape[0])
@@ -100,11 +109,11 @@ class ProjectionLibrary:
         if n_candidates <= 0:
             raise ValueError("n_candidates must be positive")
         base = np.asarray(base_weights, dtype=np.float64)
-        if base.shape != (2, 8):
-            raise ValueError(f"base_weights must have shape (2, 8), got {base.shape}")
+        if base.ndim != 2:
+            raise ValueError(f"base_weights must have shape (M, D), got {base.shape}")
 
         rng = np.random.default_rng(seed)
-        weights = base + rng.normal(scale=noise_scale, size=(n_candidates, 2, 8))
+        weights = base + rng.normal(scale=noise_scale, size=(n_candidates, *base.shape))
         weights[0] = base
         return cls.from_array(
             weights,

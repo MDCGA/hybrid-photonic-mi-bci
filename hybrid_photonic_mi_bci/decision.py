@@ -34,37 +34,54 @@ class CandidateDecision:
 
 
 class PrototypeDecisionHead:
-    """Classify 2-D projection points by distance to class prototypes."""
+    """Classify projection points by distance to class prototypes."""
 
     def __init__(self, prototypes: ArrayLike, config: DecisionConfig | None = None):
         self.config = config or DecisionConfig()
         self.prototypes = np.asarray(prototypes, dtype=np.float64)
         class_count = len(self.config.class_names)
         if self.prototypes.ndim == 2:
-            expected = (class_count, 2)
+            if self.prototypes.shape[0] != class_count:
+                raise ValueError(
+                    "shared prototypes must have shape "
+                    f"({class_count}, projection_dim), got {self.prototypes.shape}"
+                )
         elif self.prototypes.ndim == 3:
-            expected = (self.prototypes.shape[0], class_count, 2)
+            if self.prototypes.shape[1] != class_count:
+                raise ValueError(
+                    "candidate-specific prototypes must have shape "
+                    f"(N, {class_count}, projection_dim), got {self.prototypes.shape}"
+                )
         else:
-            expected = (class_count, 2)
-        if self.prototypes.shape != expected:
             raise ValueError(
                 "prototypes must have shape "
-                f"({class_count}, 2) or (N, {class_count}, 2), got {self.prototypes.shape}"
+                f"({class_count}, projection_dim) or "
+                f"(N, {class_count}, projection_dim), got {self.prototypes.shape}"
             )
         if self.config.temperature <= 0:
             raise ValueError("temperature must be positive")
 
     def decide_all(self, projections: ArrayLike) -> list[CandidateDecision]:
         z = np.asarray(projections, dtype=np.float64)
-        if z.ndim != 2 or z.shape[1] != 2:
-            raise ValueError(f"projections must have shape (N, 2), got {z.shape}")
+        if z.ndim != 2:
+            raise ValueError(f"projections must have shape (N, projection_dim), got {z.shape}")
         if self.prototypes.ndim == 2:
+            if self.prototypes.shape[1] != z.shape[1]:
+                raise ValueError(
+                    "prototype dimension must match projection dimension, "
+                    f"got {self.prototypes.shape[1]} and {z.shape[1]}"
+                )
             distances = np.linalg.norm(z[:, None, :] - self.prototypes[None, :, :], axis=2)
         else:
             if self.prototypes.shape[0] != z.shape[0]:
                 raise ValueError(
                     "candidate-specific prototypes must match projection count, "
                     f"got {self.prototypes.shape[0]} and {z.shape[0]}"
+                )
+            if self.prototypes.shape[2] != z.shape[1]:
+                raise ValueError(
+                    "prototype dimension must match projection dimension, "
+                    f"got {self.prototypes.shape[2]} and {z.shape[1]}"
                 )
             distances = np.linalg.norm(z[:, None, :] - self.prototypes, axis=2)
         logits = -distances / self.config.temperature

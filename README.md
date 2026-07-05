@@ -4,11 +4,14 @@ Modular software baseline for a hybrid photonic EEG motor-imagery BCI
 experiment on `BCICIV_1_asc`.
 
 The central idea is not to treat the photonic chip as a one-off accelerator for
-one fixed classifier. Instead, each EEG decision window scans a small bank of
-candidate `2 x 8` calibration projections. The current implementation uses
-NumPy matrix-vector multiplication, while the rest of the pipeline is already
-structured around a backend interface that can later be replaced by photonic
-hardware.
+one fixed classifier. Instead, each EEG decision window scans a bank of
+candidate calibration projections. The current BCICIV baseline uses `2 x 8`
+candidate matrices because it maps eight EEG features into a two-dimensional
+three-class discriminant space. That is an algorithm choice, not a hard hardware
+limit: a `2 x 8` photonic unit can be tiled or scanned over row/column blocks to
+evaluate larger `M x D` matrices. The implementation uses NumPy matrix-vector
+multiplication by default, while the backend interface also includes a tiled
+software model for future photonic integration.
 
 Current system outputs:
 
@@ -107,7 +110,7 @@ BCICIV EEG trial
   -> 1.0-4.0 s decision window
   -> 8-D log-bandpower feature vector
   -> standardization from calibration trials
-  -> candidate bank of N projection matrices, each 2 x 8
+  -> candidate bank of N projection matrices, currently each 2 x 8
   -> MVMBackend.scan(weights, feature)
   -> prototype decision in 2-D candidate spaces
   -> probability fusion / online selector
@@ -162,7 +165,7 @@ Common adjustable parameters:
 
 - `--n-train`: calibration trials per file before replay.
 - `--warmup-trials`: labeled windows used to warm up the selector.
-- `--n-candidates`: number of candidate `2 x 8` projections scanned per trial.
+- `--n-candidates`: number of candidate projections scanned per trial.
 - `--library-kind`: `perturb`, `bootstrap`, or `mixed`.
 - `--selector`: `bandit`, `confidence`, or `fusion`.
 - `--reject-threshold`: confidence threshold for reject.
@@ -187,7 +190,7 @@ Default pooled settings:
 - replay split: remaining `80` trials per file
 - pooled warmup: `840` trials
 - pooled replay: `560` trials
-- candidate library: `32` candidate `2 x 8` projections
+- candidate library: `32` candidate projections, each `2 x 8` in this baseline
 - selector: probability fusion
 
 Recent default replay result:
@@ -273,6 +276,12 @@ Current software backend:
 NumpyMVMBackend
 ```
 
+Tiled software model of the photonic primitive:
+
+```python
+TiledMVMBackend(tile_shape=(2, 8))
+```
+
 Future hardware backend placeholder:
 
 ```python
@@ -282,26 +291,37 @@ PhotonicMVMBackendStub
 Contract:
 
 ```text
-weights:  (n_candidates, 2, 8)
-features: (8,)
-return:   (n_candidates, 2)
+weights:  (n_candidates, out_dim, in_dim)
+features: (in_dim,)
+return:   (n_candidates, out_dim)
 ```
 
-That means a photonic implementation can be added behind the backend boundary
-without changing feature extraction, candidate selection, reject logic, metrics,
-or plotting code.
+For the current BCICIV baseline, this contract is used as:
+
+```text
+weights:  (32, 2, 8)
+features: (8,)
+return:   (32, 2)
+```
+
+For a larger CSP/FBCSP/Riemannian feature vector or a larger classifier matrix,
+the same backend contract can evaluate `(N, M, D)` by decomposing each candidate
+matrix into `2 x 8` photonic tiles and accumulating partial sums. That means a
+photonic implementation can be added behind the backend boundary without
+changing candidate selection, reject logic, metrics, or plotting code.
 
 In practice, the hardware backend would hide details such as:
 
 - weight programming / calibration
 - feature quantization or scaling
+- tiled scheduling for matrices larger than `2 x 8`
 - optical/electrical transport
 - detector readout
 - nonideality compensation
 - batching or scan scheduling
 
-As long as it returns the same `(n_candidates, 2)` projection array, the rest of
-the software pipeline can remain unchanged.
+As long as it returns the same `(n_candidates, out_dim)` projection array, the
+rest of the software pipeline can remain unchanged.
 
 ## Current Scope
 

@@ -154,7 +154,7 @@ def least_squares_projection(
     labels: IntArray,
     n_classes: int,
 ) -> FloatArray:
-    """Fit a `2 x 8` projection from features to class target coordinates."""
+    """Fit the current baseline's two-dimensional discriminant projection."""
 
     targets = class_targets(n_classes)[labels]
     weights, *_ = np.linalg.lstsq(features, targets, rcond=None)

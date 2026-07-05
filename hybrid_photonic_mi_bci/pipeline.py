@@ -55,8 +55,9 @@ class HybridBCIPipeline:
 
     def predict_window(self, features: ArrayLike) -> PipelineOutput:
         x = np.asarray(features, dtype=np.float64)
-        if x.shape != (8,):
-            raise ValueError(f"features must have shape (8,), got {x.shape}")
+        expected_dim = self.projection_library.weights.shape[2]
+        if x.shape != (expected_dim,):
+            raise ValueError(f"features must have shape ({expected_dim},), got {x.shape}")
         if self.standardizer is not None:
             x = self.standardizer.transform(x)
 
