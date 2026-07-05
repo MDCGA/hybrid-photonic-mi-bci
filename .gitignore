@@ -11,3 +11,6 @@ Dataset/*.zip
 
 # Keep generated figures, but ignore transient scratch outputs if added later.
 artifacts/tmp/
+
+# Local host-application databases and live acquisition exports.
+artifacts/host/

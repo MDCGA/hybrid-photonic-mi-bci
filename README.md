@@ -35,8 +35,10 @@ EMPT_MI_BCI/
     small_networks.py             Compact FBCSP MLP embedding model.
     experience.py                 Experience-library retrieval and scan.
     backends.py                   NumPy and tiled MVM backend interfaces.
+    host/                         Cyton host app, acquisition, and library store.
     workflows/                    Clean experiment lines and shared protocol.
   examples/
+    run_cyton_host.py             Cyton host CLI/Tkinter entry point.
     run_fbcsp_reference.py
     run_small_network_line.py
     run_experience_photonic_line.py
@@ -66,6 +68,12 @@ python -m pip install -e ".[dev,viz,torch]"
 Core dependencies are declared in `pyproject.toml`. The compact embedding line
 uses PyTorch. The reference FBCSP-LDA line can be imported without eagerly
 loading torch.
+
+For OpenBCI Cyton hardware control through BrainFlow:
+
+```bash
+python -m pip install -e ".[cyton]"
+```
 
 ## Dataset
 
@@ -215,6 +223,54 @@ Default results saved in `artifacts/metrics/fbcsp_design/summary.json`:
 The mainline excludes the 42 calibration-query windows from its online
 evaluation.
 
+## Cyton Host Application
+
+The host-app layer is separate from the offline BCICIV workflows. It is the
+starting point for the OpenBCI Cyton upper-computer software:
+
+```text
+Cyton / synthetic Cyton
+  -> acquisition adapter
+  -> host controller
+  -> SQLite experience-library groups
+  -> calibration/session artifacts
+  -> future online FBCSP + candidate-scan runtime
+```
+
+Modules:
+
+```text
+hybrid_photonic_mi_bci/host/
+  acquisition.py          BrainFlow Cyton adapter, synthetic source, Cyton commands.
+  controller.py           Device/store controller used by CLI or GUI.
+  experience_store.py     SQLite group and entry management.
+  tk_app.py               Lightweight Tkinter operator UI.
+```
+
+Use the simulator first:
+
+```bash
+python examples/run_cyton_host.py --db artifacts/tmp/cyton_host_demo.sqlite init-db
+python examples/run_cyton_host.py --db artifacts/tmp/cyton_host_demo.sqlite stream --synthetic --duration 2
+python examples/run_cyton_host.py --db artifacts/tmp/cyton_host_demo.sqlite gui
+```
+
+For real Cyton hardware:
+
+```bash
+python examples/run_cyton_host.py --db artifacts/host/cyton_experience.sqlite stream --serial-port COM3 --duration 5
+```
+
+Replace `COM3` with the serial port of the OpenBCI dongle. Local host databases
+and live acquisition exports are ignored under `artifacts/host/`.
+
+The current store supports:
+
+- experience-library group creation/listing/activation;
+- per-group device, channel set, preprocessing, FBCSP, and encoder metadata;
+- entry metadata for future saved CSP filters, selected features, embeddings,
+  candidate heads, reject thresholds, and performance metrics.
+
 ## Figures
 
 Regenerate all FBCSP design figures:
@@ -251,4 +307,5 @@ python -m unittest discover -s tests
 ```
 
 The tests cover the generic MVM backend, tiled MVM behavior, FBCSP output shapes,
-shrinkage LDA, experience-library scan shape, and replay split protocol.
+shrinkage LDA, experience-library scan shape, replay split protocol, the Cyton
+host simulator, Cyton command builder, and SQLite experience group store.
