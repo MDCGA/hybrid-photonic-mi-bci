@@ -9,6 +9,15 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
+from ..compute_accounting import (
+    LinearComputeLedger,
+    add_car_event,
+    add_feature_standardization_event,
+    add_fbcsp_events,
+    add_mlp_forward_event,
+    add_mlp_training_event,
+    compact_summary_fields,
+)
 from ..small_networks import SmallMLPConfig, train_small_mlp
 from .common import (
     FBCSPDesignConfig,
@@ -40,6 +49,8 @@ class SmallNetworkLineResult:
     history: dict[str, list[float]]
     metrics: dict[str, Any]
     reject_threshold: float
+    compute_summary: dict[str, Any]
+    compute_events: list[dict[str, Any]]
     summary: dict[str, Any]
 
 
@@ -80,6 +91,8 @@ def run_small_network_line(
         reject_threshold=reject_threshold,
         margin_threshold=cfg.margin_threshold,
     )
+    ledger = _account_small_network_compute(data, train_features, replay_features, cfg)
+    compute_summary = ledger.summary()
     summary = summary_from_metrics(
         "FBCSP + small MLP embedding",
         metrics,
@@ -91,6 +104,7 @@ def run_small_network_line(
             "reject_threshold": reject_threshold,
             "calibration_trials": 0,
             "tile_evaluations_per_window": 0,
+            **compact_summary_fields(compute_summary),
         },
     )
     result = SmallNetworkLineResult(
@@ -106,6 +120,8 @@ def run_small_network_line(
         history=mlp_result.history,
         metrics=metrics,
         reject_threshold=reject_threshold,
+        compute_summary=compute_summary,
+        compute_events=ledger.to_events(),
         summary=summary,
     )
     if save:
@@ -124,6 +140,10 @@ def save_small_network_result(result: SmallNetworkLineResult, output_dir: Path) 
             "history_final": {
                 "loss": result.history["loss"][-1],
                 "accuracy": result.history["accuracy"][-1],
+            },
+            "compute_accounting": {
+                "summary": result.compute_summary,
+                "events_file": "../compute_accounting.json",
             },
             "config": data.config,
             "metrics": {
@@ -168,3 +188,70 @@ def save_small_network_result(result: SmallNetworkLineResult, output_dir: Path) 
         history_loss=np.asarray(result.history["loss"], dtype=np.float64),
         history_accuracy=np.asarray(result.history["accuracy"], dtype=np.float64),
     )
+
+
+def _account_small_network_compute(
+    data: FBCSPPreparedData,
+    train_features: FloatArray,
+    replay_features: FloatArray,
+    cfg: FBCSPDesignConfig,
+) -> LinearComputeLedger:
+    ledger = LinearComputeLedger()
+    if data.dataset.reference_sample_count and data.dataset.reference_channel_count:
+        add_car_event(
+            ledger,
+            prefix="small-network BCICIV loader",
+            n_samples=data.dataset.reference_sample_count,
+            n_channels=data.dataset.reference_channel_count,
+        )
+    add_fbcsp_events(
+        ledger,
+        prefix="small-network FBCSP",
+        n_train=len(data.split.train),
+        n_replay=len(data.split.replay),
+        n_bands=data.train_tensor.shape[1],
+        n_classes=data.train_tensor.shape[2],
+        n_filters=data.train_tensor.shape[3],
+        n_channels=data.dataset.trials.shape[1],
+        n_samples=data.dataset.trials.shape[2],
+        filter_order=cfg.filter_order,
+    )
+    add_feature_standardization_event(
+        ledger,
+        name="small-network selected FBCSP standardization affine",
+        n_samples=train_features.shape[0] + replay_features.shape[0],
+        n_features=train_features.shape[1],
+        stage="preprocessing",
+    )
+    n_classes = len(data.dataset.class_names)
+    add_mlp_training_event(
+        ledger,
+        prefix="small-network",
+        n_samples=train_features.shape[0],
+        input_dim=train_features.shape[1],
+        hidden_dim=cfg.mlp_hidden_dim,
+        embedding_dim=cfg.mlp_embedding_dim,
+        n_classes=n_classes,
+        epochs=cfg.mlp_epochs,
+    )
+    add_mlp_forward_event(
+        ledger,
+        name="small-network train forward for threshold/embedding export",
+        n_samples=train_features.shape[0],
+        input_dim=train_features.shape[1],
+        hidden_dim=cfg.mlp_hidden_dim,
+        embedding_dim=cfg.mlp_embedding_dim,
+        n_classes=n_classes,
+        stage="calibration",
+    )
+    add_mlp_forward_event(
+        ledger,
+        name="small-network replay forward",
+        n_samples=replay_features.shape[0],
+        input_dim=replay_features.shape[1],
+        hidden_dim=cfg.mlp_hidden_dim,
+        embedding_dim=cfg.mlp_embedding_dim,
+        n_classes=n_classes,
+        stage="inference",
+    )
+    return ledger

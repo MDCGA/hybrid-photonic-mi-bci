@@ -8,7 +8,9 @@ from typing import Iterable
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.signal import butter, sosfiltfilt
+from scipy.signal import butter
+
+from ..backends import common_average_reference, signal_sosfiltfilt
 
 
 FloatArray = NDArray[np.float64]
@@ -59,6 +61,8 @@ class BCICIVTrials:
     marker_positions: IntArray
     fs: float
     window: tuple[float, float]
+    reference_channel_count: int | None = None
+    reference_sample_count: int | None = None
 
 
 def load_calibration_recording(
@@ -230,6 +234,8 @@ def load_pooled_subject_trials(
     replay_positions = []
     channel_names: tuple[str, ...] | None = None
     fs: float | None = None
+    reference_channel_count: int | None = None
+    reference_sample_count = 0
     for subject in subject_list:
         subject_trials = load_subject_trials(
             data_dir=data_dir,
@@ -250,6 +256,11 @@ def load_pooled_subject_trials(
             fs = subject_trials.fs
         elif fs != subject_trials.fs:
             raise ValueError("all pooled subjects must use the same sampling rate")
+        if reference_channel_count is None:
+            reference_channel_count = subject_trials.reference_channel_count
+        elif reference_channel_count != subject_trials.reference_channel_count:
+            raise ValueError("all pooled subjects must use the same CAR channel count")
+        reference_sample_count += int(subject_trials.reference_sample_count or 0)
 
         mapped_labels = _map_local_to_global_labels(
             subject_trials.labels,
@@ -274,6 +285,8 @@ def load_pooled_subject_trials(
         marker_positions=np.concatenate([*train_positions, *replay_positions], axis=0),
         fs=float(fs or 0.0),
         window=window,
+        reference_channel_count=reference_channel_count,
+        reference_sample_count=reference_sample_count,
     )
 
 
@@ -291,7 +304,11 @@ def extract_trials(
         raise ValueError(f"invalid trial window {window}")
 
     indices = _channel_indices(recording.channel_names, selected_channels)
-    referenced = recording.samples - recording.samples.mean(axis=1, keepdims=True)
+    referenced = common_average_reference(
+        recording.samples,
+        channel_axis=1,
+        name="bciciv_loader_car",
+    )
     selected = referenced[:, indices]
     start_offset = int(round(window[0] * recording.fs))
     stop_offset = int(round(window[1] * recording.fs))
@@ -321,6 +338,8 @@ def extract_trials(
         marker_positions=np.asarray(positions, dtype=int),
         fs=recording.fs,
         window=window,
+        reference_channel_count=len(recording.channel_names),
+        reference_sample_count=recording.samples.shape[0],
     )
 
 
@@ -345,7 +364,11 @@ def extract_log_bandpower_features(
         raise ValueError(f"invalid trial window {window}")
 
     indices = _channel_indices(recording.channel_names, selected_channels)
-    referenced = recording.samples - recording.samples.mean(axis=1, keepdims=True)
+    referenced = common_average_reference(
+        recording.samples,
+        channel_axis=1,
+        name="bciciv_log_bandpower_car",
+    )
     selected = referenced[:, indices]
     filtered = _bandpass(selected, fs=recording.fs, band=band)
 
@@ -415,7 +438,12 @@ def _channel_indices(all_channels: tuple[str, ...], selected_channels: tuple[str
 
 def _bandpass(samples: FloatArray, fs: float, band: tuple[float, float]) -> FloatArray:
     sos = butter(4, band, btype="bandpass", fs=fs, output="sos")
-    return sosfiltfilt(sos, samples, axis=0)
+    return signal_sosfiltfilt(
+        sos,
+        samples,
+        axis=0,
+        name="bciciv_log_bandpower_sosfiltfilt",
+    )
 
 
 def _marker_to_label(marker_code: int) -> int:

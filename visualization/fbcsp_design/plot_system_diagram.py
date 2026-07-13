@@ -37,13 +37,13 @@ def plot(output_dir: Path, formats: tuple[str, ...] = ("png",)) -> list[Path]:
 
     _band(ax, 0.2, 6.95, 17.8, 1.05, "Shared FBCSP Feature Layer", "#f0fdf4")
     shared = [
-        (0.45, "CAR\n8 motor channels"),
+        (0.45, "CAR via SignalOps\n8 motor channels"),
         (2.75, "Trial window\nmarker + 1.0-4.0 s"),
-        (5.25, "Filter bank\n8-12 ... 28-32 Hz"),
-        (8.0, "OVR CSP\nleft/right/foot vs rest"),
+        (5.25, "3rd-order SOS filter bank\nvia SignalOps"),
+        (8.0, "OVR CSP covariance +\nprojection via MatrixOps"),
         (10.8, "Log-variance\n72D raw FBCSP"),
         (13.35, "Fisher selection\n32D"),
-        (15.65, "Train-fitted\nstandardizer"),
+        (15.65, "Standardizer affine\nvia MatrixOps"),
     ]
     for x, label in shared:
         _box(ax, x, 7.2, 2.05, 0.55, label, "#dcfce7")
@@ -51,35 +51,35 @@ def plot(output_dir: Path, formats: tuple[str, ...] = ("png",)) -> list[Path]:
 
     _band(ax, 0.2, 5.05, 8.55, 1.25, "Reference Baseline", "#fff7ed")
     _box(ax, 0.55, 5.38, 2.35, 0.58, "FBCSP 32D\ntrain/replay")
-    _box(ax, 3.25, 5.38, 2.45, 0.58, "Shrinkage LDA\nscore = A x + b")
+    _box(ax, 3.25, 5.38, 2.45, 0.58, "Shrinkage LDA\nA x + b via backend")
     _box(ax, 6.05, 5.38, 2.15, 0.58, "Softmax + reject\nmetrics")
     _chain(ax, [2.95, 5.75], 5.67)
 
     _band(ax, 9.05, 5.05, 8.95, 1.25, "Small-Network Embedding Line", "#f5f3ff")
     _box(ax, 9.35, 5.38, 2.35, 0.58, "FBCSP 32D\nLayerNorm input")
-    _box(ax, 12.05, 5.38, 2.7, 0.58, "MLP encoder\n32 -> 64 -> 32")
-    _box(ax, 15.1, 5.38, 2.45, 0.58, "Embedding h\nclassifier logits")
+    _box(ax, 12.05, 5.38, 2.7, 0.58, "MLP encoder Linear\n32 -> 64 -> 32")
+    _box(ax, 15.1, 5.38, 2.45, 0.58, "Embedding h\nclassifier via backend")
     _chain(ax, [11.75, 14.8], 5.67)
 
     _band(ax, 0.2, 2.6, 17.8, 1.7, "Mainline: Experience Library Retrieval + Photonic Candidate Scan", "#f8fafc")
     main = [
         (0.45, "Experience library\n64 bootstrap heads"),
         (2.9, "Anchor heads\nMLP classifier\n+ embedding LDA"),
-        (5.35, "Calibration query\nmean embedding + labels"),
+        (5.35, "Calibration query\ncentroid dot via MatrixOps"),
         (7.8, "Select top-8\ncalibration-aware weights"),
-        (10.25, "Candidate heads\nA_i h + b_i"),
+        (10.25, "Candidate heads\nA_i [h,1] via MatrixOps"),
         (12.7, "TiledMVMBackend\n2 x 8 primitive"),
-        (15.15, "Digital fusion\nsoftmax/reject"),
+        (15.15, "Probability fusion via\nMatrixOps; reject digital"),
     ]
     for x, label in main:
         _box(ax, x, 2.98, 2.1, 0.74, label, "#e0f2fe")
     _chain(ax, [2.65, 5.1, 7.55, 10.0, 12.45, 14.9], 3.35)
 
     _band(ax, 0.2, 0.55, 17.8, 1.25, "Photonic Boundary and Measured Work", "#fffbeb")
-    _box(ax, 0.55, 0.88, 3.0, 0.56, "Photonic part\nmatrix-vector products A_i h")
-    _box(ax, 3.95, 0.88, 3.2, 0.56, "Software now\nNumPy/tiled simulation")
-    _box(ax, 7.55, 0.88, 3.2, 0.56, "For K=8, M=3, D=32\n64 tile evaluations/window")
-    _box(ax, 11.15, 0.88, 3.15, 0.56, "Digital side\nbias, softmax, fusion, reject")
+    _box(ax, 0.55, 0.88, 3.0, 0.56, "Unified handoff\nMatrixOps + SignalOps")
+    _box(ax, 3.95, 0.88, 3.2, 0.56, "MatrixOps routed\nCSP/LDA/MLP/std/bias/A_i/fusion")
+    _box(ax, 7.55, 0.88, 3.2, 0.56, "SignalOps routed\nCAR + SOS filter bank")
+    _box(ax, 11.15, 0.88, 3.15, 0.56, "Digital side\ntrain/backprop/variance/log/reject")
     _box(ax, 14.75, 0.88, 2.65, 0.56, "Saved artifacts\nmetrics + figures")
     _chain(ax, [3.65, 7.25, 10.85, 14.45], 1.16)
 

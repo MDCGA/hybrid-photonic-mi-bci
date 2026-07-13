@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
-from .backends import NumpyMVMBackend
+from .backends import NumpyMVMBackend, matrix_einsum, matrix_multiply
 from .calibration import ConfidenceSelector, EpsilonGreedyBandit, ProbabilityFusionSelector
 from .decision import DecisionConfig, PrototypeDecisionHead
 from .features import Standardizer
@@ -75,10 +75,19 @@ def build_pipeline_from_features(
     )
 
     if config.prototype_kind == "shared":
-        projected_train = x_train @ base_w.T
+        projected_train = matrix_multiply(
+            x_train,
+            base_w.T,
+            name="legacy_shared_projection",
+        )
         prototypes = class_prototypes(projected_train, y_train, n_classes=n_classes)
     elif config.prototype_kind == "candidate":
-        projected_by_candidate = np.einsum("nij,sj->nsi", library.weights, x_train)
+        projected_by_candidate = matrix_einsum(
+            "nij,sj->nsi",
+            library.weights,
+            x_train,
+            name="legacy_candidate_projection_bank",
+        )
         prototypes = np.stack(
             [
                 class_prototypes(projected_by_candidate[i], y_train, n_classes=n_classes)

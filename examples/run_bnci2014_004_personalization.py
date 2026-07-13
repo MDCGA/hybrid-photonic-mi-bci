@@ -1,4 +1,4 @@
-"""Run single-subject personalization tests on BNCI2014_004 / BCI IV 2b."""
+"""Run the three FBCSP design lines on BNCI2014_004 / BCI IV 2b."""
 
 from __future__ import annotations
 
@@ -23,22 +23,25 @@ def main() -> None:
         data_dir=Path(args.data_dir),
         metrics_dir=Path(args.metrics_dir),
         subjects=tuple(int(item) for item in args.subjects.split(",") if item),
-        calibration_trials_per_class=tuple(int(item) for item in args.calibration.split(",") if item),
+        calibration_trials_per_class=args.calibration_trials_per_class,
+        filter_order=args.filter_order,
         experience_entries=args.experience_entries,
         top_k=args.top_k,
         seed=args.seed,
     )
     result = run_bnci2014_004_personalization(config, save=True)
-    print("BNCI2014_004 personalization summary")
-    print("k/class | before | cal-only | exp-after | gain-before | improved")
+    print("BNCI2014_004 three-line design comparison")
+    print("line | subjects | windows | command | balanced | reject | photonic | inference")
     for row in result["summary"]:
         print(
-            f"{row['calibration_trials_per_class']:>7} | "
-            f"{row['before_mean']:.3f} | "
-            f"{row['calibration_only_mean']:.3f} | "
-            f"{row['experience_after_mean']:.3f} | "
-            f"{row['gain_vs_before_mean']:+.3f} | "
-            f"{row['subjects_improved_vs_before']}/{row['subjects']}"
+            f"{row['line']} | "
+            f"{row['subjects']} | "
+            f"{row['total']} | "
+            f"{row['command_accuracy']:.3f} | "
+            f"{row['balanced_command_accuracy']:.3f} | "
+            f"{row['reject_rate']:.3f} | "
+            f"{row['photonic_linear_share']:.3f} | "
+            f"{row['photonic_linear_share_inference']:.3f}"
         )
     print(f"\nSaved metrics to {Path(args.metrics_dir)}")
 
@@ -48,7 +51,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-dir", default="Dataset/BNCI2014_004")
     parser.add_argument("--metrics-dir", default="artifacts/metrics/bnci2014_004_personalization")
     parser.add_argument("--subjects", default="1,2,3,4,5,6,7,8,9")
-    parser.add_argument("--calibration", default="2,4,8,12,16")
+    parser.add_argument("--calibration-trials-per-class", type=int, default=8)
+    parser.add_argument("--filter-order", type=int, default=3)
     parser.add_argument("--experience-entries", type=int, default=32)
     parser.add_argument("--top-k", type=int, default=8)
     parser.add_argument("--seed", type=int, default=13)

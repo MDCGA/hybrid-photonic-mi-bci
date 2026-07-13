@@ -7,6 +7,8 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from .backends import featurewise_affine
+
 
 FloatArray = NDArray[np.float64]
 
@@ -33,7 +35,12 @@ class Standardizer:
         x = np.asarray(features, dtype=np.float64)
         if x.shape[-1] != 8:
             raise ValueError(f"last feature dimension must be 8, got {x.shape}")
-        return (x - self.mean_) / self.scale_
+        return featurewise_affine(
+            x,
+            scale=1.0 / self.scale_,
+            bias=-self.mean_ / self.scale_,
+            name="legacy_standardizer_affine",
+        )
 
     def fit_transform(self, features: ArrayLike) -> FloatArray:
         return self.fit(features).transform(features)

@@ -9,8 +9,8 @@ The current design is not a log-bandpower shortcut. The implemented mainline is:
 FBCSP
   -> compact neural embedding
   -> experience-library retrieval
-  -> multi-candidate linear-head scan through an MVM backend
-  -> digital fusion, softmax, and reject
+  -> multi-candidate linear-head scan through the MatrixOps/MVM backend
+  -> backend probability fusion, digital softmax/reject
 ```
 
 The traditional reference baseline is:
@@ -28,13 +28,15 @@ are `left`, `right`, and `foot`.
 EMPT_MI_BCI/
   Dataset/
     BCICIV_1_asc/                 Local raw ASCII dataset, ignored by git.
+    BNCI2014_004/                 Local BCI IV 2b GDF dataset, ignored by git.
   hybrid_photonic_mi_bci/
     datasets/                     BCICIV loaders and pooled trial extraction.
+    compute_accounting.py         Linear MAC accounting for photonic/digital split.
     fbcsp.py                      One-vs-rest filter-bank CSP.
     linear_models.py              Shrinkage LDA and linear-head helpers.
     small_networks.py             Compact FBCSP MLP embedding model.
     experience.py                 Experience-library retrieval and scan.
-    backends.py                   NumPy and tiled MVM backend interfaces.
+    backends.py                   Unified MatrixOps, SignalOps, and tiled MVM interfaces.
     host/                         Cyton host app, acquisition, and library store.
     workflows/                    Clean experiment lines and shared protocol.
   examples/
@@ -128,7 +130,7 @@ EEG trial
   -> common-average reference
   -> selected motor channels
   -> marker + 1.0-4.0 s window
-  -> filter bank: 8-12, 12-16, 16-20, 20-24, 24-28, 28-32 Hz
+  -> 3rd-order filter bank: 8-12, 12-16, 16-20, 20-24, 24-28, 28-32 Hz
   -> one-vs-rest CSP for left/right/foot
   -> log-variance features
   -> 72D raw FBCSP vector
@@ -160,23 +162,122 @@ embedding h
   -> experience library with bootstrap linear heads
   -> global anchor heads: MLP classifier and embedding-LDA
   -> calibration-aware top-K retrieval, default K=8
-  -> candidate linear heads score_i = A_i h + b_i
-  -> TiledMVMBackend for A_i h
-  -> digital bias, softmax, fusion, and reject
+  -> candidate linear heads score_i = A_i [h, 1]
+  -> TiledMVMBackend for augmented candidate heads
+  -> MatrixOps probability fusion
+  -> digital softmax and reject
 ```
 
 The photonic primitive is modeled as a `2 x 8` tile, not an algorithmic size
 limit. Larger matrices are scanned over row and column blocks:
 
 ```text
-tile_count = K * ceil(M / 2) * ceil(D / 8)
+tile_count = K * ceil(M / tile_rows) * ceil(D_augmented / tile_cols)
 ```
 
 For the default mainline:
 
 ```text
-K = 8, M = 3, D = 32
-tile_count = 8 * ceil(3/2) * ceil(32/8) = 64 tile evaluations/window
+K = 8, M = 3, D_augmented = 32 + 1
+tile_count = 8 * ceil(3/2) * ceil(33/8) = 80 tile evaluations/window
+```
+
+The extra dimension is the constant-one input used to scan linear-head bias on
+the same photonic MVM path as the weights.
+
+## Photonic Handoff Interface
+
+Algorithm code should route matrix products and forward signal-processing
+linear operations through `hybrid_photonic_mi_bci.backends` instead of calling
+`np @`, `np.einsum`, or direct filtering kernels from workflow code. The current
+defaults are `SimulatedPhotonicMatrixOpsBackend` and
+`SimulatedPhotonicSignalOpsBackend`, which use NumPy/SciPy internally as
+deterministic software stand-ins for future photonic drivers.
+
+A real matrix driver can replace the matrix path with
+`set_matrix_ops_backend(...)` or be scoped with `use_matrix_ops_backend(...)`.
+A real signal-processing driver can replace CAR/SOS filtering with
+`set_signal_ops_backend(...)` or `use_signal_ops_backend(...)`.
+
+Main backend helpers:
+
+```text
+matrix_multiply / matrix_einsum
+linear_scores
+covariance_gram
+csp_spatial_project
+prototype_distances
+candidate_probability_fusion
+batched_matrix_vector
+common_average_reference
+signal_sosfiltfilt
+```
+
+The tiled candidate scan uses the same handoff internally, so the `2 x 8`
+photonic primitive remains a hardware tile, not an algorithmic matrix-size
+limit.
+
+## Linear Compute Accounting
+
+The project now reports the main photonic share on a forward-only basis. Model
+fitting and training/backprop are excluded from this denominator; preprocessing,
+calibration forward passes, and online inference remain included. Algorithm-path
+matrix products routed through `MatrixOpsBackend` and forward CAR/SOS signal
+operations routed through `SignalOpsBackend` are treated as photonic work under
+the current software-substitution assumption:
+
+```text
+photonic_linear_share = forward_photonic_linear_MACs / forward_total_linear_MACs
+```
+
+Scope:
+
+- counted as photonic: backend-routed CAR, Butterworth SOS `sosfiltfilt`
+  band-pass filtering, FBCSP covariance/projection matrix products,
+  selected-feature standardization affine maps, LDA/linear-head scoring,
+  exported MLP `Linear` layers, MLP LayerNorm affine parameters, linear-head
+  and MLP bias via augmented constant-one inputs, experience-library retrieval
+  distance cross terms, tiled candidate scan, retrieval-weight fusion, and
+  prototype-distance cross terms in the legacy prototype path;
+- counted as digital in the forward path: scalar control, thresholding, and
+  other non-matrix/non-filter bookkeeping;
+- excluded from this ratio: FBCSP/CSP fitting, LDA fitting, PyTorch compact-MLP
+  training/backprop, LayerNorm mean/variance normalization, activations,
+  softmax, remaining non-dot-product distance arithmetic, variance/log
+  nonlinear feature operations, `eigh`/`pinv` decompositions, and
+  visualization-only PCA/projection products.
+
+CAR can be represented as a fixed channel projection and band-pass filtering can
+be represented as a linear FIR/state-space operator, so both are now exposed
+through `SignalOpsBackend`. The current implementation is still a software
+simulation; it establishes the replacement boundary for later photonic signal
+hardware.
+
+The SOS filter estimate uses:
+
+```text
+MACs = trials * bands * channels * samples * sos_sections * 5 * 2
+```
+
+The final `* 2` is the forward/backward pass in `sosfiltfilt`. For the current
+3rd-order Butterworth band-pass, `sos_sections = 3`. Small edge-padding
+overheads are ignored. Earlier 4th-order runs increased this digital filtering
+term by about one third, which suppressed the forward photonic share without
+improving the current validation metrics enough to justify the cost. A 2nd-order
+run was also checked, but it degraded the BCICIV mainline too much.
+
+Saved accounting files:
+
+```text
+artifacts/metrics/fbcsp_design/compute_accounting.json
+artifacts/metrics/bnci2014_004_personalization/compute_accounting.json
+```
+
+Generated accounting figures:
+
+```text
+artifacts/figures/fbcsp_design/compute_accounting/compute_accounting_summary.png
+artifacts/figures/bnci2014_004_personalization/bnci_compute_accounting_summary.png
 ```
 
 ## Run Experiments
@@ -204,6 +305,7 @@ python examples/run_fbcsp_design_comparison.py --help
 Common knobs:
 
 - `--selected-features`: selected FBCSP dimension, default `32`.
+- `--filter-order`: Butterworth SOS band-pass order, default `3`.
 - `--mlp-epochs`: compact MLP epochs, default `220`.
 - `--experience-entries`: bootstrap experience entries, default `64`.
 - `--experience-top-k`: scanned candidates, default `8`.
@@ -214,30 +316,33 @@ Common knobs:
 
 Default results saved in `artifacts/metrics/fbcsp_design/summary.json`:
 
-| Line | Eval windows | Command acc. | Balanced acc. | Accepted acc. | Reject rate | Tile evals/window |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| FBCSP + shrinkage LDA | 560 | 0.713 | 0.732 | 0.723 | 0.014 | 0 |
-| FBCSP + small MLP embedding | 560 | 0.743 | 0.718 | 0.797 | 0.068 | 0 |
-| FBCSP + MLP embedding + library + photonic scan | 518 | 0.751 | 0.729 | 0.783 | 0.041 | 64 |
+| Line | Eval windows | Command acc. | Balanced acc. | Reject rate | Forward MACs | Forward share | Inference share |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| FBCSP + shrinkage LDA | 560 | 0.713 | 0.733 | 0.016 | 0.576 GMAC | 1.000 | 1.000 |
+| FBCSP + small MLP embedding | 560 | 0.723 | 0.709 | 0.075 | 0.584 GMAC | 1.000 | 1.000 |
+| FBCSP + MLP embedding + library + photonic scan | 518 | 0.730 | 0.724 | 0.048 | 0.585 GMAC | 1.000 | 1.000 |
 
 The mainline excludes the 42 calibration-query windows from its online
-evaluation.
+evaluation. The default 3rd-order filter is a compute/accuracy compromise:
+`--filter-order 4` remains supported when accuracy is prioritized, while a
+2nd-order run was too aggressive for the BCICIV mainline. Under the current
+forward-only accounting, all measured forward linear MAC-equivalent work is
+routed through MatrixOps or SignalOps handoff interfaces.
 
-## Experience-Library Personalization Test
+## BNCI2014_004 Three-Line Evaluation
 
-To directly test whether the experience library helps a single target subject
-specialize, use `BNCI2014_004 / BCI Competition IV 2b`. This dataset has 9
-subjects, 5 sessions per subject, and 3 motor-area EEG channels (`C3`, `Cz`,
-`C4`) for left/right hand MI.
+The three implemented lines are also evaluated on `BNCI2014_004 / BCI
+Competition IV 2b`. This dataset has 9 subjects, 5 sessions per subject, and 3
+motor-area EEG channels (`C3`, `Cz`, `C4`) for left/right hand MI.
 
 The implemented protocol uses only labeled `T` sessions:
 
 ```text
 for each target subject:
-  sessions 1-2 -> subject history / experience library
+  sessions 1-2 -> train/history set
   session 3    -> target new session
-    first k trials/class -> target calibration
-    remaining trials     -> held-out evaluation
+    first 8 trials/class -> mainline calibration query only
+    remaining trials     -> shared held-out evaluation for all three lines
 ```
 
 Run:
@@ -249,18 +354,16 @@ python visualization/plot_bnci2014_004_personalization.py
 
 Default mean results across 9 subjects:
 
-| k trials/class | Before personalization | Calibration only | Experience + calibration | Mean gain vs before | Improved subjects |
-| ---: | ---: | ---: | ---: | ---: | ---: |
-| 2 | 0.756 | 0.614 | 0.766 | +0.011 | 6/9 |
-| 4 | 0.756 | 0.703 | 0.764 | +0.008 | 6/9 |
-| 8 | 0.755 | 0.738 | 0.773 | +0.018 | 9/9 |
-| 12 | 0.763 | 0.750 | 0.779 | +0.016 | 7/9 |
-| 16 | 0.761 | 0.760 | 0.775 | +0.014 | 6/9 |
+| Line | Eval windows | Command acc. | Balanced acc. | Reject rate | Forward MACs | Forward share | Inference share |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| FBCSP + shrinkage LDA | 1296 | 0.755 | 0.755 | 0.012 | 0.596 GMAC | 1.000 | 1.000 |
+| FBCSP + small MLP embedding | 1296 | 0.744 | 0.744 | 0.014 | 0.599 GMAC | 1.000 | 1.000 |
+| FBCSP + MLP + library + photonic scan | 1296 | 0.745 | 0.745 | 0.023 | 0.667 GMAC | 1.000 | 1.000 |
 
-This is the first direct evidence in the repository that the experience-library
-mechanism can improve held-out performance after a small amount of target-session
-calibration. The current test is binary MI, so it validates personalization
-behavior before returning to the four-output `left/right/foot/reject` system.
+The BNCI workflow is binary MI, so it validates the three-line comparison and
+experience-library retrieval behavior before returning to the four-output
+`left/right/foot/reject` BCICIV setting. Its forward linear compute follows the
+same MatrixOps + SignalOps handoff accounting.
 
 ## Cyton Host Application
 
@@ -325,6 +428,7 @@ artifacts/figures/fbcsp_design/system/
 artifacts/figures/fbcsp_design/reference/
 artifacts/figures/fbcsp_design/small_network/
 artifacts/figures/fbcsp_design/experience_photonic/
+artifacts/figures/fbcsp_design/compute_accounting/
 artifacts/figures/fbcsp_design/summary/
 ```
 
@@ -335,6 +439,7 @@ Key figures:
 - `small_network_training_embedding`: training curves, embedding PCA, replay trace, confusion.
 - `experience_photonic_scan_diagnostics`: library weights, head quality, replay trace, confusion.
 - `photonic_tile_schedule`: `2 x 8` tile work per decision window.
+- `compute_accounting_summary`: forward MatrixOps/SignalOps-vs-digital linear MAC split and online share.
 - `design_line_summary`: final line comparison.
 
 ## Tests

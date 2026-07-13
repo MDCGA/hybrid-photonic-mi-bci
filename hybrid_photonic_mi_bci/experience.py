@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from .backends import candidate_probability_fusion, prototype_distances
 from .backends import MVMBackend, TiledMVMBackend
 from .evaluation import softmax
 from .linear_models import LinearHead, ShrinkageLDA
@@ -91,7 +92,11 @@ def retrieve_top_k(
         raise ValueError("experience library is empty")
     query = np.asarray(calibration_embeddings, dtype=np.float64).mean(axis=0)
     centroids = np.stack([entry.centroid for entry in entries], axis=0)
-    distances = np.linalg.norm(centroids - query[None, :], axis=1)
+    distances = prototype_distances(
+        query[None, :],
+        centroids,
+        name="experience_retrieval_centroid_distance",
+    )[0]
     order = np.argsort(distances)[: min(k, len(entries))]
     selected = tuple(entries[int(index)] for index in order)
     selected_distances = distances[order]
@@ -116,17 +121,22 @@ def scan_experience_heads(
     backend = backend or TiledMVMBackend(tile_shape=(2, 8))
     weights = np.stack([entry.head.weights for entry in entries], axis=0)
     bias = np.stack([entry.head.bias for entry in entries], axis=0)
+    augmented_weights = np.concatenate([weights, bias[:, :, None]], axis=2)
     candidate_scores = np.zeros((x.shape[0], len(entries), weights.shape[1]), dtype=np.float64)
     tile_count = 0
     for index, feature in enumerate(x):
-        projected = backend.scan(weights, feature)
-        candidate_scores[index] = projected + bias
+        augmented_feature = np.concatenate([feature, np.ones(1, dtype=np.float64)])
+        candidate_scores[index] = backend.scan(augmented_weights, augmented_feature)
         if hasattr(backend, "last_tile_count"):
             tile_count = int(getattr(backend, "last_tile_count"))
     candidate_probs = softmax(candidate_scores.reshape(-1, candidate_scores.shape[-1])).reshape(
         candidate_scores.shape
     )
-    fused_probs = np.einsum("k,nkc->nc", selected_weights, candidate_probs)
+    fused_probs = candidate_probability_fusion(
+        selected_weights,
+        candidate_probs,
+        name="experience_probability_fusion",
+    )
     fused_scores = np.log(fused_probs + 1e-12)
     return ExperienceScanResult(
         selected_entries=entries,

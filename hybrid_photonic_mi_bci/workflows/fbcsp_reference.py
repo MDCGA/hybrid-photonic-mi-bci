@@ -9,6 +9,15 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
+from ..compute_accounting import (
+    LinearComputeLedger,
+    add_car_event,
+    add_feature_standardization_event,
+    add_fbcsp_events,
+    add_lda_fit_events,
+    add_linear_scores_event,
+    compact_summary_fields,
+)
 from ..linear_models import ShrinkageLDA
 from .common import (
     FBCSPDesignConfig,
@@ -37,6 +46,8 @@ class FBCSPReferenceResult:
     replay_scores: FloatArray
     metrics: dict[str, Any]
     reject_threshold: float
+    compute_summary: dict[str, Any]
+    compute_events: list[dict[str, Any]]
     summary: dict[str, Any]
 
 
@@ -65,6 +76,8 @@ def run_fbcsp_reference(
         reject_threshold=reject_threshold,
         margin_threshold=cfg.margin_threshold,
     )
+    ledger = _account_reference_compute(data, train_features, replay_features)
+    compute_summary = ledger.summary()
     summary = summary_from_metrics(
         "FBCSP + shrinkage LDA",
         metrics,
@@ -74,6 +87,7 @@ def run_fbcsp_reference(
             "reject_threshold": reject_threshold,
             "calibration_trials": 0,
             "tile_evaluations_per_window": 0,
+            **compact_summary_fields(compute_summary),
         },
     )
     result = FBCSPReferenceResult(
@@ -84,6 +98,8 @@ def run_fbcsp_reference(
         replay_scores=replay_scores,
         metrics=metrics,
         reject_threshold=reject_threshold,
+        compute_summary=compute_summary,
+        compute_events=ledger.to_events(),
         summary=summary,
     )
     if save:
@@ -113,6 +129,10 @@ def save_reference_result(result: FBCSPReferenceResult, output_dir: Path) -> Non
                 "replay_class_counts": class_count_dict(data.replay_labels, data.dataset.class_names),
             },
             "feature_ranking": feature_rank_table(data, top_n=len(data.selected_indices)),
+            "compute_accounting": {
+                "summary": result.compute_summary,
+                "events_file": "../compute_accounting.json",
+            },
             "metrics": {
                 key: value
                 for key, value in result.metrics.items()
@@ -152,3 +172,63 @@ def save_reference_result(result: FBCSPReferenceResult, output_dir: Path) -> Non
         train_fbcsp_tensor=data.train_tensor,
         replay_fbcsp_tensor=data.replay_tensor,
     )
+
+
+def _account_reference_compute(
+    data: FBCSPPreparedData,
+    train_features: FloatArray,
+    replay_features: FloatArray,
+) -> LinearComputeLedger:
+    ledger = LinearComputeLedger()
+    if data.dataset.reference_sample_count and data.dataset.reference_channel_count:
+        add_car_event(
+            ledger,
+            prefix="reference BCICIV loader",
+            n_samples=data.dataset.reference_sample_count,
+            n_channels=data.dataset.reference_channel_count,
+        )
+    add_fbcsp_events(
+        ledger,
+        prefix="reference FBCSP",
+        n_train=len(data.split.train),
+        n_replay=len(data.split.replay),
+        n_bands=data.train_tensor.shape[1],
+        n_classes=data.train_tensor.shape[2],
+        n_filters=data.train_tensor.shape[3],
+        n_channels=data.dataset.trials.shape[1],
+        n_samples=data.dataset.trials.shape[2],
+        filter_order=data.config.filter_order,
+    )
+    add_feature_standardization_event(
+        ledger,
+        name="reference selected FBCSP standardization affine",
+        n_samples=train_features.shape[0] + replay_features.shape[0],
+        n_features=train_features.shape[1],
+        stage="preprocessing",
+    )
+    n_classes = len(data.dataset.class_names)
+    add_lda_fit_events(
+        ledger,
+        prefix="reference LDA",
+        n_samples=train_features.shape[0],
+        n_features=train_features.shape[1],
+        n_classes=n_classes,
+        stage="fit",
+    )
+    add_linear_scores_event(
+        ledger,
+        name="reference LDA train scores for reject calibration",
+        n_samples=train_features.shape[0],
+        n_features=train_features.shape[1],
+        n_outputs=n_classes,
+        stage="calibration",
+    )
+    add_linear_scores_event(
+        ledger,
+        name="reference LDA replay scores",
+        n_samples=replay_features.shape[0],
+        n_features=replay_features.shape[1],
+        n_outputs=n_classes,
+        stage="inference",
+    )
+    return ledger

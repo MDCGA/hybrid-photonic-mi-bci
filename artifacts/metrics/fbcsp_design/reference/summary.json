@@ -4,14 +4,22 @@
     "line": "FBCSP + shrinkage LDA",
     "total": 560,
     "command_accuracy": 0.7125,
-    "balanced_command_accuracy": 0.7323779668607254,
-    "accepted_accuracy": 0.7228260869565217,
-    "reject_rate": 0.014285714285714285,
+    "balanced_command_accuracy": 0.7328295267950441,
+    "accepted_accuracy": 0.7241379310344828,
+    "reject_rate": 0.01607142857142857,
     "raw_fbcsp_dim": 72,
     "selected_features": 32,
-    "reject_threshold": 0.47147279602762643,
+    "reject_threshold": 0.47483663310471064,
     "calibration_trials": 0,
-    "tile_evaluations_per_window": 0
+    "tile_evaluations_per_window": 0,
+    "linear_macs_total": 576378573,
+    "linear_macs_photonic": 576378573,
+    "linear_macs_digital": 0,
+    "photonic_linear_share": 1.0,
+    "linear_macs_inference": 338743440,
+    "photonic_linear_macs_inference": 338743440,
+    "digital_linear_macs_inference": 0,
+    "photonic_linear_share_inference": 1.0
   },
   "config": {
     "data_dir": "Dataset\\BCICIV_1_asc",
@@ -65,6 +73,7 @@
         32.0
       ]
     ],
+    "filter_order": 3,
     "n_train_per_subject": 120,
     "calibration_trials_per_subject": 6,
     "csp_components": 2,
@@ -234,13 +243,13 @@
     },
     {
       "rank": 21,
-      "index": 16,
-      "feature": "12-16Hz_right_csp0"
+      "index": 68,
+      "feature": "28-32Hz_foot_csp0"
     },
     {
       "rank": 22,
-      "index": 68,
-      "feature": "28-32Hz_foot_csp0"
+      "index": 16,
+      "feature": "12-16Hz_right_csp0"
     },
     {
       "rank": 23,
@@ -254,64 +263,196 @@
     },
     {
       "rank": 25,
-      "index": 56,
-      "feature": "24-28Hz_foot_csp0"
-    },
-    {
-      "rank": 26,
       "index": 9,
       "feature": "8-12Hz_foot_csp1"
     },
     {
+      "rank": 26,
+      "index": 56,
+      "feature": "24-28Hz_foot_csp0"
+    },
+    {
       "rank": 27,
-      "index": 40,
-      "feature": "20-24Hz_right_csp0"
-    },
-    {
-      "rank": 28,
-      "index": 59,
-      "feature": "24-28Hz_foot_csp3"
-    },
-    {
-      "rank": 29,
-      "index": 29,
-      "feature": "16-20Hz_right_csp1"
-    },
-    {
-      "rank": 30,
       "index": 52,
       "feature": "24-28Hz_right_csp0"
     },
     {
+      "rank": 28,
+      "index": 40,
+      "feature": "20-24Hz_right_csp0"
+    },
+    {
+      "rank": 29,
+      "index": 59,
+      "feature": "24-28Hz_foot_csp3"
+    },
+    {
+      "rank": 30,
+      "index": 29,
+      "feature": "16-20Hz_right_csp1"
+    },
+    {
       "rank": 31,
-      "index": 42,
-      "feature": "20-24Hz_right_csp2"
+      "index": 20,
+      "feature": "12-16Hz_foot_csp0"
     },
     {
       "rank": 32,
-      "index": 20,
-      "feature": "12-16Hz_foot_csp0"
+      "index": 42,
+      "feature": "20-24Hz_right_csp2"
     }
   ],
+  "compute_accounting": {
+    "summary": {
+      "scope": "forward linear MAC-equivalent operations",
+      "forward_stages": [
+        "preprocessing",
+        "calibration",
+        "inference"
+      ],
+      "photonic_rule": "Algorithm-path MatrixOpsBackend matrix products are counted as photonic because the active backend is SimulatedPhotonicMatrixOpsBackend. Forward signal operations routed through SignalOpsBackend are also counted as photonic because the active backend is SimulatedPhotonicSignalOpsBackend. This includes CAR, SOS band-pass filtering, FBCSP/LDA matrix products, feature-standardization affine maps, exported MLP inference Linear and LayerNorm affine layers including bias via augmented constant inputs, candidate-head scans, retrieval fusion, and distance cross terms. Fit and PyTorch training/backprop MACs are reported separately but excluded from the main ratio.",
+      "excluded": [
+        "model fitting and training/backprop stages for the main forward-only ratio",
+        "activation, softmax, thresholding, and non-dot-product distance arithmetic",
+        "variance, logarithm, and other nonlinear feature operations",
+        "matrix decompositions/inversions such as eigh and pinv",
+        "visualization-only PCA/projection matrix products"
+      ],
+      "linear_macs_total": 576378573,
+      "linear_macs_photonic": 576378573,
+      "linear_macs_digital": 0,
+      "photonic_linear_share": 1.0,
+      "linear_macs_all_stages_total": 1544924877,
+      "linear_macs_all_stages_photonic": 1544924877,
+      "linear_macs_all_stages_digital": 0,
+      "photonic_linear_share_all_stages": 1.0,
+      "linear_macs_inference": 338743440,
+      "photonic_linear_macs_inference": 338743440,
+      "digital_linear_macs_inference": 0,
+      "photonic_linear_share_inference": 1.0,
+      "linear_macs_fit_or_training_excluded": 968546304,
+      "photonic_linear_macs_fit_or_training_excluded": 968546304,
+      "digital_linear_macs_fit_or_training_excluded": 0,
+      "linear_macs_offline_or_calibration": 1206181437,
+      "photonic_linear_macs_offline_or_calibration": 1206181437,
+      "photonic_linear_share_offline_or_calibration": 1.0,
+      "by_stage": {
+        "preprocessing": {
+          "linear_macs_total": 237551973,
+          "linear_macs_photonic": 237551973,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 2
+        },
+        "fit": {
+          "linear_macs_total": 968546304,
+          "linear_macs_photonic": 968546304,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 6
+        },
+        "training": {
+          "linear_macs_total": 0,
+          "linear_macs_photonic": 0,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 0.0,
+          "events": 0
+        },
+        "calibration": {
+          "linear_macs_total": 83160,
+          "linear_macs_photonic": 83160,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "inference": {
+          "linear_macs_total": 338743440,
+          "linear_macs_photonic": 338743440,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 3
+        }
+      },
+      "by_category": {
+        "bandpass_filter": {
+          "linear_macs_total": 967680000,
+          "linear_macs_photonic": 967680000,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 3
+        },
+        "car_reference": {
+          "linear_macs_total": 236073573,
+          "linear_macs_photonic": 236073573,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "fbcsp_covariance": {
+          "linear_macs_total": 96768000,
+          "linear_macs_photonic": 96768000,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "fbcsp_projection": {
+          "linear_macs_total": 241920000,
+          "linear_macs_photonic": 241920000,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 2
+        },
+        "feature_standardization_affine": {
+          "linear_macs_total": 1478400,
+          "linear_macs_photonic": 1478400,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "lda_fit_covariance": {
+          "linear_macs_total": 860160,
+          "linear_macs_photonic": 860160,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "lda_fit_parameters": {
+          "linear_macs_total": 6144,
+          "linear_macs_photonic": 6144,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "linear_head_scores": {
+          "linear_macs_total": 138600,
+          "linear_macs_photonic": 138600,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 2
+        }
+      }
+    },
+    "events_file": "../compute_accounting.json"
+  },
   "metrics": {
     "total": 560,
     "correct": 399,
-    "rejected": 8,
-    "accepted_accuracy": 0.7228260869565217,
+    "rejected": 9,
+    "accepted_accuracy": 0.7241379310344828,
     "command_accuracy": 0.7125,
-    "balanced_command_accuracy": 0.7323779668607254,
-    "reject_rate": 0.014285714285714285,
+    "balanced_command_accuracy": 0.7328295267950441,
+    "reject_rate": 0.01607142857142857,
     "confusion": [
       [
-        192,
+        191,
         46,
         37,
-        5
+        6
       ],
       [
-        54,
-        146,
-        2,
+        52,
+        147,
+        3,
         1
       ],
       [
@@ -322,8 +463,8 @@
       ]
     ],
     "per_class_recall": [
-      0.6857142857142857,
-      0.7192118226600985,
+      0.6821428571428572,
+      0.7241379310344828,
       0.7922077922077922
     ]
   }

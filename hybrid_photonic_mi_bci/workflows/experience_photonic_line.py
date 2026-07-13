@@ -9,7 +9,16 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from ..backends import TiledMVMBackend
+from ..backends import TiledMVMBackend, prototype_distances
+from ..compute_accounting import (
+    LinearComputeLedger,
+    add_candidate_scan_events,
+    add_centroid_retrieval_event,
+    add_lda_fit_events,
+    add_linear_scores_event,
+    compact_summary_fields,
+    events_from_dicts,
+)
 from ..experience import (
     ExperienceEntry,
     build_bootstrap_experience_library,
@@ -50,6 +59,8 @@ class ExperiencePhotonicLineResult:
     metrics: dict[str, Any]
     reject_threshold: float
     tile_count_per_window: int
+    compute_summary: dict[str, Any]
+    compute_events: list[dict[str, Any]]
     summary: dict[str, Any]
 
 
@@ -104,6 +115,16 @@ def run_experience_photonic_line(
         reject_threshold=reject_threshold,
         margin_threshold=cfg.margin_threshold,
     )
+    ledger = _account_experience_compute(
+        small=small,
+        data=data,
+        bootstrap_library=bootstrap_library,
+        selected=selected,
+        train_windows=small.train_embeddings.shape[0],
+        calibration_windows=calibration_embeddings.shape[0],
+        eval_windows=eval_embeddings.shape[0],
+    )
+    compute_summary = ledger.summary()
     summary = summary_from_metrics(
         "FBCSP + MLP embedding + library + photonic scan",
         metrics,
@@ -118,6 +139,7 @@ def run_experience_photonic_line(
             "tile_shape": cfg.tile_shape,
             "tile_evaluations_per_window": int(eval_scan.tile_count_per_window),
             "reject_threshold": reject_threshold,
+            **compact_summary_fields(compute_summary),
         },
     )
     result = ExperiencePhotonicLineResult(
@@ -136,6 +158,8 @@ def run_experience_photonic_line(
         metrics=metrics,
         reject_threshold=reject_threshold,
         tile_count_per_window=eval_scan.tile_count_per_window,
+        compute_summary=compute_summary,
+        compute_events=ledger.to_events(),
         summary=summary,
     )
     if save:
@@ -156,6 +180,10 @@ def save_experience_result(result: ExperiencePhotonicLineResult, output_dir: Pat
                 "calibration_trials_total": int(len(data.split.calibration_replay)),
                 "online_evaluation_trials": int(len(result.eval_labels)),
                 "note": "Calibration windows query the experience library; online metrics exclude them.",
+            },
+            "compute_accounting": {
+                "summary": result.compute_summary,
+                "events_file": "../compute_accounting.json",
             },
             "selected_entries": [
                 {
@@ -263,6 +291,127 @@ def _build_anchor_entries(
     return (mlp_entry, lda_entry)
 
 
+def _account_experience_compute(
+    *,
+    small: SmallNetworkLineResult,
+    data: FBCSPPreparedData,
+    bootstrap_library: tuple[ExperienceEntry, ...],
+    selected: tuple[ExperienceEntry, ...],
+    train_windows: int,
+    calibration_windows: int,
+    eval_windows: int,
+) -> LinearComputeLedger:
+    ledger = LinearComputeLedger(events_from_dicts(small.compute_events))
+    n_classes = len(data.dataset.class_names)
+    embedding_dim = small.train_embeddings.shape[1]
+    add_linear_scores_event(
+        ledger,
+        name="experience anchor MLP head train scores",
+        n_samples=train_windows,
+        n_features=embedding_dim,
+        n_outputs=n_classes,
+        stage="fit",
+    )
+    add_lda_fit_events(
+        ledger,
+        prefix="experience anchor embedding LDA",
+        n_samples=train_windows,
+        n_features=embedding_dim,
+        n_classes=n_classes,
+        stage="fit",
+    )
+    add_linear_scores_event(
+        ledger,
+        name="experience anchor embedding LDA train scores",
+        n_samples=train_windows,
+        n_features=embedding_dim,
+        n_outputs=n_classes,
+        stage="fit",
+    )
+    total_bootstrap_samples = int(
+        sum(len(entry.train_indices) for entry in bootstrap_library)
+    )
+    ledger.add(
+        "experience bootstrap LDA pooled covariance centered.T @ centered",
+        total_bootstrap_samples * embedding_dim * embedding_dim,
+        photonic=True,
+        stage="fit",
+        category="lda_fit_covariance",
+        implementation="simulated_photonic_matmul",
+        details={
+            "entries": int(len(bootstrap_library)),
+            "total_bootstrap_samples": total_bootstrap_samples,
+            "features": int(embedding_dim),
+            "classes": int(n_classes),
+        },
+    )
+    ledger.add(
+        "experience bootstrap LDA weights/bias means @ inv_cov",
+        len(bootstrap_library) * 2 * n_classes * embedding_dim * embedding_dim,
+        photonic=True,
+        stage="fit",
+        category="lda_fit_parameters",
+        implementation="simulated_photonic_matmul",
+        details={
+            "entries": int(len(bootstrap_library)),
+            "features": int(embedding_dim),
+            "classes": int(n_classes),
+            "note": "Aggregated over all bootstrap heads.",
+        },
+    )
+    ledger.add(
+        "experience bootstrap LDA train scores",
+        total_bootstrap_samples * (embedding_dim + 1) * n_classes,
+        photonic=True,
+        stage="fit",
+        category="linear_head_scores",
+        implementation="simulated_photonic_augmented_matmul",
+        details={
+            "entries": int(len(bootstrap_library)),
+            "total_bootstrap_samples": total_bootstrap_samples,
+            "features": int(embedding_dim),
+            "augmented_features": int(embedding_dim) + 1,
+            "classes": int(n_classes),
+            "note": "Bias is counted as an augmented constant-one input channel.",
+        },
+    )
+    add_linear_scores_event(
+        ledger,
+        name="experience selected heads calibration scores",
+        n_samples=calibration_windows * len(selected),
+        n_features=embedding_dim,
+        n_outputs=n_classes,
+        stage="calibration",
+    )
+    add_centroid_retrieval_event(
+        ledger,
+        name="experience calibration-to-library centroid retrieval",
+        n_queries=1,
+        n_centroids=len(bootstrap_library) + 2,
+        n_features=embedding_dim,
+        stage="calibration",
+    )
+    add_candidate_scan_events(
+        ledger,
+        prefix="experience train threshold scan",
+        n_windows=train_windows,
+        n_candidates=len(selected),
+        n_features=embedding_dim,
+        n_classes=n_classes,
+        stage="calibration",
+    )
+    add_candidate_scan_events(
+        ledger,
+        prefix="experience online evaluation scan",
+        n_windows=eval_windows,
+        n_candidates=len(selected),
+        n_features=embedding_dim,
+        n_classes=n_classes,
+        stage="inference",
+    )
+    return ledger
+
+
 def _select_candidates(
     entries: tuple[ExperienceEntry, ...],
     calibration_embeddings: FloatArray,
@@ -274,7 +423,11 @@ def _select_candidates(
         raise ValueError("experience library is empty")
     query = np.asarray(calibration_embeddings, dtype=np.float64).mean(axis=0)
     centroids = np.stack([entry.centroid for entry in entries], axis=0)
-    distances = np.linalg.norm(centroids - query[None, :], axis=1)
+    distances = prototype_distances(
+        query[None, :],
+        centroids,
+        name="experience_mainline_retrieval_centroid_distance",
+    )[0]
     anchor_indices = [
         index for index, entry in enumerate(entries) if entry.entry_id.startswith("anchor_")
     ]

@@ -8,7 +8,10 @@ from typing import Iterable
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy.linalg import eigh
-from scipy.signal import butter, sosfiltfilt
+from scipy.signal import butter
+
+from .backends import covariance_gram, csp_spatial_project
+from .backends import signal_sosfiltfilt
 
 
 FloatArray = NDArray[np.float64]
@@ -42,7 +45,7 @@ class FilterBankCSP:
         self,
         bands: Iterable[tuple[float, float]] = DEFAULT_FILTER_BANK,
         n_components: int = 2,
-        filter_order: int = 4,
+        filter_order: int = 3,
         covariance_shrinkage: float = 0.10,
     ):
         self.bands = tuple((float(low), float(high)) for low, high in bands)
@@ -52,6 +55,8 @@ class FilterBankCSP:
             raise ValueError("n_components must be positive")
         if not 0.0 <= covariance_shrinkage <= 1.0:
             raise ValueError("covariance_shrinkage must be in [0, 1]")
+        if filter_order <= 0:
+            raise ValueError("filter_order must be positive")
         self.n_components = int(n_components)
         self.filter_order = int(filter_order)
         self.covariance_shrinkage = float(covariance_shrinkage)
@@ -131,10 +136,10 @@ class FilterBankCSP:
                 order=self.filter_order,
             )
             for class_index in range(n_classes):
-                spatial = np.einsum(
-                    "fc,nct->nft",
+                spatial = csp_spatial_project(
                     self.filters_[band_index, class_index],
                     band_trials,
+                    name="fbcsp_spatial_projection",
                 )
                 variances = np.var(spatial, axis=2) + 1e-10
                 normalized = variances / variances.sum(axis=1, keepdims=True)
@@ -188,14 +193,22 @@ def _bandpass_trials(
     order: int,
 ) -> FloatArray:
     sos = butter(order, band, btype="bandpass", fs=fs, output="sos")
-    return sosfiltfilt(sos, trials, axis=2)
+    return signal_sosfiltfilt(
+        sos,
+        trials,
+        axis=2,
+        name="fbcsp_filter_bank_sosfiltfilt",
+    )
 
 
 def _trial_covariances(trials: FloatArray) -> FloatArray:
     covariances = np.zeros((trials.shape[0], trials.shape[1], trials.shape[1]), dtype=np.float64)
     for index, trial in enumerate(trials):
         centered = trial - trial.mean(axis=1, keepdims=True)
-        covariance = centered @ centered.T / max(1, centered.shape[1] - 1)
+        covariance = covariance_gram(centered, name="fbcsp_trial_covariance") / max(
+            1,
+            centered.shape[1] - 1,
+        )
         trace = float(np.trace(covariance))
         covariances[index] = covariance / trace if trace > 1e-12 else covariance
     return covariances

@@ -7,6 +7,9 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from .backends import linear_scores as backend_linear_scores
+from .backends import featurewise_affine
+from .backends import matrix_multiply
 from .evaluation import softmax
 
 
@@ -23,8 +26,12 @@ class LinearHead:
     class_names: tuple[str, ...]
 
     def scores(self, features: ArrayLike) -> FloatArray:
-        x = np.asarray(features, dtype=np.float64)
-        return x @ self.weights.T + self.bias
+        return backend_linear_scores(
+            features,
+            self.weights,
+            self.bias,
+            name="linear_head_scores",
+        )
 
     def probabilities(self, features: ArrayLike) -> FloatArray:
         return softmax(self.scores(features))
@@ -47,7 +54,12 @@ class FeatureStandardizer:
     def transform(self, features: ArrayLike) -> FloatArray:
         if self.mean_ is None or self.scale_ is None:
             raise RuntimeError("FeatureStandardizer must be fitted before transform")
-        return (np.asarray(features, dtype=np.float64) - self.mean_) / self.scale_
+        return featurewise_affine(
+            np.asarray(features, dtype=np.float64),
+            scale=1.0 / self.scale_,
+            bias=-self.mean_ / self.scale_,
+            name="feature_standardizer_affine",
+        )
 
     def fit_transform(self, features: ArrayLike) -> FloatArray:
         return self.fit(features).transform(features)
@@ -88,15 +100,20 @@ class ShrinkageLDA:
             means[class_index] = class_x.mean(axis=0)
             priors[class_index] = len(class_x) / len(x)
             centered = class_x - means[class_index]
-            pooled += centered.T @ centered
+            pooled += matrix_multiply(
+                centered.T,
+                centered,
+                name="lda_pooled_covariance",
+            )
             dof += max(0, len(class_x) - 1)
         pooled /= max(1, dof)
         diagonal = np.diag(np.diag(pooled))
         covariance = (1.0 - self.shrinkage) * pooled + self.shrinkage * diagonal
         covariance += np.eye(covariance.shape[0]) * 1e-6
         inv_cov = np.linalg.pinv(covariance)
-        weights = means @ inv_cov
-        bias = -0.5 * np.sum((means @ inv_cov) * means, axis=1) + np.log(priors + 1e-12)
+        weights = matrix_multiply(means, inv_cov, name="lda_weight_projection")
+        bias_projection = matrix_multiply(means, inv_cov, name="lda_bias_projection")
+        bias = -0.5 * np.sum(bias_projection * means, axis=1) + np.log(priors + 1e-12)
         self.head_ = LinearHead(weights=weights, bias=bias, class_names=class_names)
         self.covariance_ = covariance
         return self

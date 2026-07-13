@@ -8,6 +8,10 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 import torch
 from torch import nn
+from scipy.special import erf
+
+from .backends import featurewise_affine
+from .backends import linear_scores as backend_linear_scores
 
 
 FloatArray = NDArray[np.float64]
@@ -124,9 +128,59 @@ def train_small_mlp(
 
 def _forward_numpy(model: FBCSPSmallMLP, features: np.ndarray) -> tuple[FloatArray, FloatArray]:
     model.eval()
-    with torch.no_grad():
-        logits, embeddings = model(torch.from_numpy(features.astype(np.float32)))
-    return (
-        logits.detach().cpu().numpy().astype(np.float64),
-        embeddings.detach().cpu().numpy().astype(np.float64),
+    x = np.asarray(features, dtype=np.float64)
+    layer_norm = model.encoder[0]
+    linear_1 = model.encoder[1]
+    linear_2 = model.encoder[4]
+    classifier = model.classifier
+    hidden = _layer_norm_numpy(
+        x,
+        weight=layer_norm.weight.detach().cpu().numpy(),
+        bias=layer_norm.bias.detach().cpu().numpy(),
+        eps=float(layer_norm.eps),
     )
+    hidden = backend_linear_scores(
+        hidden,
+        linear_1.weight.detach().cpu().numpy(),
+        linear_1.bias.detach().cpu().numpy(),
+        name="small_mlp_encoder_linear_1",
+    )
+    hidden = _gelu_numpy(hidden)
+    embeddings = backend_linear_scores(
+        hidden,
+        linear_2.weight.detach().cpu().numpy(),
+        linear_2.bias.detach().cpu().numpy(),
+        name="small_mlp_encoder_linear_2",
+    )
+    embeddings = _gelu_numpy(embeddings)
+    logits = backend_linear_scores(
+        embeddings,
+        classifier.weight.detach().cpu().numpy(),
+        classifier.bias.detach().cpu().numpy(),
+        name="small_mlp_classifier_linear",
+    )
+    return logits.astype(np.float64), embeddings.astype(np.float64)
+
+
+def _layer_norm_numpy(
+    features: np.ndarray,
+    *,
+    weight: np.ndarray,
+    bias: np.ndarray,
+    eps: float,
+) -> FloatArray:
+    x = np.asarray(features, dtype=np.float64)
+    mean = x.mean(axis=-1, keepdims=True)
+    variance = ((x - mean) ** 2).mean(axis=-1, keepdims=True)
+    normalized = (x - mean) / np.sqrt(variance + eps)
+    return featurewise_affine(
+        normalized,
+        scale=weight.astype(np.float64),
+        bias=bias.astype(np.float64),
+        name="small_mlp_layernorm_affine",
+    )
+
+
+def _gelu_numpy(values: np.ndarray) -> FloatArray:
+    x = np.asarray(values, dtype=np.float64)
+    return 0.5 * x * (1.0 + erf(x / np.sqrt(2.0)))

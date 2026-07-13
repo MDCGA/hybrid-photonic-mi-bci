@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from ..compute_accounting import summarize_lines
 from .common import FBCSPDesignConfig, prepare_fbcsp_data, save_json
 from .experience_photonic_line import ExperiencePhotonicLineResult, run_experience_photonic_line
 from .fbcsp_reference import FBCSPReferenceResult, run_fbcsp_reference
@@ -37,14 +38,35 @@ def run_full_design_comparison(
     )
     summary_rows = [reference.summary, small_network.summary, experience_photonic.summary]
     if save:
+        compute_accounting = summarize_lines(
+            [
+                {
+                    "line": reference.summary["line"],
+                    "summary": reference.compute_summary,
+                    "events": reference.compute_events,
+                },
+                {
+                    "line": small_network.summary["line"],
+                    "summary": small_network.compute_summary,
+                    "events": small_network.compute_events,
+                },
+                {
+                    "line": experience_photonic.summary["line"],
+                    "summary": experience_photonic.compute_summary,
+                    "events": experience_photonic.compute_events,
+                },
+            ]
+        )
         save_json(
             cfg.metrics_path / "summary.json",
             {
                 "dataset": "BCICIV_1_asc",
                 "design": "FBCSP mainline with compact embedding and experience-library candidate scan",
                 "rows": summary_rows,
+                "compute_accounting_file": "compute_accounting.json",
             },
         )
+        save_json(cfg.metrics_path / "compute_accounting.json", compute_accounting)
     return FullDesignComparisonResult(
         reference=reference,
         small_network=small_network,

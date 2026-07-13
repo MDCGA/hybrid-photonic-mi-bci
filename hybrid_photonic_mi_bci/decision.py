@@ -7,6 +7,8 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from .backends import prototype_distances
+
 
 FloatArray = NDArray[np.float64]
 
@@ -71,7 +73,11 @@ class PrototypeDecisionHead:
                     "prototype dimension must match projection dimension, "
                     f"got {self.prototypes.shape[1]} and {z.shape[1]}"
                 )
-            distances = np.linalg.norm(z[:, None, :] - self.prototypes[None, :, :], axis=2)
+            distances = prototype_distances(
+                z,
+                self.prototypes,
+                name="prototype_decision_distances",
+            )
         else:
             if self.prototypes.shape[0] != z.shape[0]:
                 raise ValueError(
@@ -83,7 +89,11 @@ class PrototypeDecisionHead:
                     "prototype dimension must match projection dimension, "
                     f"got {self.prototypes.shape[2]} and {z.shape[1]}"
                 )
-            distances = np.linalg.norm(z[:, None, :] - self.prototypes, axis=2)
+            distances = prototype_distances(
+                z,
+                self.prototypes,
+                name="candidate_prototype_decision_distances",
+            )
         logits = -distances / self.config.temperature
         probabilities = _softmax(logits)
         decisions: list[CandidateDecision] = []

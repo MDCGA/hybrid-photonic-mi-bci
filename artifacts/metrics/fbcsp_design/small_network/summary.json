@@ -3,21 +3,154 @@
   "summary": {
     "line": "FBCSP + small MLP embedding",
     "total": 560,
-    "command_accuracy": 0.7428571428571429,
-    "balanced_command_accuracy": 0.7180922525750112,
-    "accepted_accuracy": 0.7969348659003831,
-    "reject_rate": 0.06785714285714285,
+    "command_accuracy": 0.7232142857142857,
+    "balanced_command_accuracy": 0.7085871025526198,
+    "accepted_accuracy": 0.7818532818532818,
+    "reject_rate": 0.075,
     "raw_fbcsp_dim": 72,
     "selected_features": 32,
     "embedding_dim": 32,
     "mlp_epochs": 220,
-    "reject_threshold": 0.6789994599085493,
+    "reject_threshold": 0.6911548541061165,
     "calibration_trials": 0,
-    "tile_evaluations_per_window": 0
+    "tile_evaluations_per_window": 0,
+    "linear_macs_total": 583725773,
+    "linear_macs_photonic": 583725773,
+    "linear_macs_digital": 0,
+    "photonic_linear_share": 1.0,
+    "linear_macs_inference": 341682320,
+    "photonic_linear_macs_inference": 341682320,
+    "digital_linear_macs_inference": 0,
+    "photonic_linear_share_inference": 1.0
   },
   "history_final": {
-    "loss": 0.0791937644992556,
-    "accuracy": 0.9761904761904762
+    "loss": 0.08213191399616855,
+    "accuracy": 0.9642857142857143
+  },
+  "compute_accounting": {
+    "summary": {
+      "scope": "forward linear MAC-equivalent operations",
+      "forward_stages": [
+        "preprocessing",
+        "calibration",
+        "inference"
+      ],
+      "photonic_rule": "Algorithm-path MatrixOpsBackend matrix products are counted as photonic because the active backend is SimulatedPhotonicMatrixOpsBackend. Forward signal operations routed through SignalOpsBackend are also counted as photonic because the active backend is SimulatedPhotonicSignalOpsBackend. This includes CAR, SOS band-pass filtering, FBCSP/LDA matrix products, feature-standardization affine maps, exported MLP inference Linear and LayerNorm affine layers including bias via augmented constant inputs, candidate-head scans, retrieval fusion, and distance cross terms. Fit and PyTorch training/backprop MACs are reported separately but excluded from the main ratio.",
+      "excluded": [
+        "model fitting and training/backprop stages for the main forward-only ratio",
+        "activation, softmax, thresholding, and non-dot-product distance arithmetic",
+        "variance, logarithm, and other nonlinear feature operations",
+        "matrix decompositions/inversions such as eigh and pinv",
+        "visualization-only PCA/projection matrix products"
+      ],
+      "linear_macs_total": 583725773,
+      "linear_macs_photonic": 583725773,
+      "linear_macs_digital": 0,
+      "photonic_linear_share": 1.0,
+      "linear_macs_all_stages_total": 4515782573,
+      "linear_macs_all_stages_photonic": 1551405773,
+      "linear_macs_all_stages_digital": 2964376800,
+      "photonic_linear_share_all_stages": 0.3435519199431571,
+      "linear_macs_inference": 341682320,
+      "photonic_linear_macs_inference": 341682320,
+      "digital_linear_macs_inference": 0,
+      "photonic_linear_share_inference": 1.0,
+      "linear_macs_fit_or_training_excluded": 3932056800,
+      "photonic_linear_macs_fit_or_training_excluded": 967680000,
+      "digital_linear_macs_fit_or_training_excluded": 2964376800,
+      "linear_macs_offline_or_calibration": 4174100253,
+      "photonic_linear_macs_offline_or_calibration": 1209723453,
+      "photonic_linear_share_offline_or_calibration": 0.2898165783465671,
+      "by_stage": {
+        "preprocessing": {
+          "linear_macs_total": 237551973,
+          "linear_macs_photonic": 237551973,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 2
+        },
+        "fit": {
+          "linear_macs_total": 967680000,
+          "linear_macs_photonic": 967680000,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 4
+        },
+        "training": {
+          "linear_macs_total": 2964376800,
+          "linear_macs_photonic": 0,
+          "linear_macs_digital": 2964376800,
+          "photonic_linear_share": 0.0,
+          "events": 1
+        },
+        "calibration": {
+          "linear_macs_total": 4491480,
+          "linear_macs_photonic": 4491480,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "inference": {
+          "linear_macs_total": 341682320,
+          "linear_macs_photonic": 341682320,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 3
+        }
+      },
+      "by_category": {
+        "bandpass_filter": {
+          "linear_macs_total": 967680000,
+          "linear_macs_photonic": 967680000,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 3
+        },
+        "car_reference": {
+          "linear_macs_total": 236073573,
+          "linear_macs_photonic": 236073573,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "fbcsp_covariance": {
+          "linear_macs_total": 96768000,
+          "linear_macs_photonic": 96768000,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "fbcsp_projection": {
+          "linear_macs_total": 241920000,
+          "linear_macs_photonic": 241920000,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 2
+        },
+        "feature_standardization_affine": {
+          "linear_macs_total": 1478400,
+          "linear_macs_photonic": 1478400,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "mlp_linear_forward": {
+          "linear_macs_total": 7485800,
+          "linear_macs_photonic": 7485800,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 2
+        },
+        "mlp_linear_training": {
+          "linear_macs_total": 2964376800,
+          "linear_macs_photonic": 0,
+          "linear_macs_digital": 2964376800,
+          "photonic_linear_share": 0.0,
+          "events": 1
+        }
+      }
+    },
+    "events_file": "../compute_accounting.json"
   },
   "config": {
     "data_dir": "Dataset\\BCICIV_1_asc",
@@ -71,6 +204,7 @@
         32.0
       ]
     ],
+    "filter_order": 3,
     "n_train_per_subject": 120,
     "calibration_trials_per_subject": 6,
     "csp_components": 2,
@@ -95,36 +229,36 @@
   },
   "metrics": {
     "total": 560,
-    "correct": 416,
-    "rejected": 38,
-    "accepted_accuracy": 0.7969348659003831,
-    "command_accuracy": 0.7428571428571429,
-    "balanced_command_accuracy": 0.7180922525750112,
-    "reject_rate": 0.06785714285714285,
+    "correct": 405,
+    "rejected": 42,
+    "accepted_accuracy": 0.7818532818532818,
+    "command_accuracy": 0.7232142857142857,
+    "balanced_command_accuracy": 0.7085871025526198,
+    "reject_rate": 0.075,
     "confusion": [
       [
-        220,
-        25,
-        14,
-        21
+        207,
+        35,
+        16,
+        22
       ],
       [
-        39,
-        146,
-        4,
-        14
+        38,
+        147,
+        5,
+        13
       ],
       [
-        21,
+        16,
         3,
-        50,
-        3
+        51,
+        7
       ]
     ],
     "per_class_recall": [
-      0.7857142857142857,
-      0.7192118226600985,
-      0.6493506493506493
+      0.7392857142857143,
+      0.7241379310344828,
+      0.6623376623376623
     ]
   }
 }

@@ -44,6 +44,7 @@ class FBCSPDesignConfig:
     channels: tuple[str, ...] = DEFAULT_MOTOR_CHANNELS
     window: tuple[float, float] = DEFAULT_WINDOW
     bands: tuple[tuple[float, float], ...] = DEFAULT_FILTER_BANK
+    filter_order: int = 3
     n_train_per_subject: int = 120
     calibration_trials_per_subject: int = 6
     csp_components: int = 2
@@ -132,6 +133,7 @@ def prepare_fbcsp_data(config: FBCSPDesignConfig) -> FBCSPPreparedData:
     fbcsp = FilterBankCSP(
         bands=config.bands,
         n_components=config.csp_components,
+        filter_order=config.filter_order,
         covariance_shrinkage=config.csp_shrinkage,
     )
     train_set = fbcsp.fit_transform(

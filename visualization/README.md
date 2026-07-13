@@ -23,6 +23,7 @@ visualization/fbcsp_design/
   plot_reference.py
   plot_small_network.py
   plot_experience_photonic.py
+  plot_compute_accounting.py
   plot_summary.py
 ```
 
@@ -32,12 +33,13 @@ Generated figure groups:
 - `reference`: FBCSP + shrinkage LDA diagnostics.
 - `small_network`: compact MLP training and embedding diagnostics.
 - `experience_photonic`: experience retrieval and tiled candidate-scan diagnostics.
+- `compute_accounting`: forward MatrixOps/SignalOps-vs-digital linear MAC split.
 - `summary`: final line comparison.
 
 The older `generate_bciciv_figures.py` script is retained for the legacy
 log-bandpower ablation path only.
 
-For the BNCI2014_004 single-subject personalization test:
+For the BNCI2014_004 three-line comparison:
 
 ```bash
 python visualization/plot_bnci2014_004_personalization.py

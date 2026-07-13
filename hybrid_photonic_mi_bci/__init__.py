@@ -1,11 +1,42 @@
 """Hybrid photonic MI-BCI simulation toolkit.
 
-The package keeps the matrix-vector multiplication path behind a small backend
-interface so the first software baseline can use NumPy while a future photonic
-driver can plug into the same pipeline.
+The package keeps matrix products behind a backend interface. The default
+MatrixOps backend is a simulated photonic handoff that uses NumPy internally for
+deterministic local execution while preserving the future hardware contract.
 """
 
-from .backends import MVMBackend, NumpyMVMBackend, PhotonicMVMBackendStub, TiledMVMBackend
+from .backends import (
+    MVMBackend,
+    MatrixOpsBackend,
+    NumpyMVMBackend,
+    NumpyMatrixOpsBackend,
+    PhotonicMVMBackendStub,
+    PhotonicMatrixOpsBackendStub,
+    PhotonicSignalOpsBackendStub,
+    ScipySignalOpsBackend,
+    SimulatedPhotonicMatrixOpsBackend,
+    SimulatedPhotonicSignalOpsBackend,
+    SignalOpsBackend,
+    TiledMVMBackend,
+    affine_transform,
+    candidate_probability_fusion,
+    common_average_reference,
+    covariance_gram,
+    csp_spatial_project,
+    featurewise_affine,
+    get_matrix_ops_backend,
+    get_signal_ops_backend,
+    linear_scores,
+    matrix_einsum,
+    matrix_multiply,
+    pairwise_squared_distances,
+    prototype_distances,
+    set_matrix_ops_backend,
+    set_signal_ops_backend,
+    signal_sosfiltfilt,
+    use_matrix_ops_backend,
+    use_signal_ops_backend,
+)
 from .calibration import (
     ConfidenceSelector,
     EpsilonGreedyBandit,
@@ -30,10 +61,18 @@ __all__ = [
     "FilterBankCSP",
     "HybridBCIPipeline",
     "LinearHead",
+    "MatrixOpsBackend",
     "MVMBackend",
     "NumpyMVMBackend",
+    "NumpyMatrixOpsBackend",
     "OnlineAdaptationState",
     "PhotonicMVMBackendStub",
+    "PhotonicMatrixOpsBackendStub",
+    "PhotonicSignalOpsBackendStub",
+    "ScipySignalOpsBackend",
+    "SimulatedPhotonicMatrixOpsBackend",
+    "SimulatedPhotonicSignalOpsBackend",
+    "SignalOpsBackend",
     "PipelineBuildConfig",
     "PipelineOutput",
     "ProbabilityFusionSelector",
@@ -43,7 +82,25 @@ __all__ = [
     "ShrinkageLDA",
     "Standardizer",
     "TiledMVMBackend",
+    "affine_transform",
     "build_pipeline_from_features",
+    "candidate_probability_fusion",
+    "common_average_reference",
+    "covariance_gram",
+    "csp_spatial_project",
+    "featurewise_affine",
+    "get_matrix_ops_backend",
+    "get_signal_ops_backend",
+    "linear_scores",
+    "matrix_einsum",
+    "matrix_multiply",
+    "pairwise_squared_distances",
+    "prototype_distances",
     "run_replay",
+    "set_matrix_ops_backend",
+    "set_signal_ops_backend",
+    "signal_sosfiltfilt",
+    "use_matrix_ops_backend",
+    "use_signal_ops_backend",
     "warmup_selector",
 ]

@@ -1,8 +1,9 @@
-"""Plot BNCI2014_004 single-subject personalization results."""
+"""Plot BNCI2014_004 three-line design comparison results."""
 
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 import sys
 
@@ -25,94 +26,114 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     formats = tuple(fmt.strip().lower() for fmt in args.formats.split(",") if fmt.strip())
     output_dir.mkdir(parents=True, exist_ok=True)
+    summary = json.loads((metrics_dir / "summary.json").read_text(encoding="utf-8"))
+    accounting = json.loads((metrics_dir / "compute_accounting.json").read_text(encoding="utf-8"))
     arrays = np.load(metrics_dir / "arrays.npz")
     _set_style()
     generated = []
-    generated.extend(_plot_mean_curves(arrays, output_dir, formats))
-    generated.extend(_plot_subject_pairs(arrays, output_dir, formats, k=args.k))
-    generated.extend(_plot_gain_heatmap(arrays, output_dir, formats))
-    print("Generated BNCI2014_004 personalization figures:")
+    generated.extend(_plot_line_summary(summary["rows"], output_dir, formats))
+    generated.extend(_plot_subject_lines(arrays, output_dir, formats))
+    generated.extend(_plot_compute_accounting(accounting["lines"], output_dir, formats))
+    print("Generated BNCI2014_004 design-comparison figures:")
     for path in generated:
         print(f"- {path}")
 
 
-def _plot_mean_curves(arrays, output_dir: Path, formats: tuple[str, ...]) -> list[Path]:
-    ks = np.unique(arrays["calibration_trials_per_class"])
-    before = []
-    cal = []
-    after = []
-    stderr = []
-    for k in ks:
-        mask = arrays["calibration_trials_per_class"] == k
-        before.append(arrays["before_accuracy"][mask].mean())
-        cal.append(arrays["calibration_only_accuracy"][mask].mean())
-        values = arrays["experience_after_accuracy"][mask]
-        after.append(values.mean())
-        stderr.append(values.std(ddof=1) / np.sqrt(mask.sum()))
-    fig, ax = plt.subplots(figsize=(8.6, 5.2))
-    ax.plot(ks, before, marker="o", lw=2, color="#64748b", label="before personalization")
-    ax.plot(ks, cal, marker="o", lw=2, color="#f97316", label="calibration only")
-    ax.errorbar(
-        ks,
-        after,
-        yerr=stderr,
-        marker="o",
-        lw=2,
-        capsize=4,
-        color="#2563eb",
-        label="experience + calibration",
-    )
-    ax.set_title("BNCI2014_004: mean target-session accuracy")
-    ax.set_xlabel("Calibration trials per class from target session")
-    ax.set_ylabel("Held-out accuracy")
-    ax.set_ylim(0.55, 0.84)
-    ax.legend(loc="lower right")
-    return _save(fig, output_dir, "personalization_mean_curves", formats)
+def _plot_line_summary(rows: list[dict[str, object]], output_dir: Path, formats: tuple[str, ...]) -> list[Path]:
+    labels = [_short_label(str(row["line"])) for row in rows]
+    x = np.arange(len(rows))
+    command = np.asarray([row["command_accuracy"] for row in rows], dtype=float)
+    balanced = np.asarray([row["balanced_command_accuracy"] for row in rows], dtype=float)
+    reject = np.asarray([row["reject_rate"] for row in rows], dtype=float)
+    cmd_std = np.asarray([row["command_accuracy_std"] for row in rows], dtype=float)
+    fig, axes = plt.subplots(1, 2, figsize=(11.4, 4.8), gridspec_kw={"width_ratios": [1.3, 1.0]})
+    width = 0.34
+    axes[0].bar(x - width / 2, command, width=width, color="#2563eb", yerr=cmd_std, capsize=4, label="command")
+    axes[0].bar(x + width / 2, balanced, width=width, color="#0f766e", label="balanced")
+    axes[0].set_xticks(x, labels)
+    axes[0].set_ylim(0.45, 0.90)
+    axes[0].set_ylabel("Held-out accuracy")
+    axes[0].set_title("BNCI2014_004 held-out target accuracy")
+    axes[0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2)
+    for index, value in enumerate(command):
+        axes[0].text(index - width / 2, value + 0.015, f"{value:.3f}", ha="center", va="bottom", fontsize=8)
+    axes[1].bar(x, reject, color="#dc2626", width=0.55)
+    axes[1].set_xticks(x, labels)
+    axes[1].set_ylim(0.0, max(0.12, float(reject.max()) * 1.4))
+    axes[1].set_ylabel("Reject rate")
+    axes[1].set_title("Digital reject output")
+    for index, value in enumerate(reject):
+        axes[1].text(index, value + 0.006, f"{value:.3f}", ha="center", va="bottom", fontsize=8)
+    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    return _save(fig, output_dir, "bnci_design_line_summary", formats)
 
 
-def _plot_subject_pairs(arrays, output_dir: Path, formats: tuple[str, ...], k: int) -> list[Path]:
-    mask = arrays["calibration_trials_per_class"] == k
-    subjects = arrays["subjects"][mask]
-    before = arrays["before_accuracy"][mask]
-    after = arrays["experience_after_accuracy"][mask]
-    fig, ax = plt.subplots(figsize=(9.0, 5.2))
-    x = np.arange(len(subjects))
-    for index in x:
-        color = "#16a34a" if after[index] >= before[index] else "#dc2626"
-        ax.plot([index, index], [before[index], after[index]], color=color, lw=2.4, alpha=0.85)
-    ax.scatter(x, before, color="#64748b", s=52, label="before")
-    ax.scatter(x, after, color="#2563eb", s=58, label="experience after")
-    ax.set_xticks(x, [f"S{int(s)}" for s in subjects])
-    ax.set_ylim(0.45, 0.95)
-    ax.set_title(f"Per-subject before/after at {k} calibration trials/class")
-    ax.set_xlabel("Target subject")
-    ax.set_ylabel("Held-out accuracy")
-    ax.legend(loc="lower right")
-    return _save(fig, output_dir, f"subject_before_after_k{k}", formats)
-
-
-def _plot_gain_heatmap(arrays, output_dir: Path, formats: tuple[str, ...]) -> list[Path]:
+def _plot_subject_lines(arrays: np.lib.npyio.NpzFile, output_dir: Path, formats: tuple[str, ...]) -> list[Path]:
     subjects = np.unique(arrays["subjects"])
-    ks = np.unique(arrays["calibration_trials_per_class"])
-    gain = np.zeros((len(subjects), len(ks)), dtype=np.float64)
-    for row, subject in enumerate(subjects):
-        for col, k in enumerate(ks):
-            mask = (arrays["subjects"] == subject) & (arrays["calibration_trials_per_class"] == k)
-            gain[row, col] = arrays["gain_vs_before"][mask][0]
-    fig, ax = plt.subplots(figsize=(8.8, 5.8))
-    limit = max(0.05, float(np.abs(gain).max()))
-    image = ax.imshow(gain, cmap="RdBu_r", vmin=-limit, vmax=limit, aspect="auto")
-    ax.set_xticks(np.arange(len(ks)), [str(int(k)) for k in ks])
-    ax.set_yticks(np.arange(len(subjects)), [f"S{int(s)}" for s in subjects])
-    ax.set_xlabel("Calibration trials per class")
-    ax.set_ylabel("Target subject")
-    ax.set_title("Experience-library gain vs before personalization")
-    for row in range(gain.shape[0]):
-        for col in range(gain.shape[1]):
-            ax.text(col, row, f"{gain[row, col]:+.2f}", ha="center", va="center", fontsize=8)
-    cbar = plt.colorbar(image, ax=ax, fraction=0.046, pad=0.04)
-    cbar.set_label("Accuracy gain")
-    return _save(fig, output_dir, "personalization_gain_heatmap", formats)
+    lines = list(dict.fromkeys(str(item) for item in arrays["line"]))
+    labels = [_short_label(line) for line in lines]
+    values = np.zeros((len(subjects), len(lines)), dtype=np.float64)
+    for subject_index, subject in enumerate(subjects):
+        for line_index, line in enumerate(lines):
+            mask = (arrays["subjects"] == subject) & (arrays["line"] == line)
+            values[subject_index, line_index] = arrays["command_accuracy"][mask][0]
+    fig, ax = plt.subplots(figsize=(11.2, 5.2))
+    x = np.arange(len(subjects))
+    width = 0.22
+    colors = ("#64748b", "#2563eb", "#7c3aed")
+    for line_index, label in enumerate(labels):
+        offset = (line_index - (len(lines) - 1) / 2) * width
+        ax.bar(x + offset, values[:, line_index], width=width, color=colors[line_index], label=label)
+    ax.set_xticks(x, [f"S{int(subject)}" for subject in subjects])
+    ax.set_ylim(0.35, 1.0)
+    ax.set_xlabel("Target subject")
+    ax.set_ylabel("Command accuracy")
+    ax.set_title("Per-subject comparison on the same held-out target windows")
+    ax.legend(loc="lower right")
+    fig.tight_layout()
+    return _save(fig, output_dir, "bnci_subject_line_comparison", formats)
+
+
+def _plot_compute_accounting(lines: list[dict[str, object]], output_dir: Path, formats: tuple[str, ...]) -> list[Path]:
+    labels = [_short_label(str(line["line"])) for line in lines]
+    photonic = np.asarray([line["summary"]["linear_macs_photonic"] for line in lines], dtype=float)
+    digital = np.asarray([line["summary"]["linear_macs_digital"] for line in lines], dtype=float)
+    total_share = np.asarray([line["summary"]["photonic_linear_share"] for line in lines], dtype=float)
+    inference_share = np.asarray([line["summary"]["photonic_linear_share_inference"] for line in lines], dtype=float)
+    fig, axes = plt.subplots(1, 2, figsize=(11.8, 4.8), gridspec_kw={"width_ratios": [1.2, 1.0]})
+    x = np.arange(len(lines))
+    scale = 1e9
+    axes[0].bar(x, photonic / scale, color="#2563eb", label="MatrixOps + SignalOps photonic")
+    axes[0].bar(x, digital / scale, bottom=photonic / scale, color="#f97316", label="Digital linear compute")
+    axes[0].set_xticks(x, labels)
+    axes[0].set_ylabel("Linear compute (GMAC)")
+    axes[0].set_title("Forward linear compute")
+    axes[0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2)
+    for index, value in enumerate((photonic + digital) / scale):
+        axes[0].text(index, value, f"{value:.2f}", ha="center", va="bottom", fontsize=8)
+    width = 0.34
+    axes[1].bar(x - width / 2, total_share, width=width, color="#0f766e", label="forward")
+    axes[1].bar(x + width / 2, inference_share, width=width, color="#7c3aed", label="online inference")
+    axes[1].set_xticks(x, labels)
+    axes[1].set_ylim(0.0, 1.05)
+    axes[1].set_ylabel("Photonic share")
+    axes[1].set_title("Photonic share")
+    axes[1].legend(loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2)
+    for xpos, values in ((x - width / 2, total_share), (x + width / 2, inference_share)):
+        for xi, value in zip(xpos, values):
+            axes[1].text(xi, value + 0.025, f"{value:.2f}", ha="center", va="bottom", fontsize=8)
+    fig.tight_layout(rect=(0, 0.08, 1, 1))
+    return _save(fig, output_dir, "bnci_compute_accounting_summary", formats)
+
+
+def _short_label(label: str) -> str:
+    if "library" in label:
+        return "Mainline"
+    if "MLP" in label:
+        return "FBCSP+MLP"
+    if "LDA" in label:
+        return "FBCSP+LDA"
+    return label
 
 
 def _set_style() -> None:
@@ -145,7 +166,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--metrics-dir", default="artifacts/metrics/bnci2014_004_personalization")
     parser.add_argument("--output-dir", default="artifacts/figures/bnci2014_004_personalization")
     parser.add_argument("--formats", default="png,pdf")
-    parser.add_argument("--k", type=int, default=8)
     return parser.parse_args()
 
 

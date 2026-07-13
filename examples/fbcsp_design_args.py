@@ -19,6 +19,7 @@ def add_design_arguments(parser: argparse.ArgumentParser) -> argparse.ArgumentPa
     parser.add_argument("--window-end", type=float, default=DEFAULT_WINDOW[1])
     parser.add_argument("--n-train-per-subject", type=int, default=120)
     parser.add_argument("--calibration-trials-per-subject", type=int, default=6)
+    parser.add_argument("--filter-order", type=int, default=3)
     parser.add_argument("--csp-components", type=int, default=2)
     parser.add_argument("--csp-shrinkage", type=float, default=0.10)
     parser.add_argument("--selected-features", type=int, default=32)
@@ -49,6 +50,7 @@ def config_from_args(args: argparse.Namespace) -> FBCSPDesignConfig:
         bands=DEFAULT_FILTER_BANK,
         n_train_per_subject=args.n_train_per_subject,
         calibration_trials_per_subject=args.calibration_trials_per_subject,
+        filter_order=args.filter_order,
         csp_components=args.csp_components,
         csp_shrinkage=args.csp_shrinkage,
         selected_features=args.selected_features,
@@ -70,7 +72,10 @@ def config_from_args(args: argparse.Namespace) -> FBCSPDesignConfig:
 
 def print_summary_rows(rows: list[dict[str, object]]) -> None:
     print("\nFBCSP design comparison")
-    print("line | total | command | balanced | accepted | reject | tiles/window")
+    print(
+        "line | total | command | balanced | accepted | reject | tiles/window | "
+        "photonic share | inference share"
+    )
     for row in rows:
         print(
             f"{row['line']} | {row['total']} | "
@@ -78,5 +83,7 @@ def print_summary_rows(rows: list[dict[str, object]]) -> None:
             f"{row['balanced_command_accuracy']:.3f} | "
             f"{row['accepted_accuracy']:.3f} | "
             f"{row['reject_rate']:.3f} | "
-            f"{row.get('tile_evaluations_per_window', 0)}"
+            f"{row.get('tile_evaluations_per_window', 0)} | "
+            f"{row.get('photonic_linear_share', 0.0):.3f} | "
+            f"{row.get('photonic_linear_share_inference', 0.0):.3f}"
         )

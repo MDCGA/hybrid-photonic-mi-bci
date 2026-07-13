@@ -50,17 +50,28 @@ def plot(metrics_dir: Path, output_dir: Path, formats: tuple[str, ...] = ("png",
     saved.extend(save_figure(fig, output_dir, "experience_photonic_scan_diagnostics", formats))
 
     fig2, ax = plt.subplots(figsize=(9.0, 4.8))
-    total_tiles = summary["summary"]["tile_evaluations_per_window"]
-    values = [summary["summary"]["top_k"], 2, 4, total_tiles]
-    names = ["Candidates K", "row tiles\nceil(3/2)", "col tiles\nceil(32/8)", "tile evals\nper window"]
+    row = summary["summary"]
+    total_tiles = row["tile_evaluations_per_window"]
+    tile_rows, tile_cols = row["tile_shape"]
+    class_count = int(arrays["eval_candidate_scores"].shape[2])
+    augmented_dim = int(row["embedding_dim"]) + 1
+    row_tiles = int(np.ceil(class_count / tile_rows))
+    col_tiles = int(np.ceil(augmented_dim / tile_cols))
+    values = [row["top_k"], row_tiles, col_tiles, total_tiles]
+    names = [
+        "Candidates K",
+        f"row tiles\nceil({class_count}/{tile_rows})",
+        f"col tiles\nceil({augmented_dim}/{tile_cols})",
+        "tile evals\nper window",
+    ]
     bars = ax.bar(names, values, color=["#2563eb", "#16a34a", "#16a34a", "#dc2626"])
     ax.set_title("2 x 8 photonic tile schedule for scanned linear heads")
     ax.set_ylabel("Count")
     ax.text(
         0.02,
         0.92,
-        "Each candidate head computes A_i h with A_i in R^(3 x 32).\n"
-        "A 2 x 8 primitive scans row and column blocks, then accumulates partial sums digitally.",
+        f"Each candidate head computes A_i [h, 1] with A_i in R^({class_count} x {augmented_dim}).\n"
+        f"A {tile_rows} x {tile_cols} primitive scans row and column blocks; bias uses the constant input.",
         transform=ax.transAxes,
         ha="left",
         va="top",

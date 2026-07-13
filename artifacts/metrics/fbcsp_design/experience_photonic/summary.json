@@ -3,10 +3,10 @@
   "summary": {
     "line": "FBCSP + MLP embedding + library + photonic scan",
     "total": 518,
-    "command_accuracy": 0.750965250965251,
-    "balanced_command_accuracy": 0.7287533414356216,
-    "accepted_accuracy": 0.7826961770623743,
-    "reject_rate": 0.04054054054054054,
+    "command_accuracy": 0.7297297297297297,
+    "balanced_command_accuracy": 0.7241854252459644,
+    "accepted_accuracy": 0.7667342799188641,
+    "reject_rate": 0.04826254826254826,
     "raw_fbcsp_dim": 72,
     "selected_features": 32,
     "embedding_dim": 32,
@@ -18,8 +18,16 @@
       2,
       8
     ],
-    "tile_evaluations_per_window": 64,
-    "reject_threshold": 0.5580804574571339
+    "tile_evaluations_per_window": 80,
+    "reject_threshold": 0.5701215392875251,
+    "linear_macs_total": 584869277,
+    "linear_macs_photonic": 584869277,
+    "linear_macs_digital": 0,
+    "photonic_linear_share": 1.0,
+    "linear_macs_inference": 342105008,
+    "photonic_linear_macs_inference": 342105008,
+    "digital_linear_macs_inference": 0,
+    "photonic_linear_share_inference": 1.0
   },
   "calibration_protocol": {
     "calibration_trials_per_subject": 6,
@@ -27,117 +35,284 @@
     "online_evaluation_trials": 518,
     "note": "Calibration windows query the experience library; online metrics exclude them."
   },
+  "compute_accounting": {
+    "summary": {
+      "scope": "forward linear MAC-equivalent operations",
+      "forward_stages": [
+        "preprocessing",
+        "calibration",
+        "inference"
+      ],
+      "photonic_rule": "Algorithm-path MatrixOpsBackend matrix products are counted as photonic because the active backend is SimulatedPhotonicMatrixOpsBackend. Forward signal operations routed through SignalOpsBackend are also counted as photonic because the active backend is SimulatedPhotonicSignalOpsBackend. This includes CAR, SOS band-pass filtering, FBCSP/LDA matrix products, feature-standardization affine maps, exported MLP inference Linear and LayerNorm affine layers including bias via augmented constant inputs, candidate-head scans, retrieval fusion, and distance cross terms. Fit and PyTorch training/backprop MACs are reported separately but excluded from the main ratio.",
+      "excluded": [
+        "model fitting and training/backprop stages for the main forward-only ratio",
+        "activation, softmax, thresholding, and non-dot-product distance arithmetic",
+        "variance, logarithm, and other nonlinear feature operations",
+        "matrix decompositions/inversions such as eigh and pinv",
+        "visualization-only PCA/projection matrix products"
+      ],
+      "linear_macs_total": 584869277,
+      "linear_macs_photonic": 584869277,
+      "linear_macs_digital": 0,
+      "photonic_linear_share": 1.0,
+      "linear_macs_all_stages_total": 4563559405,
+      "linear_macs_all_stages_photonic": 1599182605,
+      "linear_macs_all_stages_digital": 2964376800,
+      "photonic_linear_share_all_stages": 0.3504244084667503,
+      "linear_macs_inference": 342105008,
+      "photonic_linear_macs_inference": 342105008,
+      "digital_linear_macs_inference": 0,
+      "photonic_linear_share_inference": 1.0,
+      "linear_macs_fit_or_training_excluded": 3978690128,
+      "photonic_linear_macs_fit_or_training_excluded": 1014313328,
+      "digital_linear_macs_fit_or_training_excluded": 2964376800,
+      "linear_macs_offline_or_calibration": 4221454397,
+      "photonic_linear_macs_offline_or_calibration": 1257077597,
+      "photonic_linear_share_offline_or_calibration": 0.2977830573968415,
+      "by_stage": {
+        "preprocessing": {
+          "linear_macs_total": 237551973,
+          "linear_macs_photonic": 237551973,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 2
+        },
+        "fit": {
+          "linear_macs_total": 1014313328,
+          "linear_macs_photonic": 1014313328,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 11
+        },
+        "training": {
+          "linear_macs_total": 2964376800,
+          "linear_macs_photonic": 0,
+          "linear_macs_digital": 2964376800,
+          "photonic_linear_share": 0.0,
+          "events": 1
+        },
+        "calibration": {
+          "linear_macs_total": 5212296,
+          "linear_macs_photonic": 5212296,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 5
+        },
+        "inference": {
+          "linear_macs_total": 342105008,
+          "linear_macs_photonic": 342105008,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 5
+        }
+      },
+      "by_category": {
+        "bandpass_filter": {
+          "linear_macs_total": 967680000,
+          "linear_macs_photonic": 967680000,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 3
+        },
+        "candidate_head_scan": {
+          "linear_macs_total": 1075536,
+          "linear_macs_photonic": 1075536,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 2
+        },
+        "car_reference": {
+          "linear_macs_total": 236073573,
+          "linear_macs_photonic": 236073573,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "experience_fusion": {
+          "linear_macs_total": 32592,
+          "linear_macs_photonic": 32592,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 2
+        },
+        "experience_retrieval_distance": {
+          "linear_macs_total": 2112,
+          "linear_macs_photonic": 2112,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "fbcsp_covariance": {
+          "linear_macs_total": 96768000,
+          "linear_macs_photonic": 96768000,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "fbcsp_projection": {
+          "linear_macs_total": 241920000,
+          "linear_macs_photonic": 241920000,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 2
+        },
+        "feature_standardization_affine": {
+          "linear_macs_total": 1478400,
+          "linear_macs_photonic": 1478400,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 1
+        },
+        "lda_fit_covariance": {
+          "linear_macs_total": 42082304,
+          "linear_macs_photonic": 42082304,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 2
+        },
+        "lda_fit_parameters": {
+          "linear_macs_total": 399360,
+          "linear_macs_photonic": 399360,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 2
+        },
+        "linear_head_scores": {
+          "linear_macs_total": 4184928,
+          "linear_macs_photonic": 4184928,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 4
+        },
+        "mlp_linear_forward": {
+          "linear_macs_total": 7485800,
+          "linear_macs_photonic": 7485800,
+          "linear_macs_digital": 0,
+          "photonic_linear_share": 1.0,
+          "events": 2
+        },
+        "mlp_linear_training": {
+          "linear_macs_total": 2964376800,
+          "linear_macs_photonic": 0,
+          "linear_macs_digital": 2964376800,
+          "photonic_linear_share": 0.0,
+          "events": 1
+        }
+      }
+    },
+    "events_file": "../compute_accounting.json"
+  },
   "selected_entries": [
     {
       "entry_id": "anchor_mlp_classifier",
       "source": "small_network_classifier",
-      "train_accuracy": 0.9952380952380953,
-      "calibration_accuracy": 0.7857142857142857,
-      "calibration_confidence": 0.8002756357331745,
-      "weight": 0.45471932077843163,
-      "distance": 1.4357367614421328
+      "train_accuracy": 0.9928571428571429,
+      "calibration_accuracy": 0.8095238095238095,
+      "calibration_confidence": 0.8006679652652525,
+      "weight": 0.4858670554548395,
+      "distance": 1.7538534915052566
     },
     {
       "entry_id": "anchor_embedding_lda",
       "source": "global_embedding_lda",
-      "train_accuracy": 0.9571428571428572,
-      "calibration_accuracy": 0.8333333333333334,
-      "calibration_confidence": 0.8045797103371664,
-      "weight": 0.5108715060852149,
-      "distance": 1.4357367614421328
-    },
-    {
-      "entry_id": "bootstrap_057",
-      "source": "bootstrap",
-      "train_accuracy": 0.9427662957074722,
-      "calibration_accuracy": 0.8333333333333334,
-      "calibration_confidence": 0.8051600477818546,
-      "weight": 0.006471127040929683,
-      "distance": 1.0807047760464075
+      "train_accuracy": 0.9702380952380952,
+      "calibration_accuracy": 0.8095238095238095,
+      "calibration_confidence": 0.8074284346850281,
+      "weight": 0.47931163795867454,
+      "distance": 1.7538534915052566
     },
     {
       "entry_id": "bootstrap_047",
       "source": "bootstrap",
-      "train_accuracy": 0.9507154213036566,
+      "train_accuracy": 0.9713831478537361,
       "calibration_accuracy": 0.8333333333333334,
-      "calibration_confidence": 0.8043511909183766,
-      "weight": 0.006342319871801253,
-      "distance": 1.094902799375579
-    },
-    {
-      "entry_id": "bootstrap_043",
-      "source": "bootstrap",
-      "train_accuracy": 0.9554848966613673,
-      "calibration_accuracy": 0.8095238095238095,
-      "calibration_confidence": 0.7961033541060751,
-      "weight": 0.005889547891838603,
-      "distance": 1.0960590809991273
+      "calibration_confidence": 0.8117838292895561,
+      "weight": 0.006780893117076626,
+      "distance": 1.371967060332553
     },
     {
       "entry_id": "bootstrap_027",
       "source": "bootstrap",
-      "train_accuracy": 0.9507154213036566,
-      "calibration_accuracy": 0.8333333333333334,
-      "calibration_confidence": 0.8061997736809249,
-      "weight": 0.006070239864619266,
-      "distance": 1.1196720911306806
+      "train_accuracy": 0.9666136724960255,
+      "calibration_accuracy": 0.8571428571428571,
+      "calibration_confidence": 0.8183282932657663,
+      "weight": 0.006843180236957457,
+      "distance": 1.4074376992080941
     },
     {
-      "entry_id": "bootstrap_023",
+      "entry_id": "bootstrap_057",
       "source": "bootstrap",
-      "train_accuracy": 0.9554848966613673,
-      "calibration_accuracy": 0.8095238095238095,
-      "calibration_confidence": 0.8086783552700767,
-      "weight": 0.004842909805538503,
-      "distance": 1.207787821933027
+      "train_accuracy": 0.9666136724960255,
+      "calibration_accuracy": 0.8333333333333334,
+      "calibration_confidence": 0.8229765126511739,
+      "weight": 0.006273480039176987,
+      "distance": 1.417634158943826
+    },
+    {
+      "entry_id": "bootstrap_043",
+      "source": "bootstrap",
+      "train_accuracy": 0.9666136724960255,
+      "calibration_accuracy": 0.7857142857142857,
+      "calibration_confidence": 0.7830202825116478,
+      "weight": 0.005276938628823187,
+      "distance": 1.4234428377696875
     },
     {
       "entry_id": "bootstrap_035",
       "source": "bootstrap",
-      "train_accuracy": 0.9570747217806042,
+      "train_accuracy": 0.9713831478537361,
       "calibration_accuracy": 0.8095238095238095,
-      "calibration_confidence": 0.8080907839898882,
-      "weight": 0.00479302866162608,
-      "distance": 1.2140128567359392
+      "calibration_confidence": 0.7948035767975741,
+      "weight": 0.004816697921644628,
+      "distance": 1.521965701766073
+    },
+    {
+      "entry_id": "bootstrap_022",
+      "source": "bootstrap",
+      "train_accuracy": 0.9761526232114467,
+      "calibration_accuracy": 0.8095238095238095,
+      "calibration_confidence": 0.8011245403978963,
+      "weight": 0.004830116642806965,
+      "distance": 1.5242294527134532
     }
   ],
   "library": {
     "entries": 66,
-    "train_accuracy_mean": 0.9582080170315465,
-    "train_accuracy_std": 0.009677837959816683
+    "train_accuracy_mean": 0.9720524860230744,
+    "train_accuracy_std": 0.006526511817630504
   },
   "metrics": {
     "total": 518,
-    "correct": 389,
-    "rejected": 21,
-    "accepted_accuracy": 0.7826961770623743,
-    "command_accuracy": 0.750965250965251,
-    "balanced_command_accuracy": 0.7287533414356216,
-    "reject_rate": 0.04054054054054054,
+    "correct": 378,
+    "rejected": 25,
+    "accepted_accuracy": 0.7667342799188641,
+    "command_accuracy": 0.7297297297297297,
+    "balanced_command_accuracy": 0.7241854252459644,
+    "reject_rate": 0.04826254826254826,
     "confusion": [
       [
-        212,
-        23,
-        17,
-        7
-      ],
-      [
-        45,
-        127,
-        2,
+        193,
+        35,
+        19,
         12
       ],
       [
-        18,
-        3,
-        50,
-        2
+        41,
+        133,
+        2,
+        10
+      ],
+      [
+        13,
+        5,
+        52,
+        3
       ]
     ],
     "per_class_recall": [
-      0.8185328185328186,
-      0.6827956989247311,
-      0.684931506849315
+      0.7451737451737451,
+      0.7150537634408602,
+      0.7123287671232876
     ]
   }
 }

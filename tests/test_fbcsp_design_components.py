@@ -2,6 +2,16 @@ import unittest
 
 import numpy as np
 
+from hybrid_photonic_mi_bci.backends import (
+    MatrixOpsBackend,
+    SignalOpsBackend,
+    SimulatedPhotonicMatrixOpsBackend,
+    SimulatedPhotonicSignalOpsBackend,
+    get_matrix_ops_backend,
+    get_signal_ops_backend,
+    use_matrix_ops_backend,
+    use_signal_ops_backend,
+)
 from hybrid_photonic_mi_bci.backends import TiledMVMBackend
 from hybrid_photonic_mi_bci.datasets.bnci2014_004 import calibration_eval_split
 from hybrid_photonic_mi_bci.experience import (
@@ -11,10 +21,15 @@ from hybrid_photonic_mi_bci.experience import (
 )
 from hybrid_photonic_mi_bci.fbcsp import FilterBankCSP
 from hybrid_photonic_mi_bci.linear_models import FeatureStandardizer, ShrinkageLDA
+from hybrid_photonic_mi_bci.decision import DecisionConfig, PrototypeDecisionHead
 from hybrid_photonic_mi_bci.workflows.common import make_replay_split
 
 
 class FBCSPDesignComponentsTest(unittest.TestCase):
+    def test_default_matrix_ops_backend_is_photonic_handoff(self) -> None:
+        self.assertIsInstance(get_matrix_ops_backend(), SimulatedPhotonicMatrixOpsBackend)
+        self.assertIsInstance(get_signal_ops_backend(), SimulatedPhotonicSignalOpsBackend)
+
     def test_fbcsp_returns_expected_multiclass_filter_bank_shape(self) -> None:
         rng = np.random.default_rng(5)
         fs = 100.0
@@ -100,6 +115,94 @@ class FBCSPDesignComponentsTest(unittest.TestCase):
         self.assertEqual(len(evaluation), 14)
         self.assertEqual(int((labels[calibration] == 0).sum()), 3)
         self.assertEqual(int((labels[calibration] == 1).sum()), 3)
+
+    def test_matrix_ops_backend_receives_algorithm_matrix_products(self) -> None:
+        class RecordingBackend(MatrixOpsBackend):
+            def __init__(self) -> None:
+                self.names: list[str] = []
+
+            def matmul(self, left, right, *, name: str = "matmul"):
+                self.names.append(name)
+                return np.asarray(left, dtype=np.float64) @ np.asarray(right, dtype=np.float64)
+
+            def einsum(self, subscripts: str, *operands, name: str = "einsum"):
+                self.names.append(name)
+                arrays = [np.asarray(operand, dtype=np.float64) for operand in operands]
+                return np.einsum(subscripts, *arrays)
+
+        rng = np.random.default_rng(23)
+        labels = np.repeat(np.arange(2), 8)
+        trials = rng.normal(size=(len(labels), 3, 96))
+        backend = RecordingBackend()
+
+        with use_matrix_ops_backend(backend):
+            fbcsp = FilterBankCSP(
+                bands=((8.0, 12.0),),
+                n_components=1,
+                covariance_shrinkage=0.10,
+            )
+            features = fbcsp.fit_transform(trials, labels, 100.0, ("left", "right"))
+            standardizer = FeatureStandardizer()
+            standardized = standardizer.fit_transform(features.vector)
+            lda = ShrinkageLDA(shrinkage=0.20).fit(
+                standardized,
+                labels,
+                class_names=("left", "right"),
+            )
+            _scores = lda.scores(standardized[:3])
+            head = PrototypeDecisionHead(
+                prototypes=np.eye(2, dtype=np.float64),
+                config=DecisionConfig(class_names=("left", "right")),
+            )
+            _decisions = head.decide_all(np.array([[0.8, 0.2]], dtype=np.float64))
+
+        self.assertIn("fbcsp_trial_covariance", backend.names)
+        self.assertIn("fbcsp_spatial_projection", backend.names)
+        self.assertIn("feature_standardizer_affine", backend.names)
+        self.assertIn("lda_pooled_covariance", backend.names)
+        self.assertIn("linear_head_scores", backend.names)
+        self.assertIn("prototype_decision_distances_shared_cross", backend.names)
+
+    def test_signal_ops_backend_receives_fbcsp_filtering(self) -> None:
+        class RecordingSignalBackend(SignalOpsBackend):
+            def __init__(self) -> None:
+                self.names: list[str] = []
+
+            def common_average_reference(
+                self,
+                samples,
+                *,
+                channel_axis: int,
+                name: str = "common_average_reference",
+            ):
+                self.names.append(name)
+                x = np.asarray(samples, dtype=np.float64)
+                return x - x.mean(axis=channel_axis, keepdims=True)
+
+            def sosfiltfilt(self, sos, samples, *, axis: int, name: str = "sosfiltfilt"):
+                self.names.append(name)
+                from scipy.signal import sosfiltfilt
+
+                return sosfiltfilt(
+                    np.asarray(sos, dtype=np.float64),
+                    np.asarray(samples, dtype=np.float64),
+                    axis=axis,
+                )
+
+        rng = np.random.default_rng(31)
+        labels = np.repeat(np.arange(2), 8)
+        trials = rng.normal(size=(len(labels), 3, 128))
+        backend = RecordingSignalBackend()
+
+        with use_signal_ops_backend(backend):
+            fbcsp = FilterBankCSP(
+                bands=((8.0, 12.0),),
+                n_components=1,
+                covariance_shrinkage=0.10,
+            )
+            _features = fbcsp.fit_transform(trials, labels, 100.0, ("left", "right"))
+
+        self.assertIn("fbcsp_filter_bank_sosfiltfilt", backend.names)
 
 
 if __name__ == "__main__":
