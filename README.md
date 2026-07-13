@@ -223,6 +223,45 @@ Default results saved in `artifacts/metrics/fbcsp_design/summary.json`:
 The mainline excludes the 42 calibration-query windows from its online
 evaluation.
 
+## Experience-Library Personalization Test
+
+To directly test whether the experience library helps a single target subject
+specialize, use `BNCI2014_004 / BCI Competition IV 2b`. This dataset has 9
+subjects, 5 sessions per subject, and 3 motor-area EEG channels (`C3`, `Cz`,
+`C4`) for left/right hand MI.
+
+The implemented protocol uses only labeled `T` sessions:
+
+```text
+for each target subject:
+  sessions 1-2 -> subject history / experience library
+  session 3    -> target new session
+    first k trials/class -> target calibration
+    remaining trials     -> held-out evaluation
+```
+
+Run:
+
+```bash
+python examples/run_bnci2014_004_personalization.py
+python visualization/plot_bnci2014_004_personalization.py
+```
+
+Default mean results across 9 subjects:
+
+| k trials/class | Before personalization | Calibration only | Experience + calibration | Mean gain vs before | Improved subjects |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 2 | 0.756 | 0.614 | 0.766 | +0.011 | 6/9 |
+| 4 | 0.756 | 0.703 | 0.764 | +0.008 | 6/9 |
+| 8 | 0.755 | 0.738 | 0.773 | +0.018 | 9/9 |
+| 12 | 0.763 | 0.750 | 0.779 | +0.016 | 7/9 |
+| 16 | 0.761 | 0.760 | 0.775 | +0.014 | 6/9 |
+
+This is the first direct evidence in the repository that the experience-library
+mechanism can improve held-out performance after a small amount of target-session
+calibration. The current test is binary MI, so it validates personalization
+behavior before returning to the four-output `left/right/foot/reject` system.
+
 ## Cyton Host Application
 
 The host-app layer is separate from the offline BCICIV workflows. It is the

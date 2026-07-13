@@ -7,6 +7,7 @@ __pycache__/
 # Keep raw datasets local. They are large and should be downloaded/extracted
 # separately according to Dataset/README.md.
 Dataset/BCICIV_1_asc/
+Dataset/BNCI2014_004/
 Dataset/*.zip
 
 # Keep generated figures, but ignore transient scratch outputs if added later.

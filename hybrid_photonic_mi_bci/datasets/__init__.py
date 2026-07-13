@@ -16,6 +16,11 @@ from .bciciv_1_asc import (
     load_subject_features,
     load_subject_trials,
 )
+from .bnci2014_004 import (
+    BNCI2014_004Session,
+    calibration_eval_split,
+    load_subject_history_and_target,
+)
 
 __all__ = [
     "BCICIVFeatures",
@@ -32,4 +37,7 @@ __all__ = [
     "load_pooled_subject_trials",
     "load_subject_features",
     "load_subject_trials",
+    "BNCI2014_004Session",
+    "calibration_eval_split",
+    "load_subject_history_and_target",
 ]

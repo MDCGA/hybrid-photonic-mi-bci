@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 
 from hybrid_photonic_mi_bci.backends import TiledMVMBackend
+from hybrid_photonic_mi_bci.datasets.bnci2014_004 import calibration_eval_split
 from hybrid_photonic_mi_bci.experience import (
     build_bootstrap_experience_library,
     retrieve_top_k,
@@ -89,6 +90,16 @@ class FBCSPDesignComponentsTest(unittest.TestCase):
         self.assertEqual(len(split.calibration_replay), 42)
         self.assertEqual(len(split.evaluation_replay), 518)
         self.assertEqual(split.replay_per_subject, 80)
+
+    def test_bnci004_calibration_split_is_class_balanced(self) -> None:
+        labels = np.array([0, 1] * 10, dtype=int)
+
+        calibration, evaluation = calibration_eval_split(labels, trials_per_class=3)
+
+        self.assertEqual(len(calibration), 6)
+        self.assertEqual(len(evaluation), 14)
+        self.assertEqual(int((labels[calibration] == 0).sum()), 3)
+        self.assertEqual(int((labels[calibration] == 1).sum()), 3)
 
 
 if __name__ == "__main__":

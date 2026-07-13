@@ -1,0 +1,59 @@
+{
+  "summary": [
+    {
+      "calibration_trials_per_class": 2,
+      "subjects": 9,
+      "before_mean": 0.7556980056980057,
+      "calibration_only_mean": 0.613960113960114,
+      "experience_after_mean": 0.7663817663817664,
+      "gain_vs_before_mean": 0.010683760683760682,
+      "gain_vs_calibration_only_mean": 0.15242165242165243,
+      "subjects_improved_vs_before": 6,
+      "subjects_improved_vs_calibration_only": 9
+    },
+    {
+      "calibration_trials_per_class": 4,
+      "subjects": 9,
+      "before_mean": 0.7558479532163742,
+      "calibration_only_mean": 0.7032163742690059,
+      "experience_after_mean": 0.7638888888888888,
+      "gain_vs_before_mean": 0.008040935672514602,
+      "gain_vs_calibration_only_mean": 0.060672514619883024,
+      "subjects_improved_vs_before": 6,
+      "subjects_improved_vs_calibration_only": 8
+    },
+    {
+      "calibration_trials_per_class": 8,
+      "subjects": 9,
+      "before_mean": 0.7554012345679012,
+      "calibration_only_mean": 0.7384259259259259,
+      "experience_after_mean": 0.773148148148148,
+      "gain_vs_before_mean": 0.0177469135802469,
+      "gain_vs_calibration_only_mean": 0.03472222222222221,
+      "subjects_improved_vs_before": 9,
+      "subjects_improved_vs_calibration_only": 5
+    },
+    {
+      "calibration_trials_per_class": 12,
+      "subjects": 9,
+      "before_mean": 0.7630718954248366,
+      "calibration_only_mean": 0.7499999999999999,
+      "experience_after_mean": 0.7794117647058824,
+      "gain_vs_before_mean": 0.016339869281045756,
+      "gain_vs_calibration_only_mean": 0.02941176470588236,
+      "subjects_improved_vs_before": 7,
+      "subjects_improved_vs_calibration_only": 5
+    },
+    {
+      "calibration_trials_per_class": 16,
+      "subjects": 9,
+      "before_mean": 0.7612847222222222,
+      "calibration_only_mean": 0.7595486111111112,
+      "experience_after_mean": 0.7751736111111112,
+      "gain_vs_before_mean": 0.013888888888888888,
+      "gain_vs_calibration_only_mean": 0.015625,
+      "subjects_improved_vs_before": 6,
+      "subjects_improved_vs_calibration_only": 6
+    }
+  ]
+}

@@ -36,3 +36,15 @@ Generated figure groups:
 
 The older `generate_bciciv_figures.py` script is retained for the legacy
 log-bandpower ablation path only.
+
+For the BNCI2014_004 single-subject personalization test:
+
+```bash
+python visualization/plot_bnci2014_004_personalization.py
+```
+
+Default output:
+
+```text
+artifacts/figures/bnci2014_004_personalization/
+```
