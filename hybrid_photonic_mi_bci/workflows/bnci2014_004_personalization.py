@@ -34,6 +34,7 @@ from ..evaluation import softmax
 from ..experience import ExperienceEntry, build_bootstrap_experience_library, scan_experience_heads
 from ..fbcsp import FilterBankCSP
 from ..linear_models import FeatureStandardizer, LinearHead, ShrinkageLDA, select_fisher_features
+from ..progress import ProgressLogger
 from ..small_networks import SmallMLPConfig, train_small_mlp
 from .common import evaluate_scores, save_json, save_npz
 
@@ -98,24 +99,33 @@ def run_bnci2014_004_personalization(
     """Run the BNCI2014_004 three-line design comparison."""
 
     cfg = config or BNCI004PersonalizationConfig()
-    subject_results = [_run_subject(subject, cfg) for subject in cfg.subjects]
-    subject_rows = [row for result in subject_results for row in result["rows"]]
-    summary_rows: list[dict[str, Any]] = []
-    compute_lines = []
-    for line in LINES:
-        line_rows = [row for row in subject_rows if row["line"] == line]
-        ledger = LinearComputeLedger()
-        for result in subject_results:
-            ledger.extend(events_from_dicts(result["compute_events"][line]))
-        compute_summary = ledger.summary()
-        summary_rows.append(_aggregate_line(line_rows, compute_summary))
-        compute_lines.append(
-            {
-                "line": line,
-                "summary": compute_summary,
-                "events": ledger.to_events(),
-            }
-        )
+    total_steps = len(cfg.subjects) + 2
+    progress = ProgressLogger(
+        "bnci2014_004_three_line_comparison",
+        cfg.metrics_path / "run_progress.json" if save else None,
+    )
+    subject_results = []
+    for index, subject in enumerate(cfg.subjects, start=1):
+        with progress.step(f"run subject {subject}", index=index, total=total_steps):
+            subject_results.append(_run_subject(subject, cfg))
+    with progress.step("aggregate subject and compute summaries", index=len(cfg.subjects) + 1, total=total_steps):
+        subject_rows = [row for result in subject_results for row in result["rows"]]
+        summary_rows: list[dict[str, Any]] = []
+        compute_lines = []
+        for line in LINES:
+            line_rows = [row for row in subject_rows if row["line"] == line]
+            ledger = LinearComputeLedger()
+            for result in subject_results:
+                ledger.extend(events_from_dicts(result["compute_events"][line]))
+            compute_summary = ledger.summary()
+            summary_rows.append(_aggregate_line(line_rows, compute_summary))
+            compute_lines.append(
+                {
+                    "line": line,
+                    "summary": compute_summary,
+                    "events": ledger.to_events(),
+                }
+            )
     payload = {
         "config": cfg,
         "summary": summary_rows,
@@ -123,7 +133,9 @@ def run_bnci2014_004_personalization(
         "compute_accounting": summarize_lines(compute_lines),
     }
     if save:
-        _save_results(payload, cfg.metrics_path)
+        with progress.step("save BNCI metrics", index=total_steps, total=total_steps):
+            _save_results(payload, cfg.metrics_path)
+    progress.write()
     return payload
 
 
@@ -733,6 +745,7 @@ def _save_results(payload: dict[str, Any], output_dir: Path) -> None:
             "rows": payload["summary"],
             "subject_rows_file": "subject_rows.json",
             "compute_accounting_file": "compute_accounting.json",
+            "progress_file": "run_progress.json",
         },
     )
     save_json(output_dir / "subject_rows.json", {"rows": payload["subject_rows"]})

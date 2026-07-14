@@ -76,5 +76,6 @@
       "photonic_linear_share_inference": 1.0
     }
   ],
-  "compute_accounting_file": "compute_accounting.json"
+  "compute_accounting_file": "compute_accounting.json",
+  "progress_file": "run_progress.json"
 }

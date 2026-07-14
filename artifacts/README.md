@@ -11,10 +11,12 @@ artifacts/
       summary.json
       compute_accounting.json
       subject_rows.json
+      run_progress.json
       arrays.npz
     fbcsp_design/
       summary.json
       compute_accounting.json
+      run_progress.json
       reference/
       small_network/
       experience_photonic/

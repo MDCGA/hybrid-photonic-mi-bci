@@ -131,5 +131,6 @@
     }
   ],
   "subject_rows_file": "subject_rows.json",
-  "compute_accounting_file": "compute_accounting.json"
+  "compute_accounting_file": "compute_accounting.json",
+  "progress_file": "run_progress.json"
 }

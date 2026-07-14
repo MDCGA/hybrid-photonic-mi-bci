@@ -287,6 +287,13 @@ artifacts/metrics/fbcsp_design/compute_accounting.json
 artifacts/metrics/bnci2014_004_personalization/compute_accounting.json
 ```
 
+Run progress and timing files:
+
+```text
+artifacts/metrics/fbcsp_design/run_progress.json
+artifacts/metrics/bnci2014_004_personalization/run_progress.json
+```
+
 Generated accounting figures:
 
 ```text
@@ -301,6 +308,9 @@ Run the full comparison:
 ```bash
 python examples/run_fbcsp_design_comparison.py
 ```
+
+The command prints per-stage progress and elapsed time to the terminal and
+saves the same records to `artifacts/metrics/fbcsp_design/run_progress.json`.
 
 Run each line separately:
 
@@ -365,6 +375,9 @@ Run:
 python examples/run_bnci2014_004_personalization.py
 python visualization/plot_bnci2014_004_personalization.py
 ```
+
+The BNCI run records one timed step per subject plus aggregation/saving in
+`artifacts/metrics/bnci2014_004_personalization/run_progress.json`.
 
 Default mean results across 9 subjects:
 

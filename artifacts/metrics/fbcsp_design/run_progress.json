@@ -1,0 +1,53 @@
+{
+  "run_name": "fbcsp_design_comparison",
+  "started_at": "2026-07-14T19:35:46",
+  "updated_at": "2026-07-14T19:35:59",
+  "elapsed_seconds": 13.400876900006551,
+  "events": [
+    {
+      "step": "prepare pooled BCICIV FBCSP data",
+      "status": "completed",
+      "started_at": "2026-07-14T19:35:46",
+      "ended_at": "2026-07-14T19:35:52",
+      "elapsed_seconds": 6.376332100015134,
+      "index": 1,
+      "total": 5
+    },
+    {
+      "step": "run FBCSP + shrinkage LDA",
+      "status": "completed",
+      "started_at": "2026-07-14T19:35:52",
+      "ended_at": "2026-07-14T19:35:52",
+      "elapsed_seconds": 0.03175710001960397,
+      "index": 2,
+      "total": 5
+    },
+    {
+      "step": "run FBCSP + small MLP embedding",
+      "status": "completed",
+      "started_at": "2026-07-14T19:35:52",
+      "ended_at": "2026-07-14T19:35:57",
+      "elapsed_seconds": 4.618201700039208,
+      "index": 3,
+      "total": 5
+    },
+    {
+      "step": "run experience-library photonic scan",
+      "status": "completed",
+      "started_at": "2026-07-14T19:35:57",
+      "ended_at": "2026-07-14T19:35:59",
+      "elapsed_seconds": 2.3699273999664,
+      "index": 4,
+      "total": 5
+    },
+    {
+      "step": "save comparison summaries",
+      "status": "completed",
+      "started_at": "2026-07-14T19:35:59",
+      "ended_at": "2026-07-14T19:35:59",
+      "elapsed_seconds": 0.0012937999563291669,
+      "index": 5,
+      "total": 5
+    }
+  ]
+}
