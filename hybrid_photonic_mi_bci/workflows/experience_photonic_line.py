@@ -26,6 +26,7 @@ from ..experience import (
 )
 from ..evaluation import softmax
 from ..linear_models import LinearHead, ShrinkageLDA
+from ..progress import ConsoleProgressBar
 from .common import (
     FBCSPDesignConfig,
     FBCSPPreparedData,
@@ -69,6 +70,7 @@ def run_experience_photonic_line(
     prepared: FBCSPPreparedData | None = None,
     small_network: SmallNetworkLineResult | None = None,
     save: bool = True,
+    show_progress: bool = False,
 ) -> ExperiencePhotonicLineResult:
     """Run the mainline system from the design document."""
 
@@ -99,15 +101,23 @@ def run_experience_photonic_line(
         embeddings=small.train_embeddings,
         backend=backend,
     )
+    reject_threshold = calibrated_reject_threshold(train_scan.fused_scores, cfg)
     eval_embeddings = small.replay_embeddings[data.split.evaluation_replay]
+    eval_labels = data.replay_labels[data.split.evaluation_replay]
+    live_tracker = _LiveAccuracyProgress(
+        labels=eval_labels,
+        reject_threshold=reject_threshold,
+        margin_threshold=cfg.margin_threshold,
+        enabled=show_progress,
+    )
     eval_scan = scan_experience_heads(
         selected,
         retrieval_weights,
         embeddings=eval_embeddings,
         backend=backend,
+        progress_callback=live_tracker.update if show_progress else None,
     )
-    reject_threshold = calibrated_reject_threshold(train_scan.fused_scores, cfg)
-    eval_labels = data.replay_labels[data.split.evaluation_replay]
+    live_tracker.close()
     metrics = evaluate_scores(
         eval_scan.fused_scores,
         eval_labels,
@@ -115,6 +125,7 @@ def run_experience_photonic_line(
         reject_threshold=reject_threshold,
         margin_threshold=cfg.margin_threshold,
     )
+    metrics.update(_cumulative_decision_traces(metrics["correct_trace"], metrics["rejected_mask"]))
     ledger = _account_experience_compute(
         small=small,
         data=data,
@@ -216,6 +227,9 @@ def save_experience_result(result: ExperiencePhotonicLineResult, output_dir: Pat
                     "correct_trace",
                     "rolling_command_accuracy",
                     "rolling_reject_rate",
+                    "cumulative_command_accuracy",
+                    "cumulative_accepted_accuracy",
+                    "cumulative_reject_rate",
                 }
             },
         },
@@ -234,6 +248,9 @@ def save_experience_result(result: ExperiencePhotonicLineResult, output_dir: Pat
         correct_trace=result.metrics["correct_trace"],
         rolling_command_accuracy=result.metrics["rolling_command_accuracy"],
         rolling_reject_rate=result.metrics["rolling_reject_rate"],
+        cumulative_command_accuracy=result.metrics["cumulative_command_accuracy"],
+        cumulative_accepted_accuracy=result.metrics["cumulative_accepted_accuracy"],
+        cumulative_reject_rate=result.metrics["cumulative_reject_rate"],
         confusion=result.metrics["confusion"],
         retrieval_weights=result.retrieval_weights,
         retrieval_distances=result.retrieval_distances,
@@ -489,3 +506,65 @@ def _calibration_stats(
         accuracy[index] = float((predicted == labels).mean())
         confidence[index] = float(probabilities[np.arange(len(labels)), labels].mean())
     return accuracy, confidence
+
+
+class _LiveAccuracyProgress:
+    def __init__(
+        self,
+        *,
+        labels: NDArray[np.int_],
+        reject_threshold: float,
+        margin_threshold: float,
+        enabled: bool,
+    ) -> None:
+        self.labels = np.asarray(labels, dtype=int)
+        self.reject_threshold = float(reject_threshold)
+        self.margin_threshold = float(margin_threshold)
+        self.correct = 0
+        self.rejected = 0
+        self.progress = ConsoleProgressBar(
+            "experience online scan",
+            len(self.labels),
+            enabled=enabled,
+        )
+
+    def update(self, current: int, total: int, probability: FloatArray) -> None:
+        del total
+        probability = np.asarray(probability, dtype=np.float64)
+        order = np.argsort(probability)[::-1]
+        predicted = int(order[0])
+        second = int(order[1]) if len(order) > 1 else predicted
+        confidence = float(probability[predicted])
+        margin = float(probability[predicted] - probability[second])
+        rejected = (
+            confidence < self.reject_threshold
+            or margin < self.margin_threshold
+        )
+        self.correct += int(not rejected and predicted == int(self.labels[current - 1]))
+        self.rejected += int(rejected)
+        accepted = max(1, current - self.rejected)
+        suffix = (
+            f"acc={self.correct / current:.3f} "
+            f"accepted_acc={self.correct / accepted:.3f} "
+            f"reject={self.rejected / current:.3f}"
+        )
+        self.progress.update(current, suffix=suffix)
+
+    def close(self) -> None:
+        self.progress.close()
+
+
+def _cumulative_decision_traces(
+    correct_trace: NDArray[np.float64],
+    rejected_mask: NDArray[np.bool_],
+) -> dict[str, FloatArray]:
+    correct = np.asarray(correct_trace, dtype=np.float64)
+    rejected = np.asarray(rejected_mask, dtype=bool)
+    count = np.arange(1, len(correct) + 1, dtype=np.float64)
+    rejected_count = np.cumsum(rejected.astype(np.float64))
+    accepted_count = np.maximum(1.0, count - rejected_count)
+    return {
+        "cumulative_command_accuracy": np.cumsum(correct) / count,
+        "cumulative_accepted_accuracy": np.cumsum(correct) / accepted_count,
+        "cumulative_reject_rate": rejected_count / count,
+    }

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Callable
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -15,6 +16,7 @@ from .linear_models import LinearHead, ShrinkageLDA
 
 FloatArray = NDArray[np.float64]
 IntArray = NDArray[np.int_]
+ScanProgressCallback = Callable[[int, int, FloatArray], None]
 
 
 @dataclass(frozen=True)
@@ -111,6 +113,7 @@ def scan_experience_heads(
     retrieval_weights: ArrayLike,
     embeddings: ArrayLike,
     backend: MVMBackend | None = None,
+    progress_callback: ScanProgressCallback | None = None,
 ) -> ExperienceScanResult:
     """Scan candidate linear heads and fuse their probability outputs."""
 
@@ -129,6 +132,10 @@ def scan_experience_heads(
         candidate_scores[index] = backend.scan(augmented_weights, augmented_feature)
         if hasattr(backend, "last_tile_count"):
             tile_count = int(getattr(backend, "last_tile_count"))
+        if progress_callback is not None:
+            window_probs = softmax(candidate_scores[index])
+            fused_probability = np.sum(selected_weights[:, None] * window_probs, axis=0)
+            progress_callback(index + 1, x.shape[0], fused_probability.astype(np.float64))
     candidate_probs = softmax(candidate_scores.reshape(-1, candidate_scores.shape[-1])).reshape(
         candidate_scores.shape
     )

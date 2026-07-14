@@ -118,4 +118,57 @@ def _now() -> str:
 def _format_prefix(index: int | None, total: int | None) -> str:
     if index is None or total is None:
         return ""
-    return f"({index}/{total}) "
+        return f"({index}/{total}) "
+
+
+class ConsoleProgressBar:
+    """Small dependency-free terminal progress bar."""
+
+    def __init__(
+        self,
+        label: str,
+        total: int,
+        *,
+        width: int = 28,
+        enabled: bool = True,
+        min_interval_seconds: float = 0.10,
+    ) -> None:
+        self.label = str(label)
+        self.total = max(0, int(total))
+        self.width = max(4, int(width))
+        self.enabled = bool(enabled)
+        self.min_interval_seconds = max(0.0, float(min_interval_seconds))
+        self._started = perf_counter()
+        self._last_update = 0.0
+        self._last_length = 0
+        self._printed = False
+
+    def update(self, current: int, *, suffix: str = "") -> None:
+        if not self.enabled or self.total <= 0:
+            return
+        current = min(max(0, int(current)), self.total)
+        now = perf_counter()
+        if current < self.total and now - self._last_update < self.min_interval_seconds:
+            return
+        fraction = current / self.total
+        filled = int(round(self.width * fraction))
+        bar = "#" * filled + "-" * (self.width - filled)
+        elapsed = now - self._started
+        rate = current / elapsed if elapsed > 0.0 else 0.0
+        eta = (self.total - current) / rate if rate > 0.0 else 0.0
+        message = (
+            f"\r[progress] {self.label} [{bar}] "
+            f"{current}/{self.total} {fraction * 100.0:5.1f}% "
+            f"elapsed={elapsed:.1f}s eta={eta:.1f}s"
+        )
+        if suffix:
+            message += f" {suffix}"
+        padded = message.ljust(self._last_length)
+        self._last_length = len(message)
+        print(padded, end="", flush=True)
+        self._last_update = now
+        self._printed = True
+
+    def close(self) -> None:
+        if self.enabled and self._printed:
+            print()

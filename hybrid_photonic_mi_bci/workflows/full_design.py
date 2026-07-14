@@ -24,6 +24,7 @@ class FullDesignComparisonResult:
 def run_full_design_comparison(
     config: FBCSPDesignConfig | None = None,
     save: bool = True,
+    show_progress: bool = False,
 ) -> FullDesignComparisonResult:
     """Run reference, embedding, and photonic-candidate-scan lines."""
 
@@ -44,6 +45,7 @@ def run_full_design_comparison(
             prepared=prepared,
             small_network=small_network,
             save=save,
+            show_progress=show_progress,
         )
     summary_rows = [reference.summary, small_network.summary, experience_photonic.summary]
     if save:

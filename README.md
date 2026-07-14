@@ -311,6 +311,8 @@ python examples/run_fbcsp_design_comparison.py
 
 The command prints per-stage progress and elapsed time to the terminal and
 saves the same records to `artifacts/metrics/fbcsp_design/run_progress.json`.
+During the photonic-scan line, it also prints an online evaluation progress bar
+with cumulative command accuracy, accepted accuracy, and reject rate.
 
 Run each line separately:
 
@@ -318,6 +320,15 @@ Run each line separately:
 python examples/run_fbcsp_reference.py
 python examples/run_small_network_line.py
 python examples/run_experience_photonic_line.py
+```
+
+Add `--no-progress` to the full comparison or photonic line script to suppress
+the live terminal progress bar.
+
+Run one full online inference pass from a single held-out EEG window:
+
+```bash
+python examples/run_single_window_inference.py --evaluation-index 0
 ```
 
 Useful parameters:
