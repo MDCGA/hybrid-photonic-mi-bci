@@ -194,6 +194,20 @@ defaults are `SimulatedPhotonicMatrixOpsBackend` and
 `SimulatedPhotonicSignalOpsBackend`, which use NumPy/SciPy internally as
 deterministic software stand-ins for future photonic drivers.
 
+The tiled candidate scan uses `QuantizedPhotonicMatrixOpsBackend` internally by
+default. Its active hardware profile is the 4-bit sweet spot used by the
+photonic unit:
+
+```text
+qinmin = 0,  qinmax = 15
+qwtmin = -8, qwtmax = 7
+```
+
+The quantized backend follows the LT-Simulator `custom_matmul.py` integration:
+it first tries `osimulator.api.load_gazelle_model()`, falls back to integer
+NumPy matmul if the simulator is unavailable, removes input zero-point offset,
+and then dequantizes the result.
+
 A real matrix driver can replace the matrix path with
 `set_matrix_ops_backend(...)` or be scoped with `use_matrix_ops_backend(...)`.
 A real signal-processing driver can replace CAR/SOS filtering with
@@ -261,10 +275,10 @@ MACs = trials * bands * channels * samples * sos_sections * 5 * 2
 
 The final `* 2` is the forward/backward pass in `sosfiltfilt`. For the current
 3rd-order Butterworth band-pass, `sos_sections = 3`. Small edge-padding
-overheads are ignored. Earlier 4th-order runs increased this digital filtering
-term by about one third, which suppressed the forward photonic share without
-improving the current validation metrics enough to justify the cost. A 2nd-order
-run was also checked, but it degraded the BCICIV mainline too much.
+overheads are ignored. Earlier 4th-order runs increased this filtering MAC term
+by about one third without improving the current validation metrics enough to
+justify the cost. A 2nd-order run was also checked, but it degraded the BCICIV
+mainline too much.
 
 Saved accounting files:
 
@@ -320,7 +334,7 @@ Default results saved in `artifacts/metrics/fbcsp_design/summary.json`:
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | FBCSP + shrinkage LDA | 560 | 0.713 | 0.733 | 0.016 | 0.576 GMAC | 1.000 | 1.000 |
 | FBCSP + small MLP embedding | 560 | 0.723 | 0.709 | 0.075 | 0.584 GMAC | 1.000 | 1.000 |
-| FBCSP + MLP embedding + library + photonic scan | 518 | 0.730 | 0.724 | 0.048 | 0.585 GMAC | 1.000 | 1.000 |
+| FBCSP + MLP embedding + library + photonic scan | 518 | 0.705 | 0.732 | 0.027 | 0.585 GMAC | 1.000 | 1.000 |
 
 The mainline excludes the 42 calibration-query windows from its online
 evaluation. The default 3rd-order filter is a compute/accuracy compromise:
@@ -358,7 +372,7 @@ Default mean results across 9 subjects:
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | FBCSP + shrinkage LDA | 1296 | 0.755 | 0.755 | 0.012 | 0.596 GMAC | 1.000 | 1.000 |
 | FBCSP + small MLP embedding | 1296 | 0.744 | 0.744 | 0.014 | 0.599 GMAC | 1.000 | 1.000 |
-| FBCSP + MLP + library + photonic scan | 1296 | 0.745 | 0.745 | 0.023 | 0.667 GMAC | 1.000 | 1.000 |
+| FBCSP + MLP + library + photonic scan | 1296 | 0.749 | 0.749 | 0.016 | 0.667 GMAC | 1.000 | 1.000 |
 
 The BNCI workflow is binary MI, so it validates the three-line comparison and
 experience-library retrieval behavior before returning to the four-output

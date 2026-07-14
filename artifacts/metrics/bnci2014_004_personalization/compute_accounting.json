@@ -10,7 +10,7 @@
           "calibration",
           "inference"
         ],
-        "photonic_rule": "Algorithm-path MatrixOpsBackend matrix products are counted as photonic because the active backend is SimulatedPhotonicMatrixOpsBackend. Forward signal operations routed through SignalOpsBackend are also counted as photonic because the active backend is SimulatedPhotonicSignalOpsBackend. This includes CAR, SOS band-pass filtering, FBCSP/LDA matrix products, feature-standardization affine maps, exported MLP inference Linear and LayerNorm affine layers including bias via augmented constant inputs, candidate-head scans, retrieval fusion, and distance cross terms. Fit and PyTorch training/backprop MACs are reported separately but excluded from the main ratio.",
+        "photonic_rule": "Algorithm-path MatrixOpsBackend matrix products are counted as photonic because the active backend is SimulatedPhotonicMatrixOpsBackend. Forward signal operations routed through SignalOpsBackend are also counted as photonic because the active backend is SimulatedPhotonicSignalOpsBackend. This includes CAR, SOS band-pass filtering, FBCSP/LDA matrix products, feature-standardization affine maps, exported MLP inference Linear and LayerNorm affine layers including bias via augmented constant inputs, 4-bit quantized candidate-head tile scans, retrieval fusion, and distance cross terms. Fit and PyTorch training/backprop MACs are reported separately but excluded from the main ratio.",
         "excluded": [
           "model fitting and training/backprop stages for the main forward-only ratio",
           "activation, softmax, thresholding, and non-dot-product distance arithmetic",
@@ -1694,7 +1694,7 @@
           "calibration",
           "inference"
         ],
-        "photonic_rule": "Algorithm-path MatrixOpsBackend matrix products are counted as photonic because the active backend is SimulatedPhotonicMatrixOpsBackend. Forward signal operations routed through SignalOpsBackend are also counted as photonic because the active backend is SimulatedPhotonicSignalOpsBackend. This includes CAR, SOS band-pass filtering, FBCSP/LDA matrix products, feature-standardization affine maps, exported MLP inference Linear and LayerNorm affine layers including bias via augmented constant inputs, candidate-head scans, retrieval fusion, and distance cross terms. Fit and PyTorch training/backprop MACs are reported separately but excluded from the main ratio.",
+        "photonic_rule": "Algorithm-path MatrixOpsBackend matrix products are counted as photonic because the active backend is SimulatedPhotonicMatrixOpsBackend. Forward signal operations routed through SignalOpsBackend are also counted as photonic because the active backend is SimulatedPhotonicSignalOpsBackend. This includes CAR, SOS band-pass filtering, FBCSP/LDA matrix products, feature-standardization affine maps, exported MLP inference Linear and LayerNorm affine layers including bias via augmented constant inputs, 4-bit quantized candidate-head tile scans, retrieval fusion, and distance cross terms. Fit and PyTorch training/backprop MACs are reported separately but excluded from the main ratio.",
         "excluded": [
           "model fitting and training/backprop stages for the main forward-only ratio",
           "activation, softmax, thresholding, and non-dot-product distance arithmetic",
@@ -3317,7 +3317,7 @@
           "calibration",
           "inference"
         ],
-        "photonic_rule": "Algorithm-path MatrixOpsBackend matrix products are counted as photonic because the active backend is SimulatedPhotonicMatrixOpsBackend. Forward signal operations routed through SignalOpsBackend are also counted as photonic because the active backend is SimulatedPhotonicSignalOpsBackend. This includes CAR, SOS band-pass filtering, FBCSP/LDA matrix products, feature-standardization affine maps, exported MLP inference Linear and LayerNorm affine layers including bias via augmented constant inputs, candidate-head scans, retrieval fusion, and distance cross terms. Fit and PyTorch training/backprop MACs are reported separately but excluded from the main ratio.",
+        "photonic_rule": "Algorithm-path MatrixOpsBackend matrix products are counted as photonic because the active backend is SimulatedPhotonicMatrixOpsBackend. Forward signal operations routed through SignalOpsBackend are also counted as photonic because the active backend is SimulatedPhotonicSignalOpsBackend. This includes CAR, SOS band-pass filtering, FBCSP/LDA matrix products, feature-standardization affine maps, exported MLP inference Linear and LayerNorm affine layers including bias via augmented constant inputs, 4-bit quantized candidate-head tile scans, retrieval fusion, and distance cross terms. Fit and PyTorch training/backprop MACs are reported separately but excluded from the main ratio.",
         "excluded": [
           "model fitting and training/backprop stages for the main forward-only ratio",
           "activation, softmax, thresholding, and non-dot-product distance arithmetic",
@@ -3832,7 +3832,7 @@
           "photonic": true,
           "stage": "calibration",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 240,
             "candidates": 8,
@@ -3861,7 +3861,7 @@
           "photonic": true,
           "stage": "inference",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 144,
             "candidates": 8,
@@ -4248,7 +4248,7 @@
           "photonic": true,
           "stage": "calibration",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 240,
             "candidates": 8,
@@ -4277,7 +4277,7 @@
           "photonic": true,
           "stage": "inference",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 144,
             "candidates": 8,
@@ -4664,7 +4664,7 @@
           "photonic": true,
           "stage": "calibration",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 240,
             "candidates": 8,
@@ -4693,7 +4693,7 @@
           "photonic": true,
           "stage": "inference",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 144,
             "candidates": 8,
@@ -5080,7 +5080,7 @@
           "photonic": true,
           "stage": "calibration",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 260,
             "candidates": 8,
@@ -5109,7 +5109,7 @@
           "photonic": true,
           "stage": "inference",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 144,
             "candidates": 8,
@@ -5496,7 +5496,7 @@
           "photonic": true,
           "stage": "calibration",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 260,
             "candidates": 8,
@@ -5525,7 +5525,7 @@
           "photonic": true,
           "stage": "inference",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 144,
             "candidates": 8,
@@ -5912,7 +5912,7 @@
           "photonic": true,
           "stage": "calibration",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 240,
             "candidates": 8,
@@ -5941,7 +5941,7 @@
           "photonic": true,
           "stage": "inference",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 144,
             "candidates": 8,
@@ -6328,7 +6328,7 @@
           "photonic": true,
           "stage": "calibration",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 240,
             "candidates": 8,
@@ -6357,7 +6357,7 @@
           "photonic": true,
           "stage": "inference",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 144,
             "candidates": 8,
@@ -6744,7 +6744,7 @@
           "photonic": true,
           "stage": "calibration",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 280,
             "candidates": 8,
@@ -6773,7 +6773,7 @@
           "photonic": true,
           "stage": "inference",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 144,
             "candidates": 8,
@@ -7160,7 +7160,7 @@
           "photonic": true,
           "stage": "calibration",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 240,
             "candidates": 8,
@@ -7189,7 +7189,7 @@
           "photonic": true,
           "stage": "inference",
           "category": "candidate_head_scan",
-          "implementation": "simulated_photonic_tiled_mvm",
+          "implementation": "quantized_photonic_tiled_mvm_uint4",
           "details": {
             "windows": 144,
             "candidates": 8,

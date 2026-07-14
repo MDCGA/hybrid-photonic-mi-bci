@@ -67,8 +67,8 @@ def plot(output_dir: Path, formats: tuple[str, ...] = ("png",)) -> list[Path]:
         (2.9, "Anchor heads\nMLP classifier\n+ embedding LDA"),
         (5.35, "Calibration query\ncentroid dot via MatrixOps"),
         (7.8, "Select top-8\ncalibration-aware weights"),
-        (10.25, "Candidate heads\nA_i [h,1] via MatrixOps"),
-        (12.7, "TiledMVMBackend\n2 x 8 primitive"),
+        (10.25, "Candidate heads\nA_i [h,1], uint4 scan"),
+        (12.7, "TiledMVMBackend\n2 x 8, qin 0..15"),
         (15.15, "Probability fusion via\nMatrixOps; reject digital"),
     ]
     for x, label in main:
@@ -77,7 +77,7 @@ def plot(output_dir: Path, formats: tuple[str, ...] = ("png",)) -> list[Path]:
 
     _band(ax, 0.2, 0.55, 17.8, 1.25, "Photonic Boundary and Measured Work", "#fffbeb")
     _box(ax, 0.55, 0.88, 3.0, 0.56, "Unified handoff\nMatrixOps + SignalOps")
-    _box(ax, 3.95, 0.88, 3.2, 0.56, "MatrixOps routed\nCSP/LDA/MLP/std/bias/A_i/fusion")
+    _box(ax, 3.95, 0.88, 3.2, 0.56, "MatrixOps routed\nCSP/LDA/MLP/std/bias/fusion")
     _box(ax, 7.55, 0.88, 3.2, 0.56, "SignalOps routed\nCAR + SOS filter bank")
     _box(ax, 11.15, 0.88, 3.15, 0.56, "Digital side\ntrain/backprop/variance/log/reject")
     _box(ax, 14.75, 0.88, 2.65, 0.56, "Saved artifacts\nmetrics + figures")

@@ -7,6 +7,7 @@ from hybrid_photonic_mi_bci import (
     EpsilonGreedyBandit,
     HybridBCIPipeline,
     NumpyMVMBackend,
+    NumpyMatrixOpsBackend,
     PipelineBuildConfig,
     ProbabilityFusionSelector,
     ProjectionLibrary,
@@ -14,6 +15,7 @@ from hybrid_photonic_mi_bci import (
     TiledMVMBackend,
     build_pipeline_from_features,
     run_replay,
+    use_matrix_ops_backend,
     warmup_selector,
 )
 
@@ -23,7 +25,8 @@ class PipelineTest(unittest.TestCase):
         weights = np.arange(32, dtype=np.float64).reshape(2, 2, 8)
         features = np.ones(8, dtype=np.float64)
 
-        result = NumpyMVMBackend().scan(weights, features)
+        with use_matrix_ops_backend(NumpyMatrixOpsBackend()):
+            result = NumpyMVMBackend().scan(weights, features)
 
         self.assertEqual(result.shape, (2, 2))
         np.testing.assert_allclose(result, weights @ features)
@@ -32,7 +35,8 @@ class PipelineTest(unittest.TestCase):
         weights = np.arange(3 * 5 * 17, dtype=np.float64).reshape(3, 5, 17) / 10.0
         features = np.linspace(-1.0, 1.0, 17, dtype=np.float64)
 
-        result = NumpyMVMBackend().scan(weights, features)
+        with use_matrix_ops_backend(NumpyMatrixOpsBackend()):
+            result = NumpyMVMBackend().scan(weights, features)
 
         self.assertEqual(result.shape, (3, 5))
         np.testing.assert_allclose(result, weights @ features)
@@ -41,9 +45,10 @@ class PipelineTest(unittest.TestCase):
         rng = np.random.default_rng(11)
         weights = rng.normal(size=(4, 5, 17))
         features = rng.normal(size=17)
-        backend = TiledMVMBackend(tile_shape=(2, 8))
+        backend = TiledMVMBackend(tile_shape=(2, 8), matrix_backend=NumpyMatrixOpsBackend())
 
-        result = backend.scan(weights, features)
+        with use_matrix_ops_backend(NumpyMatrixOpsBackend()):
+            result = backend.scan(weights, features)
 
         self.assertEqual(result.shape, (4, 5))
         self.assertEqual(backend.last_tile_count, 4 * 3 * 3)

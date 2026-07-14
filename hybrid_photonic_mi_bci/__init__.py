@@ -1,8 +1,10 @@
 """Hybrid photonic MI-BCI simulation toolkit.
 
 The package keeps matrix products behind a backend interface. The default
-MatrixOps backend is a simulated photonic handoff that uses NumPy internally for
-deterministic local execution while preserving the future hardware contract.
+MatrixOps backend is a high-precision simulated photonic handoff for stable
+fitting and replay. The tiled candidate-scan backend uses a 4-bit quantized
+photonic matmul path by default and can call the optional Gazelle simulator
+when installed.
 """
 
 from .backends import (
@@ -13,6 +15,8 @@ from .backends import (
     PhotonicMVMBackendStub,
     PhotonicMatrixOpsBackendStub,
     PhotonicSignalOpsBackendStub,
+    PhotonicQuantizationConfig,
+    QuantizedPhotonicMatrixOpsBackend,
     ScipySignalOpsBackend,
     SimulatedPhotonicMatrixOpsBackend,
     SimulatedPhotonicSignalOpsBackend,
@@ -69,6 +73,8 @@ __all__ = [
     "PhotonicMVMBackendStub",
     "PhotonicMatrixOpsBackendStub",
     "PhotonicSignalOpsBackendStub",
+    "PhotonicQuantizationConfig",
+    "QuantizedPhotonicMatrixOpsBackend",
     "ScipySignalOpsBackend",
     "SimulatedPhotonicMatrixOpsBackend",
     "SimulatedPhotonicSignalOpsBackend",

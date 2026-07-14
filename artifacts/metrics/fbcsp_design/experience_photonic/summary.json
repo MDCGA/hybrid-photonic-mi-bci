@@ -3,10 +3,10 @@
   "summary": {
     "line": "FBCSP + MLP embedding + library + photonic scan",
     "total": 518,
-    "command_accuracy": 0.7297297297297297,
-    "balanced_command_accuracy": 0.7241854252459644,
-    "accepted_accuracy": 0.7667342799188641,
-    "reject_rate": 0.04826254826254826,
+    "command_accuracy": 0.7046332046332047,
+    "balanced_command_accuracy": 0.732421266667842,
+    "accepted_accuracy": 0.7242063492063492,
+    "reject_rate": 0.02702702702702703,
     "raw_fbcsp_dim": 72,
     "selected_features": 32,
     "embedding_dim": 32,
@@ -19,7 +19,7 @@
       8
     ],
     "tile_evaluations_per_window": 80,
-    "reject_threshold": 0.5701215392875251,
+    "reject_threshold": 0.5118482350281549,
     "linear_macs_total": 584869277,
     "linear_macs_photonic": 584869277,
     "linear_macs_digital": 0,
@@ -43,7 +43,7 @@
         "calibration",
         "inference"
       ],
-      "photonic_rule": "Algorithm-path MatrixOpsBackend matrix products are counted as photonic because the active backend is SimulatedPhotonicMatrixOpsBackend. Forward signal operations routed through SignalOpsBackend are also counted as photonic because the active backend is SimulatedPhotonicSignalOpsBackend. This includes CAR, SOS band-pass filtering, FBCSP/LDA matrix products, feature-standardization affine maps, exported MLP inference Linear and LayerNorm affine layers including bias via augmented constant inputs, candidate-head scans, retrieval fusion, and distance cross terms. Fit and PyTorch training/backprop MACs are reported separately but excluded from the main ratio.",
+      "photonic_rule": "Algorithm-path MatrixOpsBackend matrix products are counted as photonic because the active backend is SimulatedPhotonicMatrixOpsBackend. Forward signal operations routed through SignalOpsBackend are also counted as photonic because the active backend is SimulatedPhotonicSignalOpsBackend. This includes CAR, SOS band-pass filtering, FBCSP/LDA matrix products, feature-standardization affine maps, exported MLP inference Linear and LayerNorm affine layers including bias via augmented constant inputs, 4-bit quantized candidate-head tile scans, retrieval fusion, and distance cross terms. Fit and PyTorch training/backprop MACs are reported separately but excluded from the main ratio.",
       "excluded": [
         "model fitting and training/backprop stages for the main forward-only ratio",
         "activation, softmax, thresholding, and non-dot-product distance arithmetic",
@@ -283,36 +283,36 @@
   },
   "metrics": {
     "total": 518,
-    "correct": 378,
-    "rejected": 25,
-    "accepted_accuracy": 0.7667342799188641,
-    "command_accuracy": 0.7297297297297297,
-    "balanced_command_accuracy": 0.7241854252459644,
-    "reject_rate": 0.04826254826254826,
+    "correct": 365,
+    "rejected": 14,
+    "accepted_accuracy": 0.7242063492063492,
+    "command_accuracy": 0.7046332046332047,
+    "balanced_command_accuracy": 0.732421266667842,
+    "reject_rate": 0.02702702702702703,
     "confusion": [
       [
-        193,
-        35,
-        19,
-        12
+        180,
+        28,
+        44,
+        7
       ],
       [
-        41,
-        133,
-        2,
-        10
+        47,
+        124,
+        10,
+        5
       ],
       [
-        13,
-        5,
-        52,
-        3
+        7,
+        3,
+        61,
+        2
       ]
     ],
     "per_class_recall": [
-      0.7451737451737451,
-      0.7150537634408602,
-      0.7123287671232876
+      0.694980694980695,
+      0.6666666666666666,
+      0.8356164383561644
     ]
   }
 }

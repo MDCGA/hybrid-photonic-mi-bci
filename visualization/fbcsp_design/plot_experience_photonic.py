@@ -71,7 +71,7 @@ def plot(metrics_dir: Path, output_dir: Path, formats: tuple[str, ...] = ("png",
         0.02,
         0.92,
         f"Each candidate head computes A_i [h, 1] with A_i in R^({class_count} x {augmented_dim}).\n"
-        f"A {tile_rows} x {tile_cols} primitive scans row and column blocks; bias uses the constant input.",
+        f"4-bit tile: qin 0..15, qwt -8..7; bias uses the constant input.",
         transform=ax.transAxes,
         ha="left",
         va="top",

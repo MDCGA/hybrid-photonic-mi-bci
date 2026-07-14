@@ -4,6 +4,7 @@ import numpy as np
 
 from hybrid_photonic_mi_bci.backends import (
     MatrixOpsBackend,
+    QuantizedPhotonicMatrixOpsBackend,
     SignalOpsBackend,
     SimulatedPhotonicMatrixOpsBackend,
     SimulatedPhotonicSignalOpsBackend,
@@ -29,6 +30,25 @@ class FBCSPDesignComponentsTest(unittest.TestCase):
     def test_default_matrix_ops_backend_is_photonic_handoff(self) -> None:
         self.assertIsInstance(get_matrix_ops_backend(), SimulatedPhotonicMatrixOpsBackend)
         self.assertIsInstance(get_signal_ops_backend(), SimulatedPhotonicSignalOpsBackend)
+
+    def test_tiled_mvm_backend_defaults_to_4bit_quantized_tiles(self) -> None:
+        backend = TiledMVMBackend(tile_shape=(2, 8))
+
+        self.assertIsInstance(backend.matrix_backend, QuantizedPhotonicMatrixOpsBackend)
+        self.assertEqual(backend.matrix_backend.config.bit_width, 4)
+        self.assertEqual(backend.matrix_backend.config.qinmin, 0)
+        self.assertEqual(backend.matrix_backend.config.qinmax, 15)
+        self.assertEqual(backend.matrix_backend.config.qwtmin, -8)
+        self.assertEqual(backend.matrix_backend.config.qwtmax, 7)
+
+    def test_quantized_photonic_backend_dequantizes_simple_identity(self) -> None:
+        backend = QuantizedPhotonicMatrixOpsBackend(use_gazelle_model=False)
+        features = np.array([[0.0, 1.0, 2.0, 3.0]], dtype=np.float64)
+        weights = np.eye(4, dtype=np.float64)
+
+        result = backend.matmul(features, weights, name="test_identity")
+
+        np.testing.assert_allclose(result, features, atol=0.25)
 
     def test_fbcsp_returns_expected_multiclass_filter_bank_shape(self) -> None:
         rng = np.random.default_rng(5)

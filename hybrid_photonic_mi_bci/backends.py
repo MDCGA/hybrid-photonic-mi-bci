@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from dataclasses import dataclass
 from typing import Iterator
 
 import numpy as np
@@ -106,6 +107,232 @@ class SimulatedPhotonicMatrixOpsBackend(MatrixOpsBackend):
             self.calls.append(("einsum", name))
         arrays = [np.asarray(operand, dtype=np.float64) for operand in operands]
         return np.einsum(subscripts, *arrays)
+
+
+@dataclass(frozen=True)
+class PhotonicQuantizationConfig:
+    """Quantization limits for the photonic integer MVM path."""
+
+    bit_width: int = 4
+    qinmin: int = 0
+    qinmax: int = 15
+    qwtmin: int = -8
+    qwtmax: int = 7
+    eps: float = 1e-8
+
+    @classmethod
+    def for_bit_width(cls, bit_width: int) -> "PhotonicQuantizationConfig":
+        if bit_width == 4:
+            return cls(bit_width=4, qinmin=0, qinmax=15, qwtmin=-8, qwtmax=7)
+        if bit_width == 8:
+            return cls(bit_width=8, qinmin=0, qinmax=255, qwtmin=-128, qwtmax=127)
+        raise ValueError("photonic quantization supports 4-bit or 8-bit inputs")
+
+    @property
+    def input_type(self) -> str:
+        return f"uint{self.bit_width}"
+
+
+class QuantizedPhotonicMatrixOpsBackend(MatrixOpsBackend):
+    """4/8-bit software bridge to the photonic integer matmul contract.
+
+    The quantization follows the LT-Simulator ``custom_matmul.py`` pattern:
+    activations use affine unsigned quantization, weights use symmetric signed
+    quantization, integer matmul runs through the optional Gazelle simulator
+    when available, then the zero-point offset is removed before dequantizing.
+    """
+
+    def __init__(
+        self,
+        config: PhotonicQuantizationConfig | None = None,
+        *,
+        record_calls: bool = False,
+        use_gazelle_model: bool = True,
+        announce: bool = True,
+    ) -> None:
+        self.config = config or PhotonicQuantizationConfig.for_bit_width(4)
+        self.record_calls = bool(record_calls)
+        self.calls: list[tuple[str, str]] = []
+        self._gazelle_model = _load_gazelle_model() if use_gazelle_model else None
+        self.execution_backend = (
+            "gazelle_simulator"
+            if self._gazelle_model is not None
+            else "numpy_integer_matmul"
+        )
+        if announce:
+            print(
+                "[photonic-matmul] "
+                f"backend={self.execution_backend}, "
+                f"bit_width={self.config.bit_width}, "
+                f"qin=[{self.config.qinmin},{self.config.qinmax}], "
+                f"qwt=[{self.config.qwtmin},{self.config.qwtmax}]"
+            )
+
+    def matmul(self, left: ArrayLike, right: ArrayLike, *, name: str = "matmul") -> FloatArray:
+        if self.record_calls:
+            self.calls.append(("matmul", name))
+        return _quantized_photonic_matmul(
+            left,
+            right,
+            config=self.config,
+            gazelle_model=self._gazelle_model,
+        )
+
+    def einsum(self, subscripts: str, *operands: ArrayLike, name: str = "einsum") -> FloatArray:
+        if self.record_calls:
+            self.calls.append(("einsum", name))
+        arrays = [np.asarray(operand, dtype=np.float64) for operand in operands]
+        if subscripts == "fc,nct->nft" and len(arrays) == 2:
+            filters, trials = arrays
+            if filters.ndim != 2 or trials.ndim != 3:
+                return np.einsum(subscripts, *arrays)
+            n_trials, n_channels, n_samples = trials.shape
+            if filters.shape[1] != n_channels:
+                return np.einsum(subscripts, *arrays)
+            flat = trials.transpose(0, 2, 1).reshape(n_trials * n_samples, n_channels)
+            projected = self.matmul(flat, filters.T, name=name)
+            return projected.reshape(n_trials, n_samples, filters.shape[0]).transpose(0, 2, 1)
+        if subscripts == "k,nkc->nc" and len(arrays) == 2:
+            weights, probabilities = arrays
+            if weights.ndim != 1 or probabilities.ndim != 3:
+                return np.einsum(subscripts, *arrays)
+            return self.matmul(probabilities.transpose(0, 2, 1), weights, name=name)
+        if subscripts == "nd,ncd->nc" and len(arrays) == 2:
+            vectors, prototypes = arrays
+            if vectors.ndim != 2 or prototypes.ndim != 3:
+                return np.einsum(subscripts, *arrays)
+            return self.matmul(vectors[:, None, :], prototypes.transpose(0, 2, 1), name=name).squeeze(1)
+        if subscripts == "nij,sj->nsi" and len(arrays) == 2:
+            weights, samples = arrays
+            if weights.ndim != 3 or samples.ndim != 2:
+                return np.einsum(subscripts, *arrays)
+            expanded_samples = np.broadcast_to(samples, (weights.shape[0], *samples.shape))
+            return self.matmul(expanded_samples, weights.transpose(0, 2, 1), name=name)
+        return np.einsum(subscripts, *arrays)
+
+
+def _load_gazelle_model():
+    try:
+        from osimulator.api import load_gazelle_model
+
+        return load_gazelle_model()
+    except Exception:
+        return None
+
+
+def _quantized_photonic_matmul(
+    left: ArrayLike,
+    right: ArrayLike,
+    *,
+    config: PhotonicQuantizationConfig,
+    gazelle_model,
+) -> FloatArray:
+    left_arr = np.asarray(left, dtype=np.float64)
+    right_arr = np.asarray(right, dtype=np.float64)
+    if left_arr.shape[-1] != (right_arr.shape[0] if right_arr.ndim == 1 else right_arr.shape[-2]):
+        return np.matmul(left_arr, right_arr).astype(np.float64)
+
+    left_min = float(np.min(left_arr))
+    left_max = float(np.max(left_arr))
+    input_range = max(left_max - left_min, config.eps)
+    input_scale = input_range / float(config.qinmax - config.qinmin)
+    input_zp = int(np.clip(np.round(-left_min / input_scale), config.qinmin, config.qinmax))
+
+    weight_absmax = max(float(np.max(np.abs(right_arr))), config.eps)
+    weight_scale = weight_absmax / float(config.qwtmax)
+
+    q_left = np.rint(left_arr / input_scale + input_zp)
+    q_left = np.clip(q_left, config.qinmin, config.qinmax).astype(np.int32)
+    q_right = np.rint(right_arr / weight_scale)
+    q_right = np.clip(q_right, config.qwtmin, config.qwtmax).astype(np.int32)
+
+    raw = _integer_photonic_matmul(
+        q_left,
+        q_right,
+        input_type=config.input_type,
+        gazelle_model=gazelle_model,
+    ).astype(np.float64)
+    right_sum = q_right.sum(axis=-1 if q_right.ndim == 1 else -2, dtype=np.int64).astype(np.float64)
+    if right_sum.ndim > 0 and raw.ndim > right_sum.ndim and right_sum.shape[0] == raw.shape[0]:
+        right_sum = np.expand_dims(right_sum, axis=-2)
+    corrected = raw - float(input_zp) * right_sum
+    return (corrected * (input_scale * weight_scale)).astype(np.float64)
+
+
+def _integer_photonic_matmul(
+    q_left: NDArray[np.int32],
+    q_right: NDArray[np.int32],
+    *,
+    input_type: str,
+    gazelle_model,
+) -> NDArray[np.int64]:
+    if gazelle_model is not None:
+        model_call = _to_gazelle_batches(q_left, q_right)
+        if model_call is not None:
+            left_batch, right_batch, restore = model_call
+            try:
+                result = gazelle_model(left_batch, right_batch, input_type)
+                if hasattr(result, "detach"):
+                    result = result.detach().cpu().numpy()
+                elif hasattr(result, "numpy"):
+                    result = result.numpy()
+                return restore(np.asarray(result, dtype=np.int64))
+            except Exception:
+                pass
+    return np.matmul(q_left.astype(np.int64), q_right.astype(np.int64))
+
+
+def _to_gazelle_batches(
+    q_left: NDArray[np.int32],
+    q_right: NDArray[np.int32],
+):
+    left = np.asarray(q_left, dtype=np.int32)
+    right = np.asarray(q_right, dtype=np.int32)
+    squeeze_last = False
+    if right.ndim == 1:
+        right = right[:, None]
+        squeeze_last = True
+    if left.ndim == 1:
+        left = left[None, None, :]
+        squeeze_left_batch = True
+        squeeze_left_row = True
+    elif left.ndim == 2:
+        left = left[None, :, :]
+        squeeze_left_batch = True
+        squeeze_left_row = False
+    elif left.ndim == 3:
+        squeeze_left_batch = False
+        squeeze_left_row = False
+    else:
+        return None
+    if right.ndim == 2:
+        right = right[None, :, :]
+        if left.shape[0] != 1:
+            right = np.repeat(right, left.shape[0], axis=0)
+    elif right.ndim == 3:
+        if left.shape[0] == 1 and right.shape[0] != 1:
+            left = np.repeat(left, right.shape[0], axis=0)
+            squeeze_left_batch = False
+        elif right.shape[0] == 1 and left.shape[0] != 1:
+            right = np.repeat(right, left.shape[0], axis=0)
+        elif right.shape[0] != left.shape[0]:
+            return None
+    else:
+        return None
+    if left.shape[2] != right.shape[1]:
+        return None
+
+    def restore(result: NDArray[np.int64]) -> NDArray[np.int64]:
+        out = result
+        if squeeze_left_batch:
+            out = out[0]
+        if squeeze_left_row:
+            out = out[0]
+        if squeeze_last:
+            out = np.squeeze(out, axis=-1)
+        return out
+
+    return left, right, restore
 
 
 class ScipySignalOpsBackend(SignalOpsBackend):
@@ -551,11 +778,16 @@ class TiledMVMBackend(MVMBackend):
     and input-column blocks, then accumulating partial dot products digitally.
     """
 
-    def __init__(self, tile_shape: tuple[int, int] = (2, 8)):
+    def __init__(
+        self,
+        tile_shape: tuple[int, int] = (2, 8),
+        matrix_backend: MatrixOpsBackend | None = None,
+    ):
         tile_rows, tile_cols = tile_shape
         if tile_rows <= 0 or tile_cols <= 0:
             raise ValueError("tile dimensions must be positive")
         self.tile_shape = (int(tile_rows), int(tile_cols))
+        self.matrix_backend = matrix_backend or QuantizedPhotonicMatrixOpsBackend()
         self.last_tile_count = 0
 
     def scan(self, weights: ArrayLike, features: ArrayLike) -> FloatArray:
@@ -573,7 +805,7 @@ class TiledMVMBackend(MVMBackend):
                 for col_start in range(0, in_dim, tile_cols):
                     col_stop = min(col_start + tile_cols, in_dim)
                     output[candidate_index, row_start:row_stop] += (
-                        matrix_multiply(
+                        self.matrix_backend.matmul(
                             weights_arr[
                                 candidate_index,
                                 row_start:row_stop,

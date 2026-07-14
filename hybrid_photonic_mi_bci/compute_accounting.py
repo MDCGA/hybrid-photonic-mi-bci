@@ -118,8 +118,8 @@ class LinearComputeLedger:
                 "This includes CAR, SOS band-pass filtering, FBCSP/LDA matrix "
                 "products, feature-standardization affine maps, exported MLP "
                 "inference Linear and LayerNorm affine layers including bias "
-                "via augmented constant inputs, candidate-head scans, retrieval "
-                "fusion, and distance cross terms. Fit and PyTorch training/backprop MACs are "
+                "via augmented constant inputs, 4-bit quantized candidate-head "
+                "tile scans, retrieval fusion, and distance cross terms. Fit and PyTorch training/backprop MACs are "
                 "reported separately but excluded from the main ratio."
             ),
             "excluded": [
@@ -475,7 +475,7 @@ def add_candidate_scan_events(
         photonic=True,
         stage=stage,
         category="candidate_head_scan",
-        implementation="simulated_photonic_tiled_mvm",
+        implementation="quantized_photonic_tiled_mvm_uint4",
         details={
             "windows": int(n_windows),
             "candidates": int(n_candidates),

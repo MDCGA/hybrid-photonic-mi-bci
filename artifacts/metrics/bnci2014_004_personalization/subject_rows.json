@@ -46,20 +46,20 @@
       "subject": 1,
       "line": "FBCSP + MLP + library + photonic scan",
       "eval_windows": 144,
-      "command_accuracy": 0.7430555555555556,
-      "balanced_command_accuracy": 0.7430555555555556,
-      "accepted_accuracy": 0.7642857142857142,
-      "reject_rate": 0.027777777777777776,
+      "command_accuracy": 0.75,
+      "balanced_command_accuracy": 0.75,
+      "accepted_accuracy": 0.7552447552447552,
+      "reject_rate": 0.006944444444444444,
       "confusion": [
         [
-          65,
+          67,
           5,
-          2
+          0
         ],
         [
-          28,
-          42,
-          2
+          30,
+          41,
+          1
         ]
       ],
       "calibration_trials_total": 16,
@@ -112,20 +112,20 @@
       "subject": 2,
       "line": "FBCSP + MLP + library + photonic scan",
       "eval_windows": 144,
-      "command_accuracy": 0.5138888888888888,
-      "balanced_command_accuracy": 0.5138888888888888,
-      "accepted_accuracy": 0.5401459854014599,
-      "reject_rate": 0.04861111111111111,
+      "command_accuracy": 0.5555555555555556,
+      "balanced_command_accuracy": 0.5555555555555556,
+      "accepted_accuracy": 0.5594405594405595,
+      "reject_rate": 0.006944444444444444,
       "confusion": [
         [
-          39,
-          30,
-          3
+          43,
+          28,
+          1
         ],
         [
-          33,
           35,
-          4
+          37,
+          0
         ]
       ],
       "calibration_trials_total": 16,
@@ -178,10 +178,10 @@
       "subject": 3,
       "line": "FBCSP + MLP + library + photonic scan",
       "eval_windows": 144,
-      "command_accuracy": 0.5416666666666666,
-      "balanced_command_accuracy": 0.5416666666666666,
-      "accepted_accuracy": 0.5454545454545454,
-      "reject_rate": 0.006944444444444444,
+      "command_accuracy": 0.5208333333333334,
+      "balanced_command_accuracy": 0.5208333333333334,
+      "accepted_accuracy": 0.5319148936170213,
+      "reject_rate": 0.020833333333333332,
       "confusion": [
         [
           28,
@@ -189,9 +189,9 @@
           0
         ],
         [
-          21,
-          50,
-          1
+          22,
+          47,
+          3
         ]
       ],
       "calibration_trials_total": 16,
@@ -244,20 +244,20 @@
       "subject": 4,
       "line": "FBCSP + MLP + library + photonic scan",
       "eval_windows": 144,
-      "command_accuracy": 0.9513888888888888,
-      "balanced_command_accuracy": 0.9513888888888888,
-      "accepted_accuracy": 0.9927536231884058,
-      "reject_rate": 0.041666666666666664,
+      "command_accuracy": 0.9583333333333334,
+      "balanced_command_accuracy": 0.9583333333333334,
+      "accepted_accuracy": 0.9787234042553191,
+      "reject_rate": 0.020833333333333332,
       "confusion": [
         [
           67,
-          0,
-          5
+          2,
+          3
         ],
         [
           1,
-          70,
-          1
+          71,
+          0
         ]
       ],
       "calibration_trials_total": 16,
@@ -310,20 +310,20 @@
       "subject": 5,
       "line": "FBCSP + MLP + library + photonic scan",
       "eval_windows": 144,
-      "command_accuracy": 0.8888888888888888,
-      "balanced_command_accuracy": 0.8888888888888888,
-      "accepted_accuracy": 0.9014084507042254,
-      "reject_rate": 0.013888888888888888,
+      "command_accuracy": 0.8611111111111112,
+      "balanced_command_accuracy": 0.8611111111111112,
+      "accepted_accuracy": 0.9051094890510949,
+      "reject_rate": 0.04861111111111111,
       "confusion": [
         [
-          64,
-          6,
+          65,
+          5,
           2
         ],
         [
           8,
-          64,
-          0
+          59,
+          5
         ]
       ],
       "calibration_trials_total": 16,
@@ -376,15 +376,15 @@
       "subject": 6,
       "line": "FBCSP + MLP + library + photonic scan",
       "eval_windows": 144,
-      "command_accuracy": 0.6666666666666666,
-      "balanced_command_accuracy": 0.6666666666666666,
-      "accepted_accuracy": 0.7007299270072993,
-      "reject_rate": 0.04861111111111111,
+      "command_accuracy": 0.7152777777777778,
+      "balanced_command_accuracy": 0.7152777777777777,
+      "accepted_accuracy": 0.7253521126760564,
+      "reject_rate": 0.013888888888888888,
       "confusion": [
         [
-          30,
-          35,
-          7
+          37,
+          33,
+          2
         ],
         [
           6,
@@ -442,10 +442,10 @@
       "subject": 7,
       "line": "FBCSP + MLP + library + photonic scan",
       "eval_windows": 144,
-      "command_accuracy": 0.8194444444444444,
-      "balanced_command_accuracy": 0.8194444444444444,
-      "accepted_accuracy": 0.8309859154929577,
-      "reject_rate": 0.013888888888888888,
+      "command_accuracy": 0.8333333333333334,
+      "balanced_command_accuracy": 0.8333333333333334,
+      "accepted_accuracy": 0.8333333333333334,
+      "reject_rate": 0.0,
       "confusion": [
         [
           69,
@@ -454,8 +454,8 @@
         ],
         [
           21,
-          49,
-          2
+          51,
+          0
         ]
       ],
       "calibration_trials_total": 16,
@@ -508,20 +508,20 @@
       "subject": 8,
       "line": "FBCSP + MLP + library + photonic scan",
       "eval_windows": 144,
-      "command_accuracy": 0.7916666666666666,
-      "balanced_command_accuracy": 0.7916666666666667,
-      "accepted_accuracy": 0.7916666666666666,
-      "reject_rate": 0.0,
+      "command_accuracy": 0.7708333333333334,
+      "balanced_command_accuracy": 0.7708333333333334,
+      "accepted_accuracy": 0.7762237762237763,
+      "reject_rate": 0.006944444444444444,
       "confusion": [
         [
-          47,
-          25,
+          42,
+          30,
           0
         ],
         [
-          5,
-          67,
-          0
+          2,
+          69,
+          1
         ]
       ],
       "calibration_trials_total": 16,
@@ -574,20 +574,20 @@
       "subject": 9,
       "line": "FBCSP + MLP + library + photonic scan",
       "eval_windows": 144,
-      "command_accuracy": 0.7916666666666666,
-      "balanced_command_accuracy": 0.7916666666666667,
-      "accepted_accuracy": 0.7972027972027972,
-      "reject_rate": 0.006944444444444444,
+      "command_accuracy": 0.7777777777777778,
+      "balanced_command_accuracy": 0.7777777777777778,
+      "accepted_accuracy": 0.7943262411347518,
+      "reject_rate": 0.020833333333333332,
       "confusion": [
         [
-          62,
-          10,
+          63,
+          9,
           0
         ],
         [
-          19,
-          52,
-          1
+          20,
+          49,
+          3
         ]
       ],
       "calibration_trials_total": 16,
