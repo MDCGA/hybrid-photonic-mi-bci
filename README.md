@@ -189,24 +189,32 @@ the same photonic MVM path as the weights.
 
 Algorithm code should route matrix products and forward signal-processing
 linear operations through `hybrid_photonic_mi_bci.backends` instead of calling
-`np @`, `np.einsum`, or direct filtering kernels from workflow code. The current
-defaults are `SimulatedPhotonicMatrixOpsBackend` and
-`SimulatedPhotonicSignalOpsBackend`, which use NumPy/SciPy internally as
-deterministic software stand-ins for future photonic drivers.
+`np @`, `np.einsum`, or direct filtering kernels from workflow code. The default
+matrix path is `BitSlicedPhotonicMatrixOpsBackend`: it represents ordinary
+forward operators at 8-bit logical precision, decomposes each value into
+radix-16 slices, evaluates every slice pair with physical uint4/int4 calls, and
+reconstructs the result by positional-weight accumulation. System-level matrices
+are independently decomposed into `2 x 8` spatial tiles.
 
 The tiled candidate scan uses `QuantizedPhotonicMatrixOpsBackend` internally by
-default. Its active hardware profile is the 4-bit sweet spot used by the
-photonic unit:
+default and intentionally remains a single-pass 4-bit path. Both the candidate
+scan and bit-sliced path use the same physical sweet-spot contract:
 
 ```text
 qinmin = 0,  qinmax = 15
 qwtmin = -8, qwtmax = 7
 ```
 
-The quantized backend follows the LT-Simulator `custom_matmul.py` integration:
-it first tries `osimulator.api.load_gazelle_model()`, falls back to integer
-NumPy matmul if the simulator is unavailable, removes input zero-point offset,
-and then dequantizes the result.
+The physical tile executor follows the LT-Simulator `custom_matmul.py`
+integration: it first tries `osimulator.api.load_gazelle_model()`, falls back to
+integer NumPy matmul if the simulator is unavailable, removes input zero-point
+offset, and then dequantizes or bit-slice-reconstructs the result.
+
+For example, an unsigned logical integer is expanded as
+`q = q0 + 16*q1 + 16^2*q2 + ...`, where every `qi` is in `[0, 15]`. Signed
+weights use balanced radix-16 digits in `[-8, 7]`. This preserves a higher
+logical precision without requiring one physical call to exceed 4 bits. It is
+runtime fixed-point decomposition, not QAT.
 
 A real matrix driver can replace the matrix path with
 `set_matrix_ops_backend(...)` or be scoped with `use_matrix_ops_backend(...)`.
@@ -246,8 +254,9 @@ photonic_linear_share = forward_photonic_linear_MACs / forward_total_linear_MACs
 
 Scope:
 
-- counted as photonic: backend-routed CAR, Butterworth SOS `sosfiltfilt`
-  band-pass filtering, FBCSP covariance/projection matrix products,
+- counted as photonic: CAR expanded as a channel-mixing matrix, Butterworth SOS
+  filtering expanded into per-section `3 x 3` state transitions for both filter
+  directions, FBCSP covariance/projection matrix products,
   selected-feature standardization affine maps, LDA/linear-head scoring,
   exported MLP `Linear` layers, MLP LayerNorm affine parameters, linear-head
   and MLP bias via augmented constant-one inputs, experience-library retrieval
@@ -261,11 +270,11 @@ Scope:
   nonlinear feature operations, `eigh`/`pinv` decompositions, and
   visualization-only PCA/projection products.
 
-CAR can be represented as a fixed channel projection and band-pass filtering can
-be represented as a linear FIR/state-space operator, so both are now exposed
-through `SignalOpsBackend`. The current implementation is still a software
-simulation; it establishes the replacement boundary for later photonic signal
-hardware.
+CAR is executed as a fixed channel projection. Each SOS section is executed as
+a `3 x 3` state transition whose coefficient MACs pass through the same
+bit-sliced MatrixOps backend; forward and reverse passes retain zero-phase
+filtering. The current physical executor is still the Gazelle/NumPy integer
+software path, not a real-chip latency or power measurement.
 
 The SOS filter estimate uses:
 
@@ -330,6 +339,13 @@ Run one full online inference pass from a single held-out EEG window:
 ```bash
 python examples/run_single_window_inference.py --evaluation-index 0
 ```
+
+This script explicitly separates offline setup from online execution. Dataset
+loading, model fitting, bulk replay feature caching, and threshold calibration
+use the NumPy/SciPy reference backend. After setup, the selected raw EEG window
+runs FBCSP filtering/projection, standardization, compact-MLP inference, and the
+candidate scan through the photonic backends. Terminal output reports elapsed
+time and physical bit-sliced tile evaluations for each online stage.
 
 Useful parameters:
 
@@ -480,6 +496,36 @@ Key figures:
 - `compute_accounting_summary`: forward MatrixOps/SignalOps-vs-digital linear MAC split and online share.
 - `design_line_summary`: final line comparison.
 
+## Precision and Hardware Roadmap
+
+The current policy is deliberately mixed:
+
+- candidate-head scan: one physical uint4/int4 pass per spatial tile;
+- other forward linear operators: 8-bit logical fixed point reconstructed from
+  multiple uint4/int4 slice pairs;
+- matrix shape: independently tiled into `2 x 8` blocks;
+- nonlinear activations, variance/log operations, sorting, rejection, and
+  control flow: digital execution outside the linear-MAC denominator.
+
+The next precision study must determine what each algorithm stage actually
+needs instead of assigning one conservative precision everywhere. CAR, SOS
+state transitions, FBCSP projection, standardization, individual MLP layers,
+distance cross terms, candidate heads, and probability fusion should each be
+swept across logical precision. The deployment policy should select the lowest
+precision that still satisfies command accuracy, accepted accuracy, reject
+rate, numerical stability, and noise-robustness targets. This per-operator mixed
+precision policy can remove unnecessary slice pairs, tile evaluations, latency,
+and energy.
+
+A second study should widen the physical photonic unit from 4 bits to candidate
+5/6/8-bit designs. Wider cells are expected to lose noise tolerance, but they
+also reduce positional slices and partial-sum accumulation. The useful question
+is therefore not whether wider precision is noisier in isolation, but whether
+its measured accuracy and reject behavior remain inside engineering limits while
+effective throughput, latency, and energy improve. Results should be reported as
+a Pareto comparison over task metrics, injected hardware noise, effective bits,
+physical tile/slice calls, latency, and energy.
+
 ## Tests
 
 Run all tests:
@@ -488,6 +534,8 @@ Run all tests:
 python -m unittest discover -s tests
 ```
 
-The tests cover the generic MVM backend, tiled MVM behavior, FBCSP output shapes,
+The tests cover spatial tile reconstruction, 8-bit logical values reconstructed
+from physical uint4/int4 slices, signed candidate-head weights, photonic SOS
+state-space equivalence against SciPy, generic MVM behavior, FBCSP output shapes,
 shrinkage LDA, experience-library scan shape, replay split protocol, the Cyton
 host simulator, Cyton command builder, and SQLite experience group store.

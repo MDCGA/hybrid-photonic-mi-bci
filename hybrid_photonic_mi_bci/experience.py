@@ -134,7 +134,11 @@ def scan_experience_heads(
             tile_count = int(getattr(backend, "last_tile_count"))
         if progress_callback is not None:
             window_probs = softmax(candidate_scores[index])
-            fused_probability = np.sum(selected_weights[:, None] * window_probs, axis=0)
+            fused_probability = candidate_probability_fusion(
+                selected_weights,
+                window_probs[None, :, :],
+                name="experience_progress_probability_fusion",
+            )[0]
             progress_callback(index + 1, x.shape[0], fused_probability.astype(np.float64))
     candidate_probs = softmax(candidate_scores.reshape(-1, candidate_scores.shape[-1])).reshape(
         candidate_scores.shape

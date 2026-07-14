@@ -17,6 +17,13 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from fbcsp_design_args import add_design_arguments, config_from_args  # noqa: E402
+from hybrid_photonic_mi_bci.backends import (  # noqa: E402
+    NumpyMatrixOpsBackend,
+    ScipySignalOpsBackend,
+    get_matrix_ops_backend,
+    use_matrix_ops_backend,
+    use_signal_ops_backend,
+)
 from hybrid_photonic_mi_bci.datasets import load_pooled_subject_trials  # noqa: E402
 from hybrid_photonic_mi_bci.experience import (  # noqa: E402
     ExperienceEntry,
@@ -65,7 +72,17 @@ def main() -> None:
     cfg = config_from_args(args)
 
     timings: dict[str, float] = {}
-    prepared = timed("setup_total", timings, lambda: prepare_runtime(cfg, timings))
+    print("[single-inference] setup backend=numpy/scipy (offline preparation)")
+    with use_matrix_ops_backend(NumpyMatrixOpsBackend()), use_signal_ops_backend(
+        ScipySignalOpsBackend()
+    ):
+        prepared = timed("setup_total", timings, lambda: prepare_runtime(cfg, timings))
+
+    online_backend = get_matrix_ops_backend()
+    print(
+        "[single-inference] online linear backend="
+        f"{getattr(online_backend, 'execution_backend', type(online_backend).__name__)}"
+    )
 
     evaluation_count = len(prepared.split.evaluation_abs)
     if not 0 <= args.evaluation_index < evaluation_count:
@@ -79,7 +96,13 @@ def main() -> None:
     trial = prepared.dataset.trials[absolute_index : absolute_index + 1]
 
     online_timings: dict[str, float] = {}
-    output = run_one_online_forward(prepared, trial, online_timings)
+    online_tile_counts: dict[str, int] = {}
+    output = run_one_online_forward(
+        prepared,
+        trial,
+        online_timings,
+        online_tile_counts,
+    )
     decision = output.decisions[0]
     probabilities = output.probabilities[0]
 
@@ -122,8 +145,15 @@ def main() -> None:
     print("\nSingle online forward timings")
     total_online = sum(online_timings.values())
     for name, elapsed in online_timings.items():
-        print(f"{name}: {elapsed * 1000.0:.3f} ms")
+        print(
+            f"{name}: {elapsed * 1000.0:.3f} ms, "
+            f"bit_sliced_photonic_tiles={online_tile_counts.get(name, 0)}"
+        )
     print(f"online_forward_total: {total_online * 1000.0:.3f} ms")
+    print(
+        "online_bit_sliced_photonic_tiles: "
+        f"{sum(online_tile_counts.values())}"
+    )
 
 
 def prepare_runtime(cfg, timings: dict[str, float]) -> PreparedRuntime:
@@ -268,27 +298,35 @@ def run_one_online_forward(
     prepared: PreparedRuntime,
     trial: np.ndarray,
     timings: dict[str, float],
+    tile_counts: dict[str, int] | None = None,
 ):
-    raw_features = timed(
+    counts = tile_counts if tile_counts is not None else {}
+    raw_features = timed_photonic(
         "fbcsp_transform_one_window",
         timings,
+        counts,
         lambda: prepared.fbcsp.transform(trial).vector[:, prepared.selected_indices],
     )
-    features = timed(
+    features = timed_photonic(
         "standardize_one_window",
         timings,
+        counts,
         lambda: prepared.standardizer.transform(raw_features),
     )
-    _scores, embedding = timed(
+    _scores, embedding = timed_photonic(
         "small_mlp_forward_one_window",
         timings,
+        counts,
         lambda: _forward_numpy(prepared.mlp_model, features),
     )
-    return timed(
+    output = timed_photonic(
         "pure_runtime_photonic_scan_one_window",
         timings,
+        counts,
         lambda: prepared.runtime.predict(embedding),
     )
+    counts["pure_runtime_photonic_scan_one_window"] = output.tile_count_per_window
+    return output
 
 
 def build_experience_entries(
@@ -367,6 +405,20 @@ def timed(name: str, timings: dict[str, float], func: Callable[[], T]) -> T:
     start = perf_counter()
     result = func()
     timings[name] = perf_counter() - start
+    return result
+
+
+def timed_photonic(
+    name: str,
+    timings: dict[str, float],
+    tile_counts: dict[str, int],
+    func: Callable[[], T],
+) -> T:
+    backend = get_matrix_ops_backend()
+    before = int(getattr(backend, "total_tile_count", 0))
+    result = timed(name, timings, func)
+    after = int(getattr(backend, "total_tile_count", before))
+    tile_counts[name] = max(0, after - before)
     return result
 
 

@@ -1,13 +1,15 @@
 """Hybrid photonic MI-BCI simulation toolkit.
 
 The package keeps matrix products behind a backend interface. The default
-MatrixOps backend is a high-precision simulated photonic handoff for stable
-fitting and replay. The tiled candidate-scan backend uses a 4-bit quantized
-photonic matmul path by default and can call the optional Gazelle simulator
-when installed.
+MatrixOps backend reconstructs 8-bit logical values from physical uint4/int4
+photonic slices. The candidate-scan backend uses a single 4-bit pass by default.
+Both paths decompose system-level matrices into ``2 x 8`` hardware tiles and
+can call the optional Gazelle simulator when installed.
 """
 
 from .backends import (
+    BitSlicedPhotonicConfig,
+    BitSlicedPhotonicMatrixOpsBackend,
     MVMBackend,
     MatrixOpsBackend,
     NumpyMVMBackend,
@@ -56,6 +58,8 @@ from .pipeline import HybridBCIPipeline, PipelineOutput
 from .projection_library import ProjectionCandidate, ProjectionLibrary
 
 __all__ = [
+    "BitSlicedPhotonicConfig",
+    "BitSlicedPhotonicMatrixOpsBackend",
     "DecisionConfig",
     "DEFAULT_FILTER_BANK",
     "ConfidenceSelector",

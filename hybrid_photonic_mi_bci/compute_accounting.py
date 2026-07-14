@@ -4,8 +4,9 @@ The main accounting ratio is forward-only: preprocessing, calibration forward
 passes, and online inference are included; model fitting and training/backprop
 are excluded from the denominator. Algorithm-path matrix products routed
 through ``MatrixOpsBackend`` and forward signal-processing operations routed
-through ``SignalOpsBackend`` are treated as photonic compute because the active
-defaults are simulated photonic handoff backends.
+   through ``SignalOpsBackend`` are treated as photonic compute because the active
+   forward defaults use uint4/int4 bit-sliced photonic tiles and photonic signal
+   state transitions.
 """
 
 from __future__ import annotations
@@ -111,10 +112,13 @@ class LinearComputeLedger:
             "forward_stages": FORWARD_STAGES,
             "photonic_rule": (
                 "Algorithm-path MatrixOpsBackend matrix products are counted "
-                "as photonic because the active backend is "
-                "SimulatedPhotonicMatrixOpsBackend. Forward signal operations "
-                "routed through SignalOpsBackend are also counted as photonic "
-                "because the active backend is SimulatedPhotonicSignalOpsBackend. "
+                "as photonic because the active forward backend is "
+                "BitSlicedPhotonicMatrixOpsBackend. It reconstructs 8-bit logical "
+                "values from physical uint4/int4 calls and decomposes every matrix "
+                "into 2 x 8 tiles. Forward signal operations routed through "
+                "SignalOpsBackend are also counted as photonic: CAR is an explicit "
+                "channel-mixing matrix and each SOS section is a 3 x 3 state "
+                "transition executed through the same MatrixOps backend. "
                 "This includes CAR, SOS band-pass filtering, FBCSP/LDA matrix "
                 "products, feature-standardization affine maps, exported MLP "
                 "inference Linear and LayerNorm affine layers including bias "
@@ -223,7 +227,7 @@ def add_fbcsp_events(
         photonic=True,
         stage="fit",
         category="fbcsp_covariance",
-        implementation="simulated_photonic_matmul",
+        implementation="bit_sliced_photonic_tiled_matmul_uint4_int4",
         details={
             "trials": int(n_train),
             "bands": int(n_bands),
@@ -276,7 +280,7 @@ def add_fbcsp_transform_events(
         photonic=True,
         stage=stage,
         category="fbcsp_projection",
-        implementation="simulated_photonic_einsum",
+        implementation="bit_sliced_photonic_tiled_einsum_uint4_int4",
         details={
             "trials": int(n_trials),
             "bands": int(n_bands),
@@ -309,7 +313,7 @@ def add_car_event(
         photonic=True,
         stage=stage,
         category="car_reference",
-        implementation="simulated_photonic_car",
+        implementation="bit_sliced_photonic_car_matrix_uint4_int4",
         details={
             "samples": int(n_samples),
             "channels": int(n_channels),
@@ -348,7 +352,7 @@ def add_sosfiltfilt_event(
         photonic=True,
         stage=stage,
         category="bandpass_filter",
-        implementation="simulated_photonic_sosfiltfilt",
+        implementation="bit_sliced_photonic_sos_state_space_uint4_int4",
         details={
             "trials": int(n_trials),
             "bands": int(n_bands),
@@ -380,7 +384,7 @@ def add_lda_fit_events(
         photonic=True,
         stage=stage,
         category="lda_fit_covariance",
-        implementation="simulated_photonic_matmul",
+        implementation="bit_sliced_photonic_tiled_matmul_uint4_int4",
         details={
             "samples": int(n_samples),
             "features": int(n_features),
@@ -393,7 +397,7 @@ def add_lda_fit_events(
         photonic=True,
         stage=stage,
         category="lda_fit_parameters",
-        implementation="simulated_photonic_matmul",
+        implementation="bit_sliced_photonic_tiled_matmul_uint4_int4",
         details={
             "classes": int(n_classes),
             "features": int(n_features),
@@ -411,7 +415,7 @@ def add_linear_scores_event(
     n_outputs: int,
     stage: str,
     photonic: bool = True,
-    implementation: str = "simulated_photonic_augmented_matmul",
+    implementation: str = "bit_sliced_photonic_augmented_matmul_uint4_int4",
     category: str = "linear_head_scores",
 ) -> None:
     ledger.add(
@@ -447,7 +451,7 @@ def add_feature_standardization_event(
         photonic=True,
         stage=stage,
         category="feature_standardization_affine",
-        implementation="simulated_photonic_augmented_matmul",
+        implementation="bit_sliced_photonic_augmented_matmul_uint4_int4",
         details={
             "samples": int(n_samples),
             "features": int(n_features),
@@ -491,7 +495,7 @@ def add_candidate_scan_events(
         photonic=True,
         stage=stage,
         category="experience_fusion",
-        implementation="simulated_photonic_einsum",
+        implementation="bit_sliced_photonic_tiled_einsum_uint4_int4",
         details={
             "windows": int(n_windows),
             "candidates": int(n_candidates),
@@ -517,7 +521,7 @@ def add_centroid_retrieval_event(
         photonic=True,
         stage=stage,
         category="experience_retrieval_distance",
-        implementation="matrix_ops_distance_cross_term",
+        implementation="bit_sliced_photonic_distance_cross_term_uint4_int4",
         details={
             "queries": int(n_queries),
             "centroids": int(n_centroids),
@@ -595,7 +599,7 @@ def add_mlp_forward_event(
         photonic=True,
         stage=stage,
         category="mlp_linear_forward",
-        implementation="matrix_ops_linear",
+        implementation="bit_sliced_photonic_linear_uint4_int4",
         details={
             "samples": int(n_samples),
             "input_dim": int(input_dim),

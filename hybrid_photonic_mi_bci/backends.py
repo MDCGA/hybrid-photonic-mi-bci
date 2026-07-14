@@ -18,10 +18,20 @@ from typing import Iterator
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+from scipy.signal import sosfilt_zi as _scipy_sosfilt_zi
 from scipy.signal import sosfiltfilt as _scipy_sosfiltfilt
 
 
 FloatArray = NDArray[np.float64]
+
+
+def _normalize_axis(axis: int, ndim: int) -> int:
+    normalized = int(axis)
+    if normalized < 0:
+        normalized += ndim
+    if not 0 <= normalized < ndim:
+        raise ValueError(f"axis {axis} is out of bounds for array of dimension {ndim}")
+    return normalized
 
 
 class MatrixOpsBackend(ABC):
@@ -85,8 +95,9 @@ class SimulatedPhotonicMatrixOpsBackend(MatrixOpsBackend):
     This class is the active handoff point for all algorithmic matrix products.
     It keeps numerical behavior deterministic by evaluating with NumPy today,
     while operation names and the backend boundary match the future photonic
-    driver contract. The ``2 x 8`` tile shape is metadata for the hardware
-    primitive; larger operations are still accepted as system-level matrices.
+    driver contract. Every matrix product is decomposed into ``2 x 8`` hardware
+    tiles and reconstructed from partial sums, while callers continue to pass
+    system-level matrices of arbitrary compatible shape.
     """
 
     def __init__(self, tile_shape: tuple[int, int] = (2, 8), record_calls: bool = False):
@@ -96,17 +107,27 @@ class SimulatedPhotonicMatrixOpsBackend(MatrixOpsBackend):
         self.tile_shape = (int(tile_rows), int(tile_cols))
         self.record_calls = bool(record_calls)
         self.calls: list[tuple[str, str]] = []
+        self.last_tile_count = 0
+        self.total_tile_count = 0
+        self.execution_backend = "numpy_tiled_photonic_simulation"
 
     def matmul(self, left: ArrayLike, right: ArrayLike, *, name: str = "matmul") -> FloatArray:
         if self.record_calls:
             self.calls.append(("matmul", name))
-        return np.matmul(np.asarray(left, dtype=np.float64), np.asarray(right, dtype=np.float64))
+        result, tile_count = _tiled_matmul(
+            np.asarray(left, dtype=np.float64),
+            np.asarray(right, dtype=np.float64),
+            tile_shape=self.tile_shape,
+            tile_executor=np.matmul,
+        )
+        self.last_tile_count = tile_count
+        self.total_tile_count += tile_count
+        return result.astype(np.float64)
 
     def einsum(self, subscripts: str, *operands: ArrayLike, name: str = "einsum") -> FloatArray:
         if self.record_calls:
             self.calls.append(("einsum", name))
-        arrays = [np.asarray(operand, dtype=np.float64) for operand in operands]
-        return np.einsum(subscripts, *arrays)
+        return _einsum_via_matmul(self, subscripts, operands, name=name)
 
 
 @dataclass(frozen=True)
@@ -133,6 +154,34 @@ class PhotonicQuantizationConfig:
         return f"uint{self.bit_width}"
 
 
+@dataclass(frozen=True)
+class BitSlicedPhotonicConfig:
+    """Logical fixed-point precision reconstructed from physical 4-bit calls."""
+
+    logical_input_bits: int = 8
+    logical_weight_bits: int = 8
+    slice_bits: int = 4
+    eps: float = 1e-8
+
+    def __post_init__(self) -> None:
+        if self.logical_input_bits <= 0 or self.logical_weight_bits <= 1:
+            raise ValueError("logical bit widths must be positive")
+        if self.slice_bits != 4:
+            raise ValueError("the current photonic slice contract is fixed at 4 bits")
+
+    @property
+    def input_qmax(self) -> int:
+        return (1 << self.logical_input_bits) - 1
+
+    @property
+    def weight_qmin(self) -> int:
+        return -(1 << (self.logical_weight_bits - 1))
+
+    @property
+    def weight_qmax(self) -> int:
+        return (1 << (self.logical_weight_bits - 1)) - 1
+
+
 class QuantizedPhotonicMatrixOpsBackend(MatrixOpsBackend):
     """4/8-bit software bridge to the photonic integer matmul contract.
 
@@ -149,10 +198,17 @@ class QuantizedPhotonicMatrixOpsBackend(MatrixOpsBackend):
         record_calls: bool = False,
         use_gazelle_model: bool = True,
         announce: bool = True,
+        tile_shape: tuple[int, int] = (2, 8),
     ) -> None:
         self.config = config or PhotonicQuantizationConfig.for_bit_width(4)
+        tile_rows, tile_cols = tile_shape
+        if tile_rows <= 0 or tile_cols <= 0:
+            raise ValueError("tile dimensions must be positive")
+        self.tile_shape = (int(tile_rows), int(tile_cols))
         self.record_calls = bool(record_calls)
         self.calls: list[tuple[str, str]] = []
+        self.last_tile_count = 0
+        self.total_tile_count = 0
         self._gazelle_model = _load_gazelle_model() if use_gazelle_model else None
         self.execution_backend = (
             "gazelle_simulator"
@@ -171,44 +227,87 @@ class QuantizedPhotonicMatrixOpsBackend(MatrixOpsBackend):
     def matmul(self, left: ArrayLike, right: ArrayLike, *, name: str = "matmul") -> FloatArray:
         if self.record_calls:
             self.calls.append(("matmul", name))
-        return _quantized_photonic_matmul(
+        result, tile_count = _quantized_photonic_matmul(
             left,
             right,
             config=self.config,
             gazelle_model=self._gazelle_model,
+            tile_shape=self.tile_shape,
         )
+        self.last_tile_count = tile_count
+        self.total_tile_count += tile_count
+        return result
 
     def einsum(self, subscripts: str, *operands: ArrayLike, name: str = "einsum") -> FloatArray:
         if self.record_calls:
             self.calls.append(("einsum", name))
-        arrays = [np.asarray(operand, dtype=np.float64) for operand in operands]
-        if subscripts == "fc,nct->nft" and len(arrays) == 2:
-            filters, trials = arrays
-            if filters.ndim != 2 or trials.ndim != 3:
-                return np.einsum(subscripts, *arrays)
-            n_trials, n_channels, n_samples = trials.shape
-            if filters.shape[1] != n_channels:
-                return np.einsum(subscripts, *arrays)
-            flat = trials.transpose(0, 2, 1).reshape(n_trials * n_samples, n_channels)
-            projected = self.matmul(flat, filters.T, name=name)
-            return projected.reshape(n_trials, n_samples, filters.shape[0]).transpose(0, 2, 1)
-        if subscripts == "k,nkc->nc" and len(arrays) == 2:
-            weights, probabilities = arrays
-            if weights.ndim != 1 or probabilities.ndim != 3:
-                return np.einsum(subscripts, *arrays)
-            return self.matmul(probabilities.transpose(0, 2, 1), weights, name=name)
-        if subscripts == "nd,ncd->nc" and len(arrays) == 2:
-            vectors, prototypes = arrays
-            if vectors.ndim != 2 or prototypes.ndim != 3:
-                return np.einsum(subscripts, *arrays)
-            return self.matmul(vectors[:, None, :], prototypes.transpose(0, 2, 1), name=name).squeeze(1)
-        if subscripts == "nij,sj->nsi" and len(arrays) == 2:
-            weights, samples = arrays
-            if weights.ndim != 3 or samples.ndim != 2:
-                return np.einsum(subscripts, *arrays)
-            expanded_samples = np.broadcast_to(samples, (weights.shape[0], *samples.shape))
-            return self.matmul(expanded_samples, weights.transpose(0, 2, 1), name=name)
-        return np.einsum(subscripts, *arrays)
+        return _einsum_via_matmul(self, subscripts, operands, name=name)
+
+
+class BitSlicedPhotonicMatrixOpsBackend(MatrixOpsBackend):
+    """Reconstruct higher logical precision from 4-bit photonic tile calls.
+
+    Activations are affine-quantized to an unsigned logical integer and split
+    into radix-16 digits in ``[0, 15]``. Signed logical weights use balanced
+    radix-16 digits in ``[-8, 7]``. Every digit pair is evaluated by the same
+    physical ``2 x 8`` uint4/int4 contract and accumulated with its radix
+    weight. This is positional decomposition, not a one-shot 4-bit truncation.
+    """
+
+    def __init__(
+        self,
+        config: BitSlicedPhotonicConfig | None = None,
+        *,
+        tile_shape: tuple[int, int] = (2, 8),
+        record_calls: bool = False,
+        use_gazelle_model: bool = True,
+        announce: bool = True,
+    ) -> None:
+        self.config = config or BitSlicedPhotonicConfig()
+        tile_rows, tile_cols = tile_shape
+        if tile_rows <= 0 or tile_cols <= 0:
+            raise ValueError("tile dimensions must be positive")
+        self.tile_shape = (int(tile_rows), int(tile_cols))
+        self.record_calls = bool(record_calls)
+        self.calls: list[tuple[str, str]] = []
+        self.last_tile_count = 0
+        self.total_tile_count = 0
+        self.last_slice_pair_count = 0
+        self._gazelle_model = _load_gazelle_model() if use_gazelle_model else None
+        self.execution_backend = (
+            "gazelle_simulator_bit_sliced"
+            if self._gazelle_model is not None
+            else "numpy_integer_matmul_bit_sliced"
+        )
+        if announce:
+            print(
+                "[photonic-matmul] "
+                f"backend={self.execution_backend}, "
+                f"logical_input_bits={self.config.logical_input_bits}, "
+                f"logical_weight_bits={self.config.logical_weight_bits}, "
+                "physical_slice=uint4/int4, "
+                f"tile={self.tile_shape}"
+            )
+
+    def matmul(self, left: ArrayLike, right: ArrayLike, *, name: str = "matmul") -> FloatArray:
+        if self.record_calls:
+            self.calls.append(("matmul", name))
+        result, tile_count, slice_pair_count = _bit_sliced_photonic_matmul(
+            left,
+            right,
+            config=self.config,
+            gazelle_model=self._gazelle_model,
+            tile_shape=self.tile_shape,
+        )
+        self.last_tile_count = tile_count
+        self.total_tile_count += tile_count
+        self.last_slice_pair_count = slice_pair_count
+        return result
+
+    def einsum(self, subscripts: str, *operands: ArrayLike, name: str = "einsum") -> FloatArray:
+        if self.record_calls:
+            self.calls.append(("einsum", name))
+        return _einsum_via_matmul(self, subscripts, operands, name=name)
 
 
 def _load_gazelle_model():
@@ -220,20 +319,162 @@ def _load_gazelle_model():
         return None
 
 
+def _normalize_matmul_operands(
+    left: ArrayLike,
+    right: ArrayLike,
+) -> tuple[np.ndarray, np.ndarray, bool, bool]:
+    left_arr = np.asarray(left)
+    right_arr = np.asarray(right)
+    if left_arr.ndim == 0 or right_arr.ndim == 0:
+        raise ValueError("photonic matmul operands must be at least one-dimensional")
+
+    left_was_vector = left_arr.ndim == 1
+    right_was_vector = right_arr.ndim == 1
+    left_matrix = left_arr[None, :] if left_was_vector else left_arr
+    right_matrix = right_arr[:, None] if right_was_vector else right_arr
+    if left_matrix.shape[-1] != right_matrix.shape[-2]:
+        raise ValueError(
+            "photonic matmul inner dimensions must match, "
+            f"got {left_arr.shape} and {right_arr.shape}"
+        )
+
+    batch_shape = np.broadcast_shapes(left_matrix.shape[:-2], right_matrix.shape[:-2])
+    left_matrix = np.broadcast_to(left_matrix, (*batch_shape, *left_matrix.shape[-2:]))
+    right_matrix = np.broadcast_to(right_matrix, (*batch_shape, *right_matrix.shape[-2:]))
+    return left_matrix, right_matrix, left_was_vector, right_was_vector
+
+
+def _restore_matmul_shape(
+    result: np.ndarray,
+    *,
+    left_was_vector: bool,
+    right_was_vector: bool,
+) -> np.ndarray:
+    restored = result
+    if left_was_vector:
+        restored = np.squeeze(restored, axis=-2)
+    if right_was_vector:
+        restored = np.squeeze(restored, axis=-1)
+    return restored
+
+
+def _tiled_matrix_product(
+    left_matrix: np.ndarray,
+    right_matrix: np.ndarray,
+    *,
+    tile_shape: tuple[int, int],
+    tile_executor,
+) -> tuple[np.ndarray, int]:
+    tile_rows, tile_cols = tile_shape
+    batch_shape = left_matrix.shape[:-2]
+    n_vectors = left_matrix.shape[-2]
+    inner_dim = left_matrix.shape[-1]
+    out_dim = right_matrix.shape[-1]
+    output_dtype = np.result_type(left_matrix.dtype, right_matrix.dtype)
+    output = np.zeros((*batch_shape, n_vectors, out_dim), dtype=output_dtype)
+
+    for out_start in range(0, out_dim, tile_rows):
+        out_stop = min(out_start + tile_rows, out_dim)
+        for inner_start in range(0, inner_dim, tile_cols):
+            inner_stop = min(inner_start + tile_cols, inner_dim)
+            output[..., out_start:out_stop] += tile_executor(
+                left_matrix[..., inner_start:inner_stop],
+                right_matrix[..., inner_start:inner_stop, out_start:out_stop],
+            )
+
+    batch_count = int(np.prod(batch_shape, dtype=np.int64)) if batch_shape else 1
+    tile_count = (
+        batch_count
+        * n_vectors
+        * int(np.ceil(out_dim / tile_rows))
+        * int(np.ceil(inner_dim / tile_cols))
+    )
+    return output, tile_count
+
+
+def _tiled_matmul(
+    left: ArrayLike,
+    right: ArrayLike,
+    *,
+    tile_shape: tuple[int, int],
+    tile_executor,
+) -> tuple[np.ndarray, int]:
+    left_matrix, right_matrix, left_was_vector, right_was_vector = (
+        _normalize_matmul_operands(left, right)
+    )
+    result, tile_count = _tiled_matrix_product(
+        left_matrix,
+        right_matrix,
+        tile_shape=tile_shape,
+        tile_executor=tile_executor,
+    )
+    return (
+        _restore_matmul_shape(
+            result,
+            left_was_vector=left_was_vector,
+            right_was_vector=right_was_vector,
+        ),
+        tile_count,
+    )
+
+
+def _einsum_via_matmul(
+    backend: MatrixOpsBackend,
+    subscripts: str,
+    operands: tuple[ArrayLike, ...],
+    *,
+    name: str,
+) -> FloatArray:
+    arrays = [np.asarray(operand, dtype=np.float64) for operand in operands]
+    if subscripts == "fc,nct->nft" and len(arrays) == 2:
+        filters, trials = arrays
+        if filters.ndim != 2 or trials.ndim != 3:
+            raise ValueError("fc,nct->nft expects filters=(F,C), trials=(N,C,T)")
+        n_trials, n_channels, n_samples = trials.shape
+        if filters.shape[1] != n_channels:
+            raise ValueError("CSP filter and trial channel dimensions must match")
+        flat = trials.transpose(0, 2, 1).reshape(n_trials * n_samples, n_channels)
+        projected = backend.matmul(flat, filters.T, name=name)
+        return projected.reshape(n_trials, n_samples, filters.shape[0]).transpose(0, 2, 1)
+    if subscripts == "k,nkc->nc" and len(arrays) == 2:
+        weights, probabilities = arrays
+        if weights.ndim != 1 or probabilities.ndim != 3:
+            raise ValueError("k,nkc->nc expects weights=(K,), probabilities=(N,K,C)")
+        return backend.matmul(probabilities.transpose(0, 2, 1), weights, name=name)
+    if subscripts == "nd,ncd->nc" and len(arrays) == 2:
+        vectors, prototypes = arrays
+        if vectors.ndim != 2 or prototypes.ndim != 3:
+            raise ValueError("nd,ncd->nc expects vectors=(N,D), prototypes=(N,C,D)")
+        return backend.matmul(
+            vectors[:, None, :],
+            prototypes.transpose(0, 2, 1),
+            name=name,
+        ).squeeze(1)
+    if subscripts == "nij,sj->nsi" and len(arrays) == 2:
+        weights, samples = arrays
+        if weights.ndim != 3 or samples.ndim != 2:
+            raise ValueError("nij,sj->nsi expects weights=(N,I,J), samples=(S,J)")
+        expanded_samples = np.broadcast_to(samples, (weights.shape[0], *samples.shape))
+        return backend.matmul(expanded_samples, weights.transpose(0, 2, 1), name=name)
+    raise NotImplementedError(
+        f"photonic matrix backend does not expose einsum pattern {subscripts!r}"
+    )
+
+
 def _quantized_photonic_matmul(
     left: ArrayLike,
     right: ArrayLike,
     *,
     config: PhotonicQuantizationConfig,
     gazelle_model,
-) -> FloatArray:
+    tile_shape: tuple[int, int],
+) -> tuple[FloatArray, int]:
     left_arr = np.asarray(left, dtype=np.float64)
     right_arr = np.asarray(right, dtype=np.float64)
-    if left_arr.shape[-1] != (right_arr.shape[0] if right_arr.ndim == 1 else right_arr.shape[-2]):
-        return np.matmul(left_arr, right_arr).astype(np.float64)
+    _normalize_matmul_operands(left_arr, right_arr)
 
-    left_min = float(np.min(left_arr))
-    left_max = float(np.max(left_arr))
+    left_min = min(float(np.min(left_arr)), 0.0)
+    left_max = max(float(np.max(left_arr)), 0.0)
     input_range = max(left_max - left_min, config.eps)
     input_scale = input_range / float(config.qinmax - config.qinmin)
     input_zp = int(np.clip(np.round(-left_min / input_scale), config.qinmin, config.qinmax))
@@ -246,17 +487,124 @@ def _quantized_photonic_matmul(
     q_right = np.rint(right_arr / weight_scale)
     q_right = np.clip(q_right, config.qwtmin, config.qwtmax).astype(np.int32)
 
-    raw = _integer_photonic_matmul(
-        q_left,
+    q_left_matrix, q_right_matrix, left_was_vector, right_was_vector = (
+        _normalize_matmul_operands(q_left, q_right)
+    )
+    raw, tile_count = _tiled_matrix_product(
+        q_left_matrix.astype(np.int64),
+        q_right_matrix.astype(np.int64),
+        tile_shape=tile_shape,
+        tile_executor=lambda tile_left, tile_right: _integer_photonic_matmul(
+            tile_left.astype(np.int32),
+            tile_right.astype(np.int32),
+            input_type=config.input_type,
+            gazelle_model=gazelle_model,
+        ),
+    )
+    right_sum = q_right_matrix.sum(axis=-2, dtype=np.int64).astype(np.float64)
+    corrected = raw.astype(np.float64) - float(input_zp) * right_sum[..., None, :]
+    restored = _restore_matmul_shape(
+        corrected,
+        left_was_vector=left_was_vector,
+        right_was_vector=right_was_vector,
+    )
+    return (restored * (input_scale * weight_scale)).astype(np.float64), tile_count
+
+
+def _unsigned_radix_slices(values: NDArray[np.int64], *, radix: int) -> list[NDArray[np.int32]]:
+    if np.any(values < 0):
+        raise ValueError("unsigned photonic slices cannot contain negative values")
+    remaining = values.copy()
+    slices: list[NDArray[np.int32]] = []
+    while np.any(remaining != 0) or not slices:
+        slices.append(np.remainder(remaining, radix).astype(np.int32))
+        remaining = np.floor_divide(remaining, radix)
+    return slices
+
+
+def _balanced_radix_slices(values: NDArray[np.int64], *, radix: int) -> list[NDArray[np.int32]]:
+    half_radix = radix // 2
+    remaining = values.copy()
+    slices: list[NDArray[np.int32]] = []
+    while np.any(remaining != 0) or not slices:
+        digit = np.remainder(remaining + half_radix, radix) - half_radix
+        slices.append(digit.astype(np.int32))
+        remaining = np.floor_divide(remaining - digit, radix)
+    return slices
+
+
+def _bit_sliced_photonic_matmul(
+    left: ArrayLike,
+    right: ArrayLike,
+    *,
+    config: BitSlicedPhotonicConfig,
+    gazelle_model,
+    tile_shape: tuple[int, int],
+) -> tuple[FloatArray, int, int]:
+    left_arr = np.asarray(left, dtype=np.float64)
+    right_arr = np.asarray(right, dtype=np.float64)
+    _normalize_matmul_operands(left_arr, right_arr)
+
+    left_min = min(float(np.min(left_arr)), 0.0)
+    left_max = max(float(np.max(left_arr)), 0.0)
+    input_range = max(left_max - left_min, config.eps)
+    input_scale = input_range / float(config.input_qmax)
+    input_zp = int(np.clip(np.round(-left_min / input_scale), 0, config.input_qmax))
+    q_left = np.rint(left_arr / input_scale + input_zp)
+    q_left = np.clip(q_left, 0, config.input_qmax).astype(np.int64)
+
+    weight_absmax = max(float(np.max(np.abs(right_arr))), config.eps)
+    weight_scale = weight_absmax / float(config.weight_qmax)
+    q_right = np.rint(right_arr / weight_scale)
+    q_right = np.clip(
         q_right,
-        input_type=config.input_type,
-        gazelle_model=gazelle_model,
-    ).astype(np.float64)
-    right_sum = q_right.sum(axis=-1 if q_right.ndim == 1 else -2, dtype=np.int64).astype(np.float64)
-    if right_sum.ndim > 0 and raw.ndim > right_sum.ndim and right_sum.shape[0] == raw.shape[0]:
-        right_sum = np.expand_dims(right_sum, axis=-2)
-    corrected = raw - float(input_zp) * right_sum
-    return (corrected * (input_scale * weight_scale)).astype(np.float64)
+        config.weight_qmin,
+        config.weight_qmax,
+    ).astype(np.int64)
+
+    q_left_matrix, q_right_matrix, left_was_vector, right_was_vector = (
+        _normalize_matmul_operands(q_left, q_right)
+    )
+    radix = 1 << config.slice_bits
+    left_slices = _unsigned_radix_slices(q_left_matrix, radix=radix)
+    right_slices = _balanced_radix_slices(q_right_matrix, radix=radix)
+    accumulated = np.zeros(
+        (*left_slices[0].shape[:-1], right_slices[0].shape[-1]),
+        dtype=np.int64,
+    )
+    total_tile_count = 0
+    slice_pair_count = 0
+    for left_index, left_slice in enumerate(left_slices):
+        for right_index, right_slice in enumerate(right_slices):
+            if not np.any(left_slice) or not np.any(right_slice):
+                continue
+            partial, tile_count = _tiled_matrix_product(
+                left_slice.astype(np.int64),
+                right_slice.astype(np.int64),
+                tile_shape=tile_shape,
+                tile_executor=lambda tile_left, tile_right: _integer_photonic_matmul(
+                    tile_left.astype(np.int32),
+                    tile_right.astype(np.int32),
+                    input_type="uint4",
+                    gazelle_model=gazelle_model,
+                ),
+            )
+            accumulated += partial.astype(np.int64) * (radix ** (left_index + right_index))
+            total_tile_count += tile_count
+            slice_pair_count += 1
+
+    right_sum = q_right_matrix.sum(axis=-2, dtype=np.int64)
+    corrected = accumulated - int(input_zp) * right_sum[..., None, :]
+    restored = _restore_matmul_shape(
+        corrected,
+        left_was_vector=left_was_vector,
+        right_was_vector=right_was_vector,
+    )
+    return (
+        (restored.astype(np.float64) * (input_scale * weight_scale)).astype(np.float64),
+        total_tile_count,
+        slice_pair_count,
+    )
 
 
 def _integer_photonic_matmul(
@@ -366,7 +714,13 @@ class ScipySignalOpsBackend(SignalOpsBackend):
 
 
 class SimulatedPhotonicSignalOpsBackend(SignalOpsBackend):
-    """Software stand-in for photonic forward signal-processing operations."""
+    """Software stand-in for photonic forward signal-processing operations.
+
+    CAR is expanded into an explicit channel-mixing matrix and therefore uses
+    the installed tiled MatrixOps backend. SOS filtering remains a named signal
+    operator because its recursive state and boundary handling belong to the
+    future streaming hardware driver rather than to one dense matrix product.
+    """
 
     def __init__(self, record_calls: bool = False):
         self.record_calls = bool(record_calls)
@@ -382,7 +736,17 @@ class SimulatedPhotonicSignalOpsBackend(SignalOpsBackend):
         if self.record_calls:
             self.calls.append(("common_average_reference", name))
         x = np.asarray(samples, dtype=np.float64)
-        return x - x.mean(axis=channel_axis, keepdims=True)
+        normalized_axis = _normalize_axis(channel_axis, x.ndim)
+        moved = np.moveaxis(x, normalized_axis, -1)
+        n_channels = moved.shape[-1]
+        car_matrix = np.eye(n_channels, dtype=np.float64) - np.full(
+            (n_channels, n_channels),
+            1.0 / n_channels,
+            dtype=np.float64,
+        )
+        flat = moved.reshape(-1, n_channels)
+        referenced = matrix_multiply(flat, car_matrix.T, name=name).reshape(moved.shape)
+        return np.moveaxis(referenced, -1, normalized_axis)
 
     def sosfiltfilt(
         self,
@@ -394,11 +758,120 @@ class SimulatedPhotonicSignalOpsBackend(SignalOpsBackend):
     ) -> FloatArray:
         if self.record_calls:
             self.calls.append(("sosfiltfilt", name))
-        return _scipy_sosfiltfilt(
+        return _photonic_sosfiltfilt(
             np.asarray(sos, dtype=np.float64),
             np.asarray(samples, dtype=np.float64),
             axis=axis,
+            name=name,
         )
+
+
+def _photonic_sosfiltfilt(
+    sos: FloatArray,
+    samples: FloatArray,
+    *,
+    axis: int,
+    name: str,
+) -> FloatArray:
+    """Zero-phase SOS filtering with all section MACs routed through MatrixOps."""
+
+    x = np.asarray(samples, dtype=np.float64)
+    coefficients = np.asarray(sos, dtype=np.float64)
+    if coefficients.ndim != 2 or coefficients.shape[1] != 6:
+        raise ValueError(f"sos must have shape (n_sections, 6), got {coefficients.shape}")
+    if not np.allclose(coefficients[:, 3], 1.0):
+        coefficients = coefficients / coefficients[:, 3:4]
+
+    normalized_axis = _normalize_axis(axis, x.ndim)
+    moved = np.moveaxis(x, normalized_axis, -1)
+    n_samples = moved.shape[-1]
+    n_sections = coefficients.shape[0]
+    ntaps = 2 * n_sections + 1
+    ntaps -= min(
+        int((coefficients[:, 2] == 0).sum()),
+        int((coefficients[:, 5] == 0).sum()),
+    )
+    edge = 3 * ntaps
+    if n_samples <= edge:
+        raise ValueError(
+            f"input length {n_samples} must be greater than photonic filter pad length {edge}"
+        )
+
+    flat = moved.reshape(-1, n_samples)
+    left_extension = 2.0 * flat[:, :1] - flat[:, edge:0:-1]
+    right_extension = 2.0 * flat[:, -1:] - flat[:, -2 : -edge - 2 : -1]
+    extended = np.concatenate([left_extension, flat, right_extension], axis=1)
+
+    zi = np.asarray(_scipy_sosfilt_zi(coefficients), dtype=np.float64)
+    forward = _photonic_sosfilt(
+        coefficients,
+        extended,
+        zi=zi,
+        initial_value=extended[:, 0],
+        name=f"{name}_forward",
+    )
+    backward_input = forward[:, ::-1]
+    backward = _photonic_sosfilt(
+        coefficients,
+        backward_input,
+        zi=zi,
+        initial_value=forward[:, -1],
+        name=f"{name}_backward",
+    )[:, ::-1]
+    filtered = backward[:, edge:-edge].reshape(moved.shape)
+    return np.moveaxis(filtered, -1, normalized_axis)
+
+
+def _photonic_sosfilt(
+    sos: FloatArray,
+    signals: FloatArray,
+    *,
+    zi: FloatArray,
+    initial_value: FloatArray,
+    name: str,
+) -> FloatArray:
+    n_signals, n_samples = signals.shape
+    n_sections = sos.shape[0]
+    states = np.zeros((n_signals, n_sections, 2), dtype=np.float64)
+    for section_index in range(n_sections):
+        states[:, section_index] = matrix_multiply(
+            initial_value[:, None],
+            zi[section_index][None, :],
+            name=f"{name}_initial_state_s{section_index}",
+        )
+
+    transitions = np.zeros((n_sections, 3, 3), dtype=np.float64)
+    for section_index, section in enumerate(sos):
+        b0, b1, b2, _a0, a1, a2 = section
+        transitions[section_index] = np.array(
+            [
+                [b0, 1.0, 0.0],
+                [b1 - a1 * b0, -a1, 1.0],
+                [b2 - a2 * b0, -a2, 0.0],
+            ],
+            dtype=np.float64,
+        )
+
+    output = np.zeros_like(signals, dtype=np.float64)
+    for sample_index in range(n_samples):
+        current = signals[:, sample_index]
+        for section_index in range(n_sections):
+            section_input = np.column_stack(
+                [
+                    current,
+                    states[:, section_index, 0],
+                    states[:, section_index, 1],
+                ]
+            )
+            section_output = matrix_multiply(
+                section_input,
+                transitions[section_index].T,
+                name=f"{name}_section_s{section_index}",
+            )
+            current = section_output[:, 0]
+            states[:, section_index] = section_output[:, 1:]
+        output[:, sample_index] = current
+    return output
 
 
 class PhotonicSignalOpsBackendStub(SignalOpsBackend):
@@ -438,7 +911,7 @@ class PhotonicMatrixOpsBackendStub(MatrixOpsBackend):
         raise NotImplementedError(f"Photonic einsum op {name!r} is not connected yet")
 
 
-_MATRIX_OPS_BACKEND: MatrixOpsBackend = SimulatedPhotonicMatrixOpsBackend()
+_MATRIX_OPS_BACKEND: MatrixOpsBackend = BitSlicedPhotonicMatrixOpsBackend(announce=False)
 _SIGNAL_OPS_BACKEND: SignalOpsBackend = SimulatedPhotonicSignalOpsBackend()
 
 
@@ -724,7 +1197,12 @@ def batched_matrix_vector(
 ) -> FloatArray:
     """Return a bank of matrix-vector products ``weights @ features``."""
 
-    return matrix_multiply(weights, features, name=name)
+    w = np.asarray(weights, dtype=np.float64)
+    x = np.asarray(features, dtype=np.float64)
+    if w.ndim != 3 or x.ndim != 1:
+        raise ValueError("batched_matrix_vector expects weights=(N,M,D), features=(D,)")
+    expanded = np.broadcast_to(x, (w.shape[0], 1, x.shape[0]))
+    return matrix_multiply(expanded, w.transpose(0, 2, 1), name=name).squeeze(1)
 
 
 class MVMBackend(ABC):
@@ -804,17 +1282,17 @@ class TiledMVMBackend(MVMBackend):
                 row_stop = min(row_start + tile_rows, out_dim)
                 for col_start in range(0, in_dim, tile_cols):
                     col_stop = min(col_start + tile_cols, in_dim)
-                    output[candidate_index, row_start:row_stop] += (
-                        self.matrix_backend.matmul(
-                            weights_arr[
-                                candidate_index,
-                                row_start:row_stop,
-                                col_start:col_stop,
-                            ],
-                            features_arr[col_start:col_stop],
-                            name="tiled_candidate_scan_tile",
-                        )
-                    )
+                    feature_tile = features_arr[col_start:col_stop][None, :]
+                    weight_tile = weights_arr[
+                        candidate_index,
+                        row_start:row_stop,
+                        col_start:col_stop,
+                    ]
+                    output[candidate_index, row_start:row_stop] += self.matrix_backend.matmul(
+                        feature_tile,
+                        weight_tile.T,
+                        name="tiled_candidate_scan_tile",
+                    )[0]
                     tile_count += 1
         self.last_tile_count = tile_count
         return output

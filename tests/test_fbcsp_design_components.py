@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 
 from hybrid_photonic_mi_bci.backends import (
+    BitSlicedPhotonicMatrixOpsBackend,
     MatrixOpsBackend,
     QuantizedPhotonicMatrixOpsBackend,
     SignalOpsBackend,
@@ -10,6 +11,7 @@ from hybrid_photonic_mi_bci.backends import (
     SimulatedPhotonicSignalOpsBackend,
     get_matrix_ops_backend,
     get_signal_ops_backend,
+    signal_sosfiltfilt,
     use_matrix_ops_backend,
     use_signal_ops_backend,
 )
@@ -28,8 +30,35 @@ from hybrid_photonic_mi_bci.workflows.common import make_replay_split
 
 class FBCSPDesignComponentsTest(unittest.TestCase):
     def test_default_matrix_ops_backend_is_photonic_handoff(self) -> None:
-        self.assertIsInstance(get_matrix_ops_backend(), SimulatedPhotonicMatrixOpsBackend)
+        self.assertIsInstance(get_matrix_ops_backend(), BitSlicedPhotonicMatrixOpsBackend)
         self.assertIsInstance(get_signal_ops_backend(), SimulatedPhotonicSignalOpsBackend)
+
+    def test_simulated_photonic_backend_tiles_and_reconstructs_large_matmul(self) -> None:
+        backend = SimulatedPhotonicMatrixOpsBackend(tile_shape=(2, 8))
+        left = np.arange(33, dtype=np.float64).reshape(3, 11) / 10.0
+        right = np.arange(55, dtype=np.float64).reshape(11, 5) / 20.0
+
+        result = backend.matmul(left, right, name="test_tiled_matmul")
+
+        np.testing.assert_allclose(result, left @ right, atol=1e-12)
+        self.assertEqual(backend.last_tile_count, 3 * 3 * 2)
+
+    def test_bit_sliced_backend_reconstructs_eight_bit_logical_matmul(self) -> None:
+        rng = np.random.default_rng(41)
+        left = rng.normal(size=(3, 11))
+        right = rng.normal(size=(11, 5))
+        backend = BitSlicedPhotonicMatrixOpsBackend(
+            use_gazelle_model=False,
+            announce=False,
+        )
+
+        result = backend.matmul(left, right, name="test_bit_sliced_matmul")
+        reference = left @ right
+
+        np.testing.assert_allclose(result, reference, atol=0.12, rtol=0.08)
+        base_tile_count = 3 * 3 * 2
+        self.assertGreaterEqual(backend.last_slice_pair_count, 2)
+        self.assertEqual(backend.last_tile_count, base_tile_count * backend.last_slice_pair_count)
 
     def test_tiled_mvm_backend_defaults_to_4bit_quantized_tiles(self) -> None:
         backend = TiledMVMBackend(tile_shape=(2, 8))
@@ -49,6 +78,42 @@ class FBCSPDesignComponentsTest(unittest.TestCase):
         result = backend.matmul(features, weights, name="test_identity")
 
         np.testing.assert_allclose(result, features, atol=0.25)
+
+    def test_tiled_quantized_scan_keeps_features_unsigned_and_weights_signed(self) -> None:
+        backend = TiledMVMBackend(
+            tile_shape=(2, 8),
+            matrix_backend=QuantizedPhotonicMatrixOpsBackend(
+                use_gazelle_model=False,
+                announce=False,
+            ),
+        )
+        features = np.array([0.25, 0.5, 1.0, 0.75], dtype=np.float64)
+        weights = np.array(
+            [[[-1.0, 0.5, -0.25, 0.75], [0.5, -1.0, 0.75, -0.25]]],
+            dtype=np.float64,
+        )
+
+        result = backend.scan(weights, features)
+
+        np.testing.assert_allclose(result, weights @ features, atol=0.20, rtol=0.15)
+
+    def test_photonic_sos_state_space_matches_scipy_with_float_tiles(self) -> None:
+        from scipy.signal import butter, sosfiltfilt
+
+        rng = np.random.default_rng(43)
+        samples = rng.normal(size=(2, 128))
+        sos = butter(3, (8.0, 20.0), btype="bandpass", fs=100.0, output="sos")
+        expected = sosfiltfilt(sos, samples, axis=1)
+
+        with use_matrix_ops_backend(SimulatedPhotonicMatrixOpsBackend()):
+            result = signal_sosfiltfilt(
+                sos,
+                samples,
+                axis=1,
+                name="test_photonic_sos",
+            )
+
+        np.testing.assert_allclose(result, expected, atol=1e-11, rtol=1e-11)
 
     def test_fbcsp_returns_expected_multiclass_filter_bank_shape(self) -> None:
         rng = np.random.default_rng(5)
