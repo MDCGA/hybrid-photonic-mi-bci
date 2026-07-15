@@ -1,0 +1,180 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global/global}
+    \entry{ang2012fbcsp}{article}{}{}
+      \name{author}{4}{}{%
+        {{hash=0266646fbf23960d4552e08bc7809fc6}{%
+           family={Ang},
+           familyi={A\bibinitperiod},
+           given={Kai\bibnamedelima Keng},
+           giveni={K\bibinitperiod\bibinitdelim K\bibinitperiod}}}%
+        {{hash=0b93f2085027ffe0299b616aeabb08e0}{%
+           family={Chin},
+           familyi={C\bibinitperiod},
+           given={Zheng\bibnamedelima Yang},
+           giveni={Z\bibinitperiod\bibinitdelim Y\bibinitperiod}}}%
+        {{hash=5454145ed84f8e674a6c975f73a48882}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Haihong},
+           giveni={H\bibinitperiod}}}%
+        {{hash=906cecbbab6ab1d858feb039a4ebbdcd}{%
+           family={Guan},
+           familyi={G\bibinitperiod},
+           given={Cuntai},
+           giveni={C\bibinitperiod}}}%
+      }
+      \name{namea}{4}{}{%
+        {{hash=0266646fbf23960d4552e08bc7809fc6}{%
+           family={Ang},
+           familyi={A\bibinitperiod},
+           given={Kai\bibnamedelima Keng},
+           giveni={K\bibinitperiod\bibinitdelim K\bibinitperiod}}}%
+        {{hash=0b93f2085027ffe0299b616aeabb08e0}{%
+           family={Chin},
+           familyi={C\bibinitperiod},
+           given={Zheng\bibnamedelima Yang},
+           giveni={Z\bibinitperiod\bibinitdelim Y\bibinitperiod}}}%
+        {{hash=5454145ed84f8e674a6c975f73a48882}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Haihong},
+           giveni={H\bibinitperiod}}}%
+        {{hash=906cecbbab6ab1d858feb039a4ebbdcd}{%
+           family={Guan},
+           familyi={G\bibinitperiod},
+           given={Cuntai},
+           giveni={C\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \strng{namehash}{a4d32bf8b73593b0378a9fd036b1907b}
+      \strng{fullhash}{f21ca9bdbb808137b5a4090804385904}
+      \strng{fullhashraw}{f21ca9bdbb808137b5a4090804385904}
+      \strng{bibnamehash}{7a2fb306447227ab7a278c094948891a}
+      \strng{authorbibnamehash}{7a2fb306447227ab7a278c094948891a}
+      \strng{authornamehash}{a4d32bf8b73593b0378a9fd036b1907b}
+      \strng{authorfullhash}{f21ca9bdbb808137b5a4090804385904}
+      \strng{authorfullhashraw}{f21ca9bdbb808137b5a4090804385904}
+      \strng{nameabibnamehash}{7a2fb306447227ab7a278c094948891a}
+      \strng{nameanamehash}{a4d32bf8b73593b0378a9fd036b1907b}
+      \strng{nameafullhash}{f21ca9bdbb808137b5a4090804385904}
+      \strng{nameafullhashraw}{f21ca9bdbb808137b5a4090804385904}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Frontiers in Neuroscience}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{title}{Filter Bank Common Spatial Pattern Algorithm on BCI Competition IV Datasets 2a and 2b}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{6}
+      \field{year}{2012}
+      \field{dateera}{ce}
+      \field{pages}{39}
+      \range{pages}{1}
+      \keyw{ang2012fbcsp}
+    \endentry
+    \entry{blankertz2008}{article}{}{}
+      \true{moreauthor}
+      \true{morelabelname}
+      \name{author}{1}{}{%
+        {{hash=b061ab38031e0396e2f0fc3308cccf7d}{%
+           family={Blankertz},
+           familyi={B\bibinitperiod},
+           given={Benjamin},
+           giveni={B\bibinitperiod}}}%
+      }
+      \true{morenamea}
+      \name{namea}{1}{}{%
+        {{hash=b061ab38031e0396e2f0fc3308cccf7d}{%
+           family={Blankertz},
+           familyi={B\bibinitperiod},
+           given={Benjamin},
+           giveni={B\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \strng{namehash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{fullhash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{fullhashraw}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{bibnamehash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{authorbibnamehash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{authornamehash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{authorfullhash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{authorfullhashraw}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{nameabibnamehash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{nameanamehash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{nameafullhash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{nameafullhashraw}{8107d0f654cea4f31c6d857205d155b5}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Frontiers in Neuroscience}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{title}{The Berlin Brain--Computer Interface: Non-medical Uses of BCI Technology}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{4}
+      \field{year}{2010}
+      \field{dateera}{ce}
+      \field{pages}{198}
+      \range{pages}{1}
+      \keyw{blankertz2008}
+    \endentry
+    \entry{gazellemanual}{manual}{}{}
+      \list{institution}{1}{%
+        {曦智科技}%
+      }
+      \list{language}{1}{%
+        {chinese}%
+      }
+      \list{organization}{1}{%
+        {曦智科技}%
+      }
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labeltitlesource}{title}
+      \field{langid}{english}
+      \field{languageid}{chinese}
+      \field{lansortorder}{1}
+      \field{note}{项目资料目录 \texttt{info/} 中提供的产品手册；访问日期：2026-07-15}
+      \field{title}{Gazelle 光子计算评估板产品手册 v1.0.1}
+      \field{usera}{A}
+      \field{userd}{chinese}
+      \field{year}{2026}
+      \field{dateera}{ce}
+      \keyw{gazellemanual}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

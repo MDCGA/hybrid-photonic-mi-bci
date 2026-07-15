@@ -1,0 +1,9 @@
+[0] Config.pm:328> INFO - This is Biber 2.21
+[0] Config.pm:331> INFO - Logfile is 'out-competition\competition_report.blg'
+[81] biber-MSWIN64:342> INFO - === 
+[126] Biber.pm:421> INFO - Reading 'competition_report.bcf'
+[238] Biber.pm:1002> INFO - Found 2 citekeys in bib section 0
+[246] Biber.pm:4487> INFO - Processing section 0
+[255] Biber.pm:4678> INFO - Looking for bibtex file 'body/ref.bib' for section 0
+[467] Utils.pm:479> ERROR - Cannot find 'body/ref.bib'!
+[467] Biber.pm:137> INFO - ERRORS: 1

@@ -1,0 +1,59 @@
+<mxfile host="app.diagrams.net" agent="Codex">
+  <diagram id="end-to-end-mi-bci" name="EEG to Command">
+    <mxGraphModel dx="1916" dy="1278" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;fontColor=#1D2939;" value="光电混合 MI-BCI：从 EEG 采集到最终指令" vertex="1">
+          <mxGeometry height="40" width="1140" x="230" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#475467;" value="由十步在线推理链归并而成的五个清晰阶段" vertex="1">
+          <mxGeometry height="30" width="1080" x="260" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="stage1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#344054;fillColor=#E7F0FB;strokeColor=#2F6DB0;strokeWidth=2;spacing=10;" value="&lt;font color=&quot;#2F6DB0&quot;&gt;&lt;b&gt;1-2&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;采集与对齐&lt;/b&gt;&lt;br&gt;&lt;br&gt;Cyton 计数 r(t)&lt;br&gt;微伏换算与通道映射" vertex="1">
+          <mxGeometry height="270" width="245" x="107" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="stage2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#344054;fillColor=#EAF6EE;strokeColor=#3F8C65;strokeWidth=2;spacing=10;" value="&lt;font color=&quot;#3F8C65&quot;&gt;&lt;b&gt;3-5&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;数字预处理&lt;/b&gt;&lt;br&gt;&lt;br&gt;滑动窗口与质量门控&lt;br&gt;滤波器组与 CAR" vertex="1">
+          <mxGeometry height="270" width="245" x="410" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="stage3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#344054;fillColor=#FFF4E4;strokeColor=#D9822B;strokeWidth=2;spacing=10;" value="&lt;font color=&quot;#D9822B&quot;&gt;&lt;b&gt;6-8&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;特征与个性化&lt;/b&gt;&lt;br&gt;&lt;br&gt;FBCSP -&amp;gt; 32 维特征&lt;br&gt;嵌入 h 与 top-K 经验库" vertex="1">
+          <mxGeometry height="270" width="245" x="730" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="stage4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#344054;fillColor=#F5EBFB;strokeColor=#8250A5;strokeWidth=2;spacing=10;" value="&lt;font color=&quot;#8250A5&quot;&gt;&lt;b&gt;9&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Gazelle 特化定制扫描头&lt;/b&gt;&lt;br&gt;&lt;br&gt;[A | b] [h ; 1]&lt;br&gt;2 x 8 tile 矩阵乘" vertex="1">
+          <mxGeometry height="270" width="245" x="1060" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="stage5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#344054;fillColor=#FBECEF;strokeColor=#C65353;strokeWidth=2;spacing=10;" value="&lt;font color=&quot;#C65353&quot;&gt;&lt;b&gt;10&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;融合与安全输出&lt;/b&gt;&lt;br&gt;&lt;br&gt;融合与置信度判定&lt;br&gt;左 / 右 / 脚 / 拒识" vertex="1">
+          <mxGeometry height="270" width="245" x="1370" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="edge1" edge="1" parent="1" source="stage1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475467;strokeWidth=2;fontColor=#475467;fontSize=12;labelBackgroundColor=#FFFFFF;" target="stage2" value="u(t)">
+          <mxGeometry relative="1" x="-0.0345" y="15" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge2" edge="1" parent="1" source="stage2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475467;strokeWidth=2;fontColor=#475467;fontSize=12;labelBackgroundColor=#FFFFFF;" target="stage3" value="有效窗口">
+          <mxGeometry relative="1" x="-0.0667" y="15" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge3" edge="1" parent="1" source="stage3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475467;strokeWidth=2;fontColor=#475467;fontSize=12;labelBackgroundColor=#FFFFFF;" target="stage4" value="候选头与 h">
+          <mxGeometry relative="1" x="0.0588" y="15" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge4" edge="1" parent="1" source="stage4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475467;strokeWidth=2;fontColor=#475467;fontSize=12;labelBackgroundColor=#FFFFFF;" target="stage5" value="得分">
+          <mxGeometry relative="1" x="0.0769" y="15" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="reject" edge="1" parent="1" source="stage2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#667085;strokeWidth=2;dashed=1;fontColor=#475467;fontSize=13;labelBackgroundColor=#FFFFFF;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="stage5" value="信号质量不合格 -&amp;gt; 提前拒识&lt;br&gt;（不分类，不写回经验库）">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="514" y="485" />
+              <mxPoint x="1493" y="485" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

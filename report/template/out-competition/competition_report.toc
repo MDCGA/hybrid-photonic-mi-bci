@@ -1,0 +1,75 @@
+\contentsline {chapter}{作品核心内容快速预览}{I}{chapter*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}问题定义与方案概述}{1}{chapter.0.1}%
+\contentsline {section}{\numberline {1.1}运动想象 EEG-BCI 任务与信号挑战}{1}{section.0.1.1}%
+\contentsline {section}{\numberline {1.2}脑电基础、电极位置与 MI 节律}{1}{section.0.1.2}%
+\contentsline {section}{\numberline {1.3}个体差异与会话特化动机}{3}{section.0.1.3}%
+\contentsline {section}{\numberline {1.4}方案主干与光电计算分工}{4}{section.0.1.4}%
+\contentsline {section}{\numberline {1.5}项目目标与系统输出}{5}{section.0.1.5}%
+\contentsline {section}{\numberline {1.6}系统总览}{6}{section.0.1.6}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}系统总体架构与算法路线}{7}{chapter.0.2}%
+\contentsline {section}{\numberline {2.1}训练、校准与在线推理三个阶段}{7}{section.0.2.1}%
+\contentsline {subsection}{\numberline {2.1.1}离线训练阶段}{7}{subsection.0.2.1.1}%
+\contentsline {subsubsection}{\numberline {2.1.1.1}第 1 步：加载训练数据并固定协议}{7}{subsubsection.0.2.1.1.1}%
+\contentsline {subsubsection}{\numberline {2.1.1.2}第 2 步：拟合滤波器组和 OVR CSP}{7}{subsubsection.0.2.1.1.2}%
+\contentsline {subsubsection}{\numberline {2.1.1.3}第 3 步：选择特征并拟合标准化}{7}{subsubsection.0.2.1.1.3}%
+\contentsline {subsubsection}{\numberline {2.1.1.4}第 4 步：训练 baseline 与小型 embedding}{8}{subsubsection.0.2.1.1.4}%
+\contentsline {subsubsection}{\numberline {2.1.1.5}第 5 步：建立初始经验库并保存部署包}{8}{subsubsection.0.2.1.1.5}%
+\contentsline {subsection}{\numberline {2.1.2}校准阶段}{8}{subsection.0.2.1.2}%
+\contentsline {subsubsection}{\numberline {2.1.2.1}第 1 步：输入少量目标会话窗口}{8}{subsubsection.0.2.1.2.1}%
+\contentsline {subsubsection}{\numberline {2.1.2.2}第 2 步：用冻结主干生成 calibration embeddings}{8}{subsubsection.0.2.1.2.2}%
+\contentsline {subsubsection}{\numberline {2.1.2.3}第 3 步：选择 top-$K$ 候选并计算融合权重}{9}{subsubsection.0.2.1.2.3}%
+\contentsline {subsubsection}{\numberline {2.1.2.4}第 4 步：确定拒识阈值并冻结会话状态}{9}{subsubsection.0.2.1.2.4}%
+\contentsline {subsection}{\numberline {2.1.3}在线推理阶段}{9}{subsection.0.2.1.3}%
+\contentsline {subsubsection}{\numberline {2.1.3.1}第 1 步：形成一个 EEG 决策窗口}{9}{subsubsection.0.2.1.3.1}%
+\contentsline {subsubsection}{\numberline {2.1.3.2}第 2 步：质量检查与提前拒识}{9}{subsubsection.0.2.1.3.2}%
+\contentsline {subsubsection}{\numberline {2.1.3.3}第 3 步：滤波、CAR 与 FBCSP transform}{10}{subsubsection.0.2.1.3.3}%
+\contentsline {subsubsection}{\numberline {2.1.3.4}第 4 步：标准化并生成 embedding}{10}{subsubsection.0.2.1.3.4}%
+\contentsline {subsubsection}{\numberline {2.1.3.5}第 5 步：量化并扫描候选线性头}{10}{subsubsection.0.2.1.3.5}%
+\contentsline {subsubsection}{\numberline {2.1.3.6}第 6 步：融合、平滑、拒识并输出命令}{10}{subsubsection.0.2.1.3.6}%
+\contentsline {section}{\numberline {2.2}公开数据回放与实采在线模式}{11}{section.0.2.2}%
+\contentsline {section}{\numberline {2.3}三条算法实验线}{11}{section.0.2.3}%
+\contentsline {section}{\numberline {2.4}两级拒识机制}{11}{section.0.2.4}%
+\contentsline {section}{\numberline {2.5}数据、窗口与质量控制}{11}{section.0.2.5}%
+\contentsline {section}{\numberline {2.6}滤波器组公共空间模式（FBCSP）}{12}{section.0.2.6}%
+\contentsline {section}{\numberline {2.7}小型嵌入网络与经验库}{13}{section.0.2.7}%
+\contentsline {section}{\numberline {2.8}候选扫描、融合与拒识}{14}{section.0.2.8}%
+\contentsline {chapter}{\numberline {3\hspace {.3em}}光计算接口、量化与计算统计}{15}{chapter.0.3}%
+\contentsline {section}{\numberline {3.1}统一后端接口}{15}{section.0.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}MatrixOpsBackend：通用矩阵运算接口}{15}{subsection.0.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}SignalOpsBackend：EEG 时序线性操作接口}{15}{subsection.0.3.1.2}%
+\contentsline {subsection}{\numberline {3.1.3}TiledMVMBackend：候选头 bank 扫描接口}{16}{subsection.0.3.1.3}%
+\contentsline {section}{\numberline {3.2}候选扫描的设计动机}{17}{section.0.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}光计算单元与多候选 MVM 的匹配}{17}{subsection.0.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}经验库检索与 Candidate head bank}{17}{subsection.0.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}Candidate scores 与概率融合}{17}{subsection.0.3.2.3}%
+\contentsline {subsection}{\numberline {3.2.4}决策路径重组与创新边界}{18}{subsection.0.3.2.4}%
+\contentsline {section}{\numberline {3.3}从算法矩阵到 $2\times 8$ tile}{18}{section.0.3.3}%
+\contentsline {section}{\numberline {3.4}逐算子矩阵乘拆分}{20}{section.0.3.4}%
+\contentsline {section}{\numberline {3.5}量化策略}{21}{section.0.3.5}%
+\contentsline {subsection}{\numberline {3.5.1}两层位宽口径与当前支持}{21}{subsection.0.3.5.1}%
+\contentsline {subsection}{\numberline {3.5.2}单次 4-bit 量化配置}{22}{subsection.0.3.5.2}%
+\contentsline {subsection}{\numberline {3.5.3}Radix-16 位权拆分与 8-bit 逻辑精度}{22}{subsection.0.3.5.3}%
+\contentsline {subsection}{\numberline {3.5.4}当前实现与证据边界}{23}{subsection.0.3.5.4}%
+\contentsline {subsection}{\numberline {3.5.5}精度、抗噪与资源权衡评估}{23}{subsection.0.3.5.5}%
+\contentsline {section}{\numberline {3.6}运行进度、Setup 与单窗口时延边界}{24}{section.0.3.6}%
+\contentsline {section}{\numberline {3.7}Gazelle 模拟器单窗口运行结果}{24}{section.0.3.7}%
+\contentsline {subsection}{\numberline {3.7.1}按评估板标称算力的单窗口时间推算}{25}{subsection.0.3.7.1}%
+\contentsline {section}{\numberline {3.8}线性计算量统计方法}{25}{section.0.3.8}%
+\contentsline {section}{\numberline {3.9}Forward-only 光计算占比与结果解释}{26}{section.0.3.9}%
+\contentsline {chapter}{\numberline {4\hspace {.3em}}数据、工程实现与实验验证}{28}{chapter.0.4}%
+\contentsline {section}{\numberline {4.1}工程结构与模块职责}{28}{section.0.4.1}%
+\contentsline {section}{\numberline {4.2}数据集与评估协议}{28}{section.0.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}BCICIV\_1\_asc}{28}{subsection.0.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}BNCI2014\_004}{29}{subsection.0.4.2.2}%
+\contentsline {section}{\numberline {4.3}结果与分析}{29}{section.0.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}BCICIV 三条实验线对比}{29}{subsection.0.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}主线候选、回放与错误分析}{30}{subsection.0.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}BNCI 个体特化结果}{34}{subsection.0.4.3.3}%
+\contentsline {section}{\numberline {4.4}运行方式与技术数据}{34}{section.0.4.4}%
+\contentsline {chapter}{\numberline {5\hspace {.3em}}OpenBCI Cyton 上位机扩展}{36}{chapter.0.5}%
+\contentsline {chapter}{\numberline {6\hspace {.3em}}局限性}{37}{chapter.0.6}%
+\contentsline {chapter}{\numberline {7\hspace {.3em}}后续工作}{38}{chapter.0.7}%
+\contentsline {chapter}{\numberline {8\hspace {.3em}}结论}{39}{chapter.0.8}%
+\contentsline {chapter}{\numberline {附录 A\hspace {.3em}}线性算子与计算量清单}{40}{appendix.A}%
+\contentsline {chapter}{\numberline {附录 B\hspace {.3em}}提交材料核查表}{41}{appendix.B}%
+\contentsline {chapter}{参考文献}{42}{appendix*.26}%
