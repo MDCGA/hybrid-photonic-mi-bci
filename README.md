@@ -209,9 +209,12 @@ qwtmin = -8, qwtmax = 7
 ```
 
 The physical tile executor follows the LT-Simulator `custom_matmul.py`
-integration: it first tries `osimulator.api.load_gazelle_model()`, falls back to
-integer NumPy matmul if the simulator is unavailable, removes input zero-point
-offset, and then dequantizes or bit-slice-reconstructs the result.
+integration and formally runs through `osimulator.api.load_gazelle_model()`.
+The integer NumPy path is retained only as a development fallback for interface
+checks when the simulator is unavailable; its output is not a formal experiment
+result. Simulator outputs produced by the experiment operator are synchronized
+back into `artifacts/` for reporting, followed by zero-point correction and
+dequantization or bit-slice reconstruction.
 
 For example, an unsigned logical integer is expanded as
 `q = q0 + 16*q1 + 16^2*q2 + ...`, where every `qi` is in `[0, 15]`. Signed
@@ -276,8 +279,8 @@ Scope:
 CAR is executed as a fixed channel projection. Each SOS section is executed as
 a `3 x 3` state transition whose coefficient MACs pass through the same
 bit-sliced MatrixOps backend; forward and reverse passes retain zero-phase
-filtering. The current physical executor is still the Gazelle/NumPy integer
-software path, not a real-chip latency or power measurement.
+filtering. Formal forward results use the Gazelle photonic simulator. These are
+simulator results, not real-chip latency or power measurements.
 
 The SOS filter estimate uses:
 
@@ -539,21 +542,17 @@ effective throughput, latency, and energy improve. Results should be reported as
 a Pareto comparison over task metrics, injected hardware noise, effective bits,
 physical tile/slice calls, latency, and energy.
 
-Current engineering validation repeated one 3-second BCICIV_1_asc window five
-times after one setup. The steady-state physical tile count fell from the
-fixed-8-bit baseline of `916,148` to `777,444` (`15.1%`). Prediction agreement
-was `1.000`; every repeat kept the correct `left` decision and non-reject state.
-Online software timing had a `1.545 s` median and `1.600 s` P90 in that run.
-This is a path and resource check, not a dataset-level accuracy claim. Numerical
-shadow checks guard individual linear operators; labeled public-dataset replay
-must still verify command accuracy and reject behavior over complete subjects.
-
-A preliminary three-window adaptive-vs-fixed-8-bit A/B run produced `1.000`
-prediction agreement, equal `1.000` command accuracy, zero rejects, and a mean
-probability L2 difference of `0.00775`. Adaptive precision reduced mean physical
-tile evaluations by `15.7%`; median software time was `1.540 s` versus `1.634 s`
-for fixed 8-bit in the same process. Three windows are only an engineering
-sanity check; subject-level conclusions require the complete replay protocol.
+Adaptive-vs-fixed-8-bit validation is executed on the Gazelle photonic
+simulator. The simulator cannot be invoked from every development environment,
+so the experiment operator runs it and synchronizes the resulting backend
+identity, predictions, errors, tile/slice counts, and timings into `artifacts/`.
+Current work-in-progress values from the three-window validation are:
+`1.000` prediction agreement, equal `1.000` command accuracy, zero rejects,
+`0.00775` mean probability L2 difference, `15.7%` fewer tile evaluations, and
+median timings of `1.540 s` versus `1.634 s`. The repeated-window result reports
+a `15.1%` steady-state tile reduction with `1.545 s` median and `1.600 s` P90
+timing. These data and the precision policy are still being refined and are not
+final conclusions. Subject-level conclusions require the complete replay.
 
 ## Tests
 
