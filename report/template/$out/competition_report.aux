@@ -1,0 +1,181 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand*\HyPL@Entry[1]{}
+\abx@aux@refcontext{none/global//global/global/global}
+\HyPL@Entry{0<</S/D>>}
+\HyPL@Entry{1<</S/R>>}
+\@writefile{toc}{\contentsline {chapter}{作品核心内容快速预览}{I}{chapter*.1}\protected@file@percent }
+\HyPL@Entry{9<</S/D>>}
+\@writefile{toc}{\contentsline {chapter}{\numberline {1\hspace  {.3em}}问题定义与方案概述}{1}{chapter.0.1}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{toc}{\contentsline {section}{\numberline {1.1}运动想象 EEG-BCI 任务与信号挑战}{1}{section.0.1.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1.1}{\ignorespaces MI-BCI 任务示意：系统从一个多通道 EEG 决策窗口推理运动想象意图，并输出控制命令或拒识。该图为系统任务说明，不是实验结果。}}{1}{figure.caption.2}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:mi-task}{{1.1}{1}{MI-BCI 任务示意：系统从一个多通道 EEG 决策窗口推理运动想象意图，并输出控制命令或拒识。该图为系统任务说明，不是实验结果。}{figure.caption.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {1.2}脑电基础、电极位置与 MI 节律}{1}{section.0.1.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1.2}{\ignorespaces 国际 10--20 电极位置示意。项目重点使用中央区 C3、Cz、C4 及其前后邻近通道；图为电极命名和空间关系说明。}}{2}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:eeg-electrodes}{{1.2}{2}{国际 10--20 电极位置示意。项目重点使用中央区 C3、Cz、C4 及其前后邻近通道；图为电极命名和空间关系说明。}{figure.caption.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1.3}{\ignorespaces 运动想象 EEG 节律变化的概念可视化。上图为含噪节律波形，下图示意 cue 后 mu/beta 相对功率下降（ERD）；仅用于解释信号现象。}}{3}{figure.caption.4}\protected@file@percent }
+\newlabel{fig:eeg-erd}{{1.3}{3}{运动想象 EEG 节律变化的概念可视化。上图为含噪节律波形，下图示意 cue 后 mu/beta 相对功率下降（ERD）；仅用于解释信号现象。}{figure.caption.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {1.3}个体差异与会话特化动机}{3}{section.0.1.3}\protected@file@percent }
+\abx@aux@cite{0}{ang2012fbcsp}
+\abx@aux@segm{0}{0}{ang2012fbcsp}
+\abx@aux@cite{0}{blankertz2008}
+\abx@aux@segm{0}{0}{blankertz2008}
+\@writefile{lof}{\contentsline {figure}{\numberline {1.4}{\ignorespaces 背景逻辑图：EEG 个体/会话差异推动少量校准和经验库特化，随后由低位宽候选扫描完成当前窗口的个性化判别。该图为方案逻辑说明。}}{4}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:specialization-logic}{{1.4}{4}{背景逻辑图：EEG 个体/会话差异推动少量校准和经验库特化，随后由低位宽候选扫描完成当前窗口的个性化判别。该图为方案逻辑说明。}{figure.caption.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {1.4}方案主干与光电计算分工}{4}{section.0.1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {1.5}项目目标与系统输出}{5}{section.0.1.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1.1}{\ignorespaces 项目完成情况与可展示材料}}{5}{table.caption.6}\protected@file@percent }
+\newlabel{tab:status}{{1.1}{5}{项目完成情况与可展示材料}{table.caption.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {1.6}系统总览}{6}{section.0.1.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1.5}{\ignorespaces 光电混合 MI-BCI 从 EEG 采集到最终指令的简化结构。}}{6}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:system}{{1.5}{6}{光电混合 MI-BCI 从 EEG 采集到最终指令的简化结构。}{figure.caption.7}{}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {2\hspace  {.3em}}系统总体架构与算法路线}{7}{chapter.0.2}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{toc}{\contentsline {section}{\numberline {2.1}训练、校准与在线推理三个阶段}{7}{section.0.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1.1}离线训练阶段}{7}{subsection.0.2.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1.1}第 1 步：加载训练数据并固定协议}{7}{subsubsection.0.2.1.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1.2}第 2 步：拟合滤波器组和 OVR CSP}{7}{subsubsection.0.2.1.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1.3}第 3 步：选择特征并拟合标准化}{7}{subsubsection.0.2.1.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1.4}第 4 步：训练 baseline 与小型 embedding}{8}{subsubsection.0.2.1.1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1.5}第 5 步：建立初始经验库并保存部署包}{8}{subsubsection.0.2.1.1.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1.2}校准阶段}{8}{subsection.0.2.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2.1}第 1 步：输入少量目标会话窗口}{8}{subsubsection.0.2.1.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2.2}第 2 步：用冻结主干生成 calibration embeddings}{8}{subsubsection.0.2.1.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2.3}第 3 步：选择 top-$K$ 候选并计算融合权重}{9}{subsubsection.0.2.1.2.3}\protected@file@percent }
+\newlabel{eq:retrieval-weight}{{2-4}{9}{第 3 步：选择 top-$K$ 候选并计算融合权重}{equation.0.2.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2.4}第 4 步：确定拒识阈值并冻结会话状态}{9}{subsubsection.0.2.1.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1.3}在线推理阶段}{9}{subsection.0.2.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.3.1}第 1 步：形成一个 EEG 决策窗口}{9}{subsubsection.0.2.1.3.1}\protected@file@percent }
+\newlabel{eq:windowing}{{2-5}{9}{第 1 步：形成一个 EEG 决策窗口}{equation.0.2.5}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.3.2}第 2 步：质量检查与提前拒识}{9}{subsubsection.0.2.1.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.3.3}第 3 步：滤波、CAR 与 FBCSP transform}{10}{subsubsection.0.2.1.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.3.4}第 4 步：标准化并生成 embedding}{10}{subsubsection.0.2.1.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.3.5}第 5 步：量化并扫描候选线性头}{10}{subsubsection.0.2.1.3.5}\protected@file@percent }
+\newlabel{eq:e2e-candidate}{{2-7}{10}{第 5 步：量化并扫描候选线性头}{equation.0.2.7}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.3.6}第 6 步：融合、平滑、拒识并输出命令}{10}{subsubsection.0.2.1.3.6}\protected@file@percent }
+\newlabel{eq:final-decision}{{2-9}{10}{第 6 步：融合、平滑、拒识并输出命令}{equation.0.2.9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2.2}公开数据回放与实采在线模式}{11}{section.0.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2.3}三条算法实验线}{11}{section.0.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2.4}两级拒识机制}{11}{section.0.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2.5}数据、窗口与质量控制}{11}{section.0.2.5}\protected@file@percent }
+\newlabel{eq:car}{{2-10}{12}{数据、窗口与质量控制}{equation.0.2.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2.6}滤波器组公共空间模式（FBCSP）}{12}{section.0.2.6}\protected@file@percent }
+\newlabel{eq:csp}{{2-12}{12}{滤波器组公共空间模式（FBCSP）}{equation.0.2.12}{}}
+\newlabel{eq:fbcsp}{{2-13}{12}{滤波器组公共空间模式（FBCSP）}{equation.0.2.13}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2.1}{\ignorespaces FBCSP 的数据流和线性热点。CSP 投影 $W(4\times 8)X(8\times T)$ 是可拆分为 tile 的矩阵乘；log-variance 与特征选择保留在数字端。}}{13}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:fbcsp-flow}{{2.1}{13}{FBCSP 的数据流和线性热点。CSP 投影 $W(4\times 8)X(8\times T)$ 是可拆分为 tile 的矩阵乘；log-variance 与特征选择保留在数字端。}{figure.caption.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2.7}小型嵌入网络与经验库}{13}{section.0.2.7}\protected@file@percent }
+\newlabel{eq:encoder}{{2-15}{13}{小型嵌入网络与经验库}{equation.0.2.15}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2.8}候选扫描、融合与拒识}{14}{section.0.2.8}\protected@file@percent }
+\newlabel{eq:scan}{{2-17}{14}{候选扫描、融合与拒识}{equation.0.2.17}{}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {3\hspace  {.3em}}光计算接口、量化与计算统计}{15}{chapter.0.3}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.1}统一后端接口}{15}{section.0.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1.1}MatrixOpsBackend：通用矩阵运算接口}{15}{subsection.0.3.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1.2}SignalOpsBackend：EEG 时序线性操作接口}{15}{subsection.0.3.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1.3}TiledMVMBackend：候选头 bank 扫描接口}{16}{subsection.0.3.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.2}候选扫描的设计动机}{17}{section.0.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.1}光计算单元与多候选 MVM 的匹配}{17}{subsection.0.3.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.2}经验库检索与 Candidate head bank}{17}{subsection.0.3.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.3}Candidate scores 与概率融合}{17}{subsection.0.3.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.4}决策路径重组与创新边界}{18}{subsection.0.3.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.3}从算法矩阵到 $2\times 8$ tile}{18}{section.0.3.3}\protected@file@percent }
+\newlabel{eq:tile}{{3-5}{18}{从算法矩阵到 \texorpdfstring {$2\times 8$}{2x8} tile}{equation.0.3.5}{}}
+\newlabel{eq:tilecount}{{3-6}{18}{从算法矩阵到 \texorpdfstring {$2\times 8$}{2x8} tile}{equation.0.3.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.1}{\ignorespaces 每个决策窗口的候选线性头 tile 调度。数字端负责跨 tile 部分和累加、softmax、拒识和融合。}}{19}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:tiles}{{3.1}{19}{每个决策窗口的候选线性头 tile 调度。数字端负责跨 tile 部分和累加、softmax、拒识和融合。}{figure.caption.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.2}{\ignorespaces 候选线性头的 $3\times 33\rightarrow 2\times 8$ 映射概念图。颜色表示列分块；图示为一次候选扫描的计算拆分。}}{20}{figure.caption.10}\protected@file@percent }
+\newlabel{fig:photonic-mapping}{{3.2}{20}{候选线性头的 $3\times 33\rightarrow 2\times 8$ 映射概念图。颜色表示列分块；图示为一次候选扫描的计算拆分。}{figure.caption.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.4}逐算子矩阵乘拆分}{20}{section.0.3.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.1}{\ignorespaces 主线算法到光子矩阵乘的拆分}}{21}{table.caption.11}\protected@file@percent }
+\newlabel{tab:matrix-split}{{3.1}{21}{主线算法到光子矩阵乘的拆分}{table.caption.11}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.5}量化策略}{21}{section.0.3.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.1}两层位宽口径与当前支持}{21}{subsection.0.3.5.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.2}{\ignorespaces 当前前向线性算子的量化策略}}{21}{table.caption.12}\protected@file@percent }
+\newlabel{tab:quant-policy}{{3.2}{21}{当前前向线性算子的量化策略}{table.caption.12}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.2}单次 4-bit 量化配置}{22}{subsection.0.3.5.2}\protected@file@percent }
+\newlabel{eq:quant}{{3-8}{22}{单次 4-bit 量化配置}{equation.0.3.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.3}Radix-16 位权拆分与 8-bit 逻辑精度}{22}{subsection.0.3.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.4}当前实现与证据边界}{23}{subsection.0.3.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.5}精度、抗噪与资源权衡评估}{23}{subsection.0.3.5.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.6}运行进度、Setup 与单窗口时延边界}{24}{section.0.3.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.7}Gazelle 模拟器单窗口运行结果}{24}{section.0.3.7}\protected@file@percent }
+\abx@aux@cite{0}{gazellemanual}
+\abx@aux@segm{0}{0}{gazellemanual}
+\@writefile{lot}{\contentsline {table}{\numberline {3.3}{\ignorespaces Gazelle 模拟器单窗口 online forward 耗时与 tile 数（终端截图转录）}}{25}{table.caption.13}\protected@file@percent }
+\newlabel{tab:gazelle-online}{{3.3}{25}{Gazelle 模拟器单窗口 online forward 耗时与 tile 数（终端截图转录）}{table.caption.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.1}按评估板标称算力的单窗口时间推算}{25}{subsection.0.3.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.8}线性计算量统计方法}{26}{section.0.3.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.9}Forward-only 光计算占比与结果解释}{26}{section.0.3.9}\protected@file@percent }
+\newlabel{eq:photonic_share}{{3-14}{26}{Forward-only 光计算占比与结果解释}{equation.0.3.14}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.4}{\ignorespaces 软件 photonic backend 接管口径下的前向线性计算占比（主线，518 个评估窗口）}}{27}{table.caption.14}\protected@file@percent }
+\newlabel{tab:ltsimulator-share}{{3.4}{27}{软件 photonic backend 接管口径下的前向线性计算占比（主线，518 个评估窗口）}{table.caption.14}{}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {4\hspace  {.3em}}数据、工程实现与实验验证}{28}{chapter.0.4}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.1}工程结构与模块职责}{28}{section.0.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.2}数据集与评估协议}{28}{section.0.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2.1}BCICIV\_1\_asc}{28}{subsection.0.4.2.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4.1}{\ignorespaces BCICIV\_1\_asc 数据用途与边界}}{29}{table.caption.15}\protected@file@percent }
+\newlabel{tab:bciciv-protocol}{{4.1}{29}{BCICIV\_1\_asc 数据用途与边界}{table.caption.15}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2.2}BNCI2014\_004}{29}{subsection.0.4.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.3}结果与分析}{29}{section.0.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.1}BCICIV 三条实验线对比}{29}{subsection.0.4.3.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4.2}{\ignorespaces BCICIV\_1\_asc 三条实验线当前结果}}{30}{table.caption.16}\protected@file@percent }
+\newlabel{tab:three-lines}{{4.2}{30}{BCICIV\_1\_asc 三条实验线当前结果}{table.caption.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.2}主线候选、回放与错误分析}{30}{subsection.0.4.3.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4.3}{\ignorespaces BCICIV\_1\_asc 回放结果（当前软件实验）}}{30}{table.caption.17}\protected@file@percent }
+\newlabel{tab:bciciv}{{4.3}{30}{BCICIV\_1\_asc 回放结果（当前软件实验）}{table.caption.17}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.1}{\ignorespaces 主线共享小型 MLP encoder 的训练曲线。该 encoder 接收筛选后的 FBCSP 特征，并为经验库检索与候选头扫描提供 embedding。}}{30}{figure.caption.18}\protected@file@percent }
+\newlabel{fig:mainline-training}{{4.1}{30}{主线共享小型 MLP encoder 的训练曲线。该 encoder 接收筛选后的 FBCSP 特征，并为经验库检索与候选头扫描提供 embedding。}{figure.caption.18}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces 主线 embedding 的 PCA 可视化。圆点为训练窗口，叉号为 518 个 held-out evaluation 窗口；颜色表示 left、right、foot。PCA 仅用于二维诊断，不是实际分类器。}}{31}{figure.caption.19}\protected@file@percent }
+\newlabel{fig:mainline-embedding}{{4.2}{31}{主线 embedding 的 PCA 可视化。圆点为训练窗口，叉号为 518 个 held-out evaluation 窗口；颜色表示 left、right、foot。PCA 仅用于二维诊断，不是实际分类器。}{figure.caption.19}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces 主线在 518 个 held-out evaluation 窗口上的累计指标。蓝线为累计指令准确率，绿线为累计接受窗口准确率，红线为累计拒识率。}}{32}{figure.caption.20}\protected@file@percent }
+\newlabel{fig:mainline-cumulative}{{4.3}{32}{主线在 518 个 held-out evaluation 窗口上的累计指标。蓝线为累计指令准确率，绿线为累计接受窗口准确率，红线为累计拒识率。}{figure.caption.20}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.4}{\ignorespaces 主线经验库的候选融合权重。当前权重综合距离、训练准确率、校准准确率、校准置信度和锚点先验；两个全局锚点获得主要权重。}}{32}{figure.caption.21}\protected@file@percent }
+\newlabel{fig:retrieval-weight}{{4.4}{32}{主线经验库的候选融合权重。当前权重综合距离、训练准确率、校准准确率、校准置信度和锚点先验；两个全局锚点获得主要权重。}{figure.caption.21}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.5}{\ignorespaces 主线经验库中候选线性头的训练质量分布。红点表示参与本次扫描的候选。}}{33}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:candidate-quality}{{4.5}{33}{主线经验库中候选线性头的训练质量分布。红点表示参与本次扫描的候选。}{figure.caption.22}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.6}{\ignorespaces 主线候选扫描的回放轨迹。曲线分别给出滚动指令准确率与拒识率。}}{33}{figure.caption.23}\protected@file@percent }
+\newlabel{fig:mainline-traces}{{4.6}{33}{主线候选扫描的回放轨迹。曲线分别给出滚动指令准确率与拒识率。}{figure.caption.23}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.7}{\ignorespaces 主线候选扫描的混淆矩阵。横轴为系统输出，纵轴为真实运动想象类别。}}{34}{figure.caption.24}\protected@file@percent }
+\newlabel{fig:mainline-confusion}{{4.7}{34}{主线候选扫描的混淆矩阵。横轴为系统输出，纵轴为真实运动想象类别。}{figure.caption.24}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.3}BNCI 个体特化结果}{34}{subsection.0.4.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.4}运行方式与技术数据}{34}{section.0.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {5\hspace  {.3em}}OpenBCI Cyton 上位机扩展}{36}{chapter.0.5}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {6\hspace  {.3em}}局限性}{37}{chapter.0.6}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {7\hspace  {.3em}}后续工作}{38}{chapter.0.7}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {8\hspace  {.3em}}结论}{39}{chapter.0.8}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\gdef \LT@i {\LT@entry 
+    {1}{90.19064pt}\LT@entry 
+    {1}{112.55424pt}\LT@entry 
+    {1}{85.2407pt}\LT@entry 
+    {1}{71.58394pt}\LT@entry 
+    {1}{71.58394pt}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {附录 A\hspace  {.3em}}线性算子与计算量清单}{40}{appendix.A}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\newlabel{app:ops}{{A}{40}{线性算子与计算量清单}{appendix.A}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1.1}{\ignorespaces 主线前向算子、矩阵大小与计算方式}}{40}{table.A.1}\protected@file@percent }
+\newlabel{tab:ops}{{1.1}{40}{线性算子与计算量清单}{table.A.1}{}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {附录 B\hspace  {.3em}}提交材料核查表}{41}{appendix.B}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{lot}{\contentsline {table}{\numberline {2.1}{\ignorespaces 与赛题技术文档要求的对应关系}}{41}{table.caption.25}\protected@file@percent }
+\newlabel{tab:checklist}{{2.1}{41}{与赛题技术文档要求的对应关系}{table.caption.25}{}}
+\abx@aux@read@bbl@mdfivesum{nobblfile}
+\abx@aux@read@bblrerun
+\gdef \@abspage@last{50}

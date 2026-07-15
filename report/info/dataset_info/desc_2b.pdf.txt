@@ -1,0 +1,229 @@
+
+--- PAGE 1 ---
+BCI Competition 2008 – Graz data set B
+R. Leeb 1, C. Brunner 1, G. R. M¨ uller-Putz1, A. Schl¨ ogl2, and G.
+Pfurtscheller1
+1Institute for Knowledge Discovery, Graz University of Technology,
+Austria
+2Institute for Human-Computer Interfaces, Graz University of
+Technology, Austria
+Experimental paradigm
+This data set consists of EEG data from 9 subjects of a study published in [1].
+The subjects were right-handed, had normal or corrected-to-normal vision
+and were paid for participating in the experiments. All volunteers were
+sitting in an armchair, watching a ﬂat screen monitor placed approximately
+1 m away at eye level. For each subject 5 sessions are provided, whereby the
+ﬁrst two sessions contain training data without feedback (screening), and
+the last three sessions were recorded with feedback.
+Each session consists of several runs, illustrated in Figure 1. At the
+beginning of each session, a recording of approximately 5 minutes was per-
+formed to estimate the EOG inﬂuence. The recording was divided into 3
+blocks: (1) two minutes with eyes open (looking at a ﬁxation cross on the
+screen), (2) one minute with eyes closed, and (3) one minute with eye move-
+ments. The artifact block was divided into four sections (15 seconds artifacts
+with 5 seconds resting in between) and the subjects were instructed with
+a text on the monitor to perform either eye blinking, rolling, up-down or
+left-right movements. At the beginning and at the end of each task a low
+and high warning tone were presented, respectively. Note that due to tech-
+nical problems no EOG block is available in sessionB0102T and B0504E, (see
+Table 1 for a list of all subjects)
+Figure 1: Timing scheme of one session (for screening and feedback sessions).
+1
+
+--- PAGE 2 ---
+Figure 2: Electrode montage of the three monopolar EOG channels.
+Data recording
+Three bipolar recordings (C3, Cz, and C4) were recorded with a sampling
+frequency of 250 Hz. The recordings had a dynamic range of ±100 µV for
+the screening and ±50 µV for the feedback sessions. They were bandpass-
+ﬁltered between 0.5 Hz and 100 Hz, and a notch ﬁlter at 50 Hz was enabled.
+The placement of the three bipolar recordings (large or small distances, more
+anterior or posterior) were slightly diﬀerent for each subject (for more details
+see [1]). The electrode position Fz served as EEG ground.
+In addition to the EEG channels, the electrooculogram (EOG) was rec-
+orded with three monopolar electrodes (see Figure 2, left mastoid serving
+as reference) using the same ampliﬁer settings, but with a dynamic range of
+±1 mV. The EOG channels are provided for the subsequent application of
+artifact processing methods [2] and must not be used for classiﬁcation.
+The cue-based screening paradigm (see Figure 3a) consisted of two classes,
+namely the motor imagery (MI) of left hand (class 1) and right hand (class
+2). Each subject participated in two screening sessions without feedback
+recorded on two diﬀerent days within two weeks. Each session consisted of
+six runs with ten trials each and two classes of imagery. This resulted in
+20 trials per run and 120 trials per session. Data of 120 repetitions of each
+MI class were available for each person in total. Prior to the ﬁrst motor im-
+agery training the subject executed and imagined diﬀerent movements for
+each body part and selected the one which they could imagine best (e. g.,
+squeezing a ball or pulling a brake).
+Each trial started with a ﬁxation cross and an additional short acoustic
+warning tone (1 kHz, 70 ms). Some seconds later a visual cue (an arrow
+pointing either to the left or right, according to the requested class) was
+presented for 1.25 seconds. Afterwards the subjects had to imagine the
+corresponding hand movement over a period of 4 seconds. Each trial was
+followed by a short break of at least 1.5 seconds. A randomized time of up
+to 1 second was added to the break to avoid adaptation.
+For the three online feedback sessions four runs with smiley feedback
+were recorded (see Figure 3b), whereby each run consisted of twenty trials
+for each type of motor imagery. At the beginning of each trial (second 0) the
+2
+
+--- PAGE 3 ---
+Imagination of
+left hand movement
+Imagination of
+right hand movement
+Fixation cross Imagery Period PauseCue
+beep
+1 2 3 4 5 6 7 8 9 time in s0
+Smiley (grey)
+Cue
+Feedback Period (Smiley) Pause
+beep
+1 2 3 4 5 6 7 8 9 time in s0
+(a) Screening
+(b) Smiley Feedback
+Figure 3: Timing scheme of the paradigm. (a) The ﬁrst two sessions (01T,
+02T) contain training data without feedback, and (b) the last three sessions
+(03T, 04E, 05E) with smiley feedback.
+feedback (a gray smiley) was centered on the screen. At second 2, a short
+warning beep (1 kHz, 70 ms) was given. The cue was presented from second 3
+to 7.5. Depending on the cue, the subjects were required to move the smiley
+towards the left or right side by imagining left or right hand movements,
+respectively. During the feedback period the smiley changed to green when
+moved in the correct direction, otherwise it became red. The distance of
+the smiley from the origin was set according to the integrated classiﬁcation
+output over the past two seconds (more details see [1]). Furthermore, the
+classiﬁer output was also mapped to the curvature of the mouth causing
+the smiley to be happy (corners of the mouth upwards) or sad (corners of
+the mouth downwards). At second 7.5 the screen went blank and a random
+interval between 1.0 and 2.0 seconds was added to the trial. The subject
+was instructed to keep the smiley on the correct side for as long as possible
+and therefore to perform the MI as long as possible.
+Data ﬁle description
+All data sets are stored in the General Data Format for biomedical signals
+(GDF), one ﬁle per subject and session. However, only the ﬁrst three sessions
+contain the class labels for all trials, whereas the remaining two sessions are
+used to test the classiﬁer and hence to evaluate the performance. All ﬁles are
+listed in Table 1. The GDF ﬁles can be loaded using the open-source toolbox
+BioSig, available for free at http://biosig.sourceforge.net/. There are
+3
+
+--- PAGE 4 ---
+ID Training Evaluation
+1 B0101T, B0102T, B0103T B0104E , B0105E
+2 B0201T, B0202T, B0203T B0204E, B0205E
+3 B0301T, B0302T, B0303T B0304E, B0305E
+4 B0401T, B0402T, B0403T B0404E, B0405E
+5 B0501T, B0502T, B0503T B0504E, B0505E
+6 B0601T, B0602T, B0603T B0604E, B0605E
+7 B0701T, B0702T, B0703T B0704E, B0705E
+8 B0801T, B0802T, B0803T B0804E, B0805E
+9 B0901T, B0902T, B0903T B0904E, B0905E
+Table 1: List of all ﬁles contained in the data set, the striked out evaluation
+data sets will be provided after the deadline of the competition. The ﬁrst two
+sessions (...01T, ...02T) contain training data without feedback, and the
+last three sessions ( ...03T, ...04E, ...05E) with smiley feedback. Note:
+Due to technical problems no recording for EOG estimation (eyes open,
+closed, eye movements) exists in session B0102T and B0504E.
+versions for Octave1/MATLAB2 as well as a library for C/C++.
+A GDF ﬁle can be loaded with the BioSig toolbox with the following
+command in Octave/MATLAB (for C/C++, the corresponding function
+HDRTYPE* sopen and size t sread must be called):
+[s, h] = sload(’B0101T.gdf’);
+Note that the runs are separated by 100 missing values, which are encoded as
+not-a-numbers (NaN) by default. Alternatively, this behavior can be turned
+oﬀ and the missing values will be encoded as the negative maximum values
+as stored in the ﬁle with:
+[s, h] = sload(’A01T.gdf’, 0, ’OVERFLOWDETECTION:OFF’);
+The workspace will then contain two variables, namely the signals s and
+a header structure h. The signal variable contains 6 channels (the ﬁrst 3
+are EEG and the last 3 are EOG signals). The header structure contains
+event information that describes the structure of the data over time. The
+following ﬁelds provide important information for the evaluation of this data
+set:
+h.EVENT.TYP
+h.EVENT.POS
+h.EVENT.DUR
+1http://www.gnu.org/software/octave/
+2The MathWorks, Inc., Natick, MA, USA
+4
+
+--- PAGE 5 ---
+Event type Description
+276 0x0114 Idling EEG (eyes open)
+277 0x0115 Idling EEG (eyes closed)
+768 0x0300 Start of a trial
+769 0x0301 Cue onset left (class 1)
+770 0x0302 Cue onset right (class 2)
+781 0x030D BCI feedback (continuous)
+783 0x030F Cue unknown
+1023 0x03FF Rejected trial
+1077 0x0435 Horizontal eye movement
+1078 0x0436 Vertical eye movement
+1079 0x0437 Eye rotation
+1081 0x0439 Eye blinks
+32766 0x7FFE Start of a new run
+Table 2: List of event types (the ﬁrst column contains decimal values and
+the second hexadecimal values).
+The position of an event in samples is contained in h.EVENT.POS. The cor-
+responding type can be found in h.EVENT.TYP, and the duration of that
+particular event is stored in h.EVENT.DUR. The types used in this data set
+are described in Table 2 (hexadecimal values, decimal notation in parenthe-
+ses). Note that the class labels (i. e., 1 and 2, corresponding to event types
+769 and 770) are only provided for the training data and not for the testing
+data.
+The trials containing artifacts as scored by experts are marked as events
+with the type 1023. In addition, h.ArtifactSelection contains a list of all
+trials, with 0 corresponding to a clean trial and 1 corresponding to a trial
+containing an artifact.
+In order to view the GDF ﬁles, the viewing and scoring application
+SigViewer v0.2 or higher (part of BioSig) can be used.
+Evaluation
+Participants should provide a continuous classiﬁcation output for each sam-
+ple in the form of classlabels (1, 2), including labeled trials and trials marked
+as artifact. A confusion matrix will then be built from all artifact-free trials
+for each time point. From these confusion matrices, the time course of the
+accuracy as well as the kappa coeﬃcient will be obtained [3]. The algo-
+rithm used for this evaluation will be provided in BioSig. The winner is the
+algorithm with the largest kappa value X.KAP00.
+Due to the fact that the evaluation data sets will not be distributed until
+the end of the competition, the submissions must be programs that accept
+5
+
+--- PAGE 6 ---
+EEG data (the structure of this data must be the same as used in all training
+sets3) as input and produce the aforementioned class label vector.
+Since three EOG channels are provided, it is required to remove EOG
+artifacts before the subsequent data processing using artifact removal tech-
+niques such as highpass ﬁltering or linear regression [4]. In order to enable
+the application of other correction methods, we have opted for a maximum
+transparency approach and provided the EOG channels; at the same time
+we request that artifacts do not inﬂuence the classiﬁcation result.
+All algorithms must be causal, meaning that the classiﬁcation output at
+time k may only depend on the current and past samples xk, xk−1, . . . , x0.
+In order to check whether the causality criterion and the artifact processing
+requirements are fulﬁlled, all submissions must be open source, including
+all additional libraries, compilers, programming languages, and so on (for
+example, Octave/FreeMat, C++, Python, . . . ). Note that submissions can
+also be written in the closed-source development environment MATLAB as
+long as the code is executable in Octave. Similarily, C++ programs can be
+written and compiled with a Microsoft or Intel compiler, but the code must
+also compile with g++.
+References
+[1] R. Leeb, F. Lee, C. Keinrath, R. Scherer, H. Bischof, G. Pfurtscheller.
+Brain-computer communication: motivation, aim, and impact of ex-
+ploring a virtual apartment. IEEE Transactions on Neural Systems and
+Rehabilitation Engineering 15, 473–482, 2007.
+[2] M. Fatourechi, A. Bashashati, R. K. Ward, G. E. Birch. EMG and
+EOG artifacts in brain computer interface systems: a survey. Clinical
+Neurophysiology 118, 480–494, 2007.
+[3] A. Schl¨ ogl, J. Kronegg, J. E. Huggins, S. G. Mason. Evaluation criteria
+in BCI research. In: G. Dornhege, J. d. R. Mill´ an, T. Hinterberger, D. J.
+McFarland, K.-R. M¨ uller (Eds.). Toward brain-computer interfacing,
+MIT Press, 327–342, 2007.
+[4] A. Schl¨ ogl, C. Keinrath, D. Zimmermann, R. Scherer, R. Leeb, G.
+Pfurtscheller. A fully automated correction method of EOG artifacts in
+EEG recordings. Clin.Neurophys. 2007 Jan;118(1):98-104.
+3One evaluation data set is distributed from the beginning of the competition to enable
+participants to test their program and to ensure that it produces the desired output.
+6

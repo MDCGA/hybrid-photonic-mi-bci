@@ -1,0 +1,25 @@
+\addvspace {10.0pt}
+\contentsline {figure}{\numberline {1.1}{\ignorespaces MI-BCI 任务示意：系统从一个多通道 EEG 决策窗口推理运动想象意图，并输出控制命令或拒识。该图为系统任务说明，不是实验结果。}}{1}{figure.caption.2}%
+\contentsline {figure}{\numberline {1.2}{\ignorespaces 国际 10--20 电极位置示意。项目重点使用中央区 C3、Cz、C4 及其前后邻近通道；图为电极命名和空间关系说明。}}{2}{figure.caption.3}%
+\contentsline {figure}{\numberline {1.3}{\ignorespaces 运动想象 EEG 节律变化的概念可视化。上图为含噪节律波形，下图示意 cue 后 mu/beta 相对功率下降（ERD）；仅用于解释信号现象。}}{3}{figure.caption.4}%
+\contentsline {figure}{\numberline {1.4}{\ignorespaces 背景逻辑图：EEG 个体/会话差异推动少量校准和经验库特化，随后由低位宽候选扫描完成当前窗口的个性化判别。该图为方案逻辑说明。}}{4}{figure.caption.5}%
+\contentsline {figure}{\numberline {1.5}{\ignorespaces 光电混合 MI-BCI 从 EEG 采集到最终指令的简化结构。}}{6}{figure.caption.7}%
+\addvspace {10.0pt}
+\contentsline {figure}{\numberline {2.1}{\ignorespaces FBCSP 的数据流和线性热点。CSP 投影 $W(4\times 8)X(8\times T)$ 是可拆分为 tile 的矩阵乘；log-variance 与特征选择保留在数字端。}}{13}{figure.caption.8}%
+\addvspace {10.0pt}
+\contentsline {figure}{\numberline {3.1}{\ignorespaces 每个决策窗口的候选线性头 tile 调度。数字端负责跨 tile 部分和累加、softmax、拒识和融合。}}{19}{figure.caption.9}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces 候选线性头的 $3\times 33\rightarrow 2\times 8$ 映射概念图。颜色表示列分块；图示为一次候选扫描的计算拆分。}}{20}{figure.caption.10}%
+\addvspace {10.0pt}
+\contentsline {figure}{\numberline {4.1}{\ignorespaces 主线共享小型 MLP encoder 的训练曲线。该 encoder 接收筛选后的 FBCSP 特征，并为经验库检索与候选头扫描提供 embedding。}}{30}{figure.caption.18}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces 主线 embedding 的 PCA 可视化。圆点为训练窗口，叉号为 518 个 held-out evaluation 窗口；颜色表示 left、right、foot。PCA 仅用于二维诊断，不是实际分类器。}}{31}{figure.caption.19}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces 主线在 518 个 held-out evaluation 窗口上的累计指标。蓝线为累计指令准确率，绿线为累计接受窗口准确率，红线为累计拒识率。}}{32}{figure.caption.20}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces 主线经验库的候选融合权重。当前权重综合距离、训练准确率、校准准确率、校准置信度和锚点先验；两个全局锚点获得主要权重。}}{32}{figure.caption.21}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces 主线经验库中候选线性头的训练质量分布。红点表示参与本次扫描的候选。}}{33}{figure.caption.22}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces 主线候选扫描的回放轨迹。曲线分别给出滚动指令准确率与拒识率。}}{33}{figure.caption.23}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces 主线候选扫描的混淆矩阵。横轴为系统输出，纵轴为真实运动想象类别。}}{34}{figure.caption.24}%
+\addvspace {10.0pt}
+\addvspace {10.0pt}
+\addvspace {10.0pt}
+\addvspace {10.0pt}
+\addvspace {10.0pt}
+\addvspace {10.0pt}

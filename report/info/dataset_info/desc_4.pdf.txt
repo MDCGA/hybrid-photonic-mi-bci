@@ -1,0 +1,150 @@
+
+--- PAGE 1 ---
+Prediction of Finger Flexion
+4th Brain-Computer Interface Data Competition
+Kai J. Miller 1,2 and Gerwin Schalk 3,4,5
+1Department of Physics, University of Washington, Seattle, Washington
+2Program in Neurobiology and Behavior, University of Washington, Seattle, Washington
+3Wadsworth Center, New York State Department of Health, Albany, New York
+4Department of Neurology, Albany Medical College, Albany, New York
+5Department of Neurosurgery, Washington University in St. Louis, St. Louis, Missouri
+(Dated: June 11, 2008)
+The goal of this element of the competition is to predict the ﬂexion of individual ﬁngers from
+signals recorded from the surface of the brain (electrocorticography (ECoG)). This data set contains
+brain signals from three subjects, as well as the time courses of the ﬂexion of each of ﬁve ﬁngers.
+The task in this competition is to use the provided ﬂexion information in order to predict ﬁnger
+ﬂexion for a provided test set. The performance of the classiﬁer will be evaluated by calculating the
+average correlation coeﬃcient r between actual and predicted ﬁnger ﬂexion.
+FIG. 1: ECoG signals in train data(time,channel) and
+test data(time,channel) were acquired from each electrode
+with respect to a scalp reference and ground before re-
+referencing with respect to the common average.
+I. SUBJECTS
+The three subjects in the data set were epileptic pa-
+tients at Harborview Hospital in Seattle, Washington.
+Each patient had electrode grids placed subdurally on
+the surface of the brain for the purpose of extended clini-
+cal monitoring and localization of seizure foci. Each sub-
+ject gave informed consent to participate in this study,
+which was approved by the internal review board (IRB)
+of Harborview Hospital. All patient data have been
+anonymized according to IRB protocol in accordance
+with HIPAA regulations.
+II. RECORDINGS
+Signals from the electrode grid were ampliﬁed and dig-
+itized using Synamps2 ampliﬁers (Neuroscan, El Paso,
+TX). The general-purpose BCI system BCI2000 [1] pro-
+vided visual stimuli to the patient, acquired brain sig-
+nals from the Synamps2 system, and also recorded the
+ﬂexion of individual ﬁngers (on the hand contralateral
+to the implanted grid) using a data glove (Fifth Dimen-
+sion Technologies, Irvine, CA). BCI2000 stored the brain
+signals, the timing of stimulus presentation, and the ﬂex-
+ion of each of the ﬁngers in a data ﬁle. Data ﬁles were
+converted to Matlab format for this competition. Each
+patient had subdural electrode arrays (Ad-Tech, Racine,
+WI) implanted. Each array contained 48-64 platinum
+electrodes that were conﬁgured in 8x6 or 8x8 arrange-
+ments. The electrodes had a diameter of 4 mm (2.3mm
+exposed), 1 cm inter-electrode distance, and were em-
+bedded in silastic. Electrocorticographic (ECoG) signals
+(i.e., 62, 48, and 64 channels from subjects 1, 2, and 3,
+respectively) were acquired with respect to a scalp ref-
+erence and ground (Fig. 1), band pass ﬁltered between
+0.15 to 200 Hz, and sampled at 1000 Hz.
+III. EXPERIMENT AL PROTOCOL
+The subjects were cued to move a particular ﬁnger by
+displaying the corresponding word (e.g., ”thumb”) on a
+computer monitor placed at the bed-side (Fig. 2). Each
+cue lasted two seconds and was followed by a two-second
+rest period during which the screen was blank. During
+each cue, the subjects typically moved the requested ﬁn-
+ger 3-5 times. This number varied across subjects and
+ﬁngers. There were 30 movement stimulus cues for each
+ﬁnger (i.e., a total of 150 cue presentations and about
+90-150 ﬂexions of each ﬁnger); stimulus cues were inter-
+leaved randomly. This experiment lasted 10 minutes for
+each subject.
+Subsequent oﬄine analysis showed that ring (4 th) ﬁn-
+
+--- PAGE 2 ---
+2
+FIG. 2: Capturing individual ﬁnger ﬂexion: each subject
+moved a ﬁnger several times in response to a visual cue. Fin-
+ger ﬂexion was recorded using a dataglove. The task in this
+competition is to use the provided ECoG signals to predict the
+ﬂexion of each ﬁnger during the last 1 /3 of the experiment.
+ger movements were correlated with either middle (3 rd)
+or little (5 th) ﬁnger movements. Thus, while this ring
+(4th) ﬁnger position is included with the training data,
+it will not be used for evaluation purposes.
+IV. DA T A STRUCTURE
+The data for each subject are contained in a separate
+MATLAB ﬁle that is named “subX comp.mat” where
+“X” denotes the subject number. Each ﬁle contains three
+variables:
+• “train data” - this variable, in time × channels,
+gives the ﬁrst 2 /3 (6 min, 40s) of recorded ECoG
+signals (400,000 samples at 1kHz sampling rate per
+channel) from the speciﬁed experiment, for every
+channel.
+• “train dg” - this variable, in time × ﬁnger is the
+ﬁrst 2 /3 (6 min, 40s) of recorded ﬁnger position
+(thumb - index - middle - ring - little; 400,000 sam-
+ples (super-sampled to 1 kHz) per ﬁnger) for the
+associated experiment.
+• “test data” - this variable, in time× channels, gives
+the last 1/3 (3 min, 20s) of recorded ECoG signals
+(200,000 samples at 1kHz sampling rate per chan-
+nel) from the speciﬁed experiment, for every chan-
+nel. These data will be used to predict the ﬁnal
+1/3 (3 min, 20s) of recorded ﬁnger position (thumb
+- index - middle - ring - little) for the associated
+experiment.
+Please note that the channel order has been scrambled.
+V. EV ALUA TION CRITERIA
+Each participating group will submit three ﬁles titled
+“sub1 eval”, “sub2 eval”, and “sub3 eval”, corresponding
+to subjects 1-3, respectively. Each of these will contain a
+single variable, “eval dg,” with dimensions 200,000 × 5:
+• “eval dg” - this variable, in time × channels, shall
+give the last 1 /3 (3 min, 20s) of predicted ﬁnger
+ﬂexion for each of the ﬁve ﬁngers (thumb - index -
+middle - ring - little) for the associated experiment
+(200,000 samples per ﬁnger).
+The evaluation criteria will be as follows: for each sub-
+ject, the received variable “eval dg” will be compared
+with the actual ﬁnger positions in “test dg,” which
+we have retained. We will calculate the correlation
+coeﬃcient r between the actual and the predicted
+ﬁnger ﬂexions for each subject and ﬁnger. We will not
+calculate the correlation coeﬃcient for the 4 th (ring)
+ﬁnger, because the ﬂexion of this ﬁnger was typically
+correlated with the ﬂexion of the 3 rd (middle) or 5 th
+(little) ﬁnger. The variable for predicted position should
+still be of dimension 200,000 × 5 (i.e., the 4 th column
+will not be used for evaluation). The ﬁnal score will be
+calculated as the arithmetic mean of the 12 correlation
+coeﬃcients (4 per subject, 3 subjects). The submission
+with the highest score wins the competition.
+VI. SOME THINGS TO KEEP IN MIND...
+• The lag between the dataglove position measure-
+ment recording and the ampliﬁer measurement is
+37ms ( ± 3ms, SEM). This is of the same order of
+granularity in the dataglove position (which was
+sampled at 25Hz - every 40ms).
+• There is a characteristic delay between brain activ-
+ity and resulting ﬁnger movement. You may want
+to take this into account.
+• Please cite [2] when you use this dataset in a pub-
+lication.
+[1] Schalk, G., McFarland, D.J., Hinterberger, T., Birbaumer,
+N., and Wolpaw, J.R. BCI2000: a general-purpose brain-
+computer interface (BCI) system, IEEE Trans Biomed
+Eng, 51(6): 1034-1043, 2004.
+[2] Schalk, G., Kubanek, J., Miller, K.J., Anderson, N.R.,
+Leuthardt, E.C., Ojemann, J.G., Limbrick, D., Moran,
+D.W., Gerhardt, L.A., and Wolpaw, J.R. Decoding Two-
+Dimensional Movement Trajectories Using Electrocortico-
+graphic Signals in Humans, J Neural Eng , 4: 264-275,
+2007.

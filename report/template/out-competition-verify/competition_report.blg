@@ -1,0 +1,18 @@
+[0] Config.pm:328> INFO - This is Biber 2.21
+[0] Config.pm:331> INFO - Logfile is 'out-competition-verify/competition_report.blg'
+[133] biber-MSWIN64:342> INFO - === 
+[180] Biber.pm:421> INFO - Reading 'out-competition-verify/competition_report.bcf'
+[363] Biber.pm:1002> INFO - Found 3 citekeys in bib section 0
+[377] Biber.pm:4487> INFO - Processing section 0
+[389] Biber.pm:4678> INFO - Looking for bibtex file 'body/ref.bib' for section 0
+[478] bibtex.pm:1713> INFO - LaTeX decoding ...
+[490] bibtex.pm:1519> INFO - Found BibTeX data source 'body/ref.bib'
+[500] Biber.pm:4678> INFO - Looking for bibtex file 'competition_report.bib' for section 0
+[565] bibtex.pm:1713> INFO - LaTeX decoding ...
+[572] bibtex.pm:1519> INFO - Found BibTeX data source 'competition_report.bib'
+[629] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[629] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[629] Biber.pm:4307> INFO - Sorting list 'none/global//global/global/global' of type 'entry' with template 'none' and locale 'en-US'
+[629] Biber.pm:4313> INFO - No sort tailoring available for locale 'en-US'
+[632] bbl.pm:676> INFO - Writing 'out-competition-verify/competition_report.bbl' with encoding 'UTF-8'
+[635] bbl.pm:779> INFO - Output to out-competition-verify/competition_report.bbl

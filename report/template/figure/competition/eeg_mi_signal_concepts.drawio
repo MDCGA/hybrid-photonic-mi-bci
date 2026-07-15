@@ -1,0 +1,19 @@
+<mxfile host="app.diagrams.net" modified="2026-07-14T22:10:00.000Z" agent="Codex" version="26.0.14">
+  <diagram id="eeg-erd-concepts" name="EEG 与 ERD 概念">
+    <mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="title" value="运动想象期间的脑电节律变化示意（非实测数据）" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;fontColor=#1D2939;" vertex="1" parent="1"><mxGeometry x="220" y="40" width="1160" height="40" as="geometry"/></mxCell>
+        <mxCell id="wavepanel" value="&lt;b&gt;原始 EEG 波形&lt;/b&gt;&lt;br&gt;mu/beta 节律叠加噪声" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=top;fontSize=18;fontColor=#344054;fillColor=#FFFFFF;strokeColor=#98A2B3;strokeWidth=2;spacingTop=15;" vertex="1" parent="1"><mxGeometry x="110" y="140" width="1380" height="250" as="geometry"/></mxCell>
+        <mxCell id="cue" value="提示" style="shape=ellipse;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#FFFFFF;fillColor=#D9822B;strokeColor=#D9822B;" vertex="1" parent="1"><mxGeometry x="370" y="240" width="60" height="60" as="geometry"/></mxCell>
+        <mxCell id="miinterval" value="运动想象时段" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#8A5A22;fillColor=#F5E7D4;strokeColor=#E7C58C;opacity=70;" vertex="1" parent="1"><mxGeometry x="470" y="205" width="700" height="115" as="geometry"/></mxCell>
+        <mxCell id="wave" value="含噪 EEG 节律波形" style="shape=mxgraph.basic.wave;html=1;align=center;verticalAlign=middle;fontSize=15;fontColor=#2F6DB0;strokeColor=#2F6DB0;fillColor=none;" vertex="1" parent="1"><mxGeometry x="170" y="265" width="1250" height="55" as="geometry"/></mxCell>
+        <mxCell id="powerpanel" value="&lt;b&gt;相对频带功率&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=top;fontSize=18;fontColor=#344054;fillColor=#FFFFFF;strokeColor=#98A2B3;strokeWidth=2;spacingTop=15;" vertex="1" parent="1"><mxGeometry x="110" y="455" width="1380" height="260" as="geometry"/></mxCell>
+        <mxCell id="mu" value="mu 8-12 Hz：提示后功率下降" style="shape=mxgraph.basic.wave;html=1;align=right;verticalAlign=middle;fontSize=15;fontColor=#2F6DB0;strokeColor=#2F6DB0;fillColor=none;" vertex="1" parent="1"><mxGeometry x="190" y="545" width="960" height="60" as="geometry"/></mxCell>
+        <mxCell id="beta" value="beta 16-28 Hz：较缓功率下降" style="shape=mxgraph.basic.wave;html=1;align=right;verticalAlign=middle;fontSize=15;fontColor=#3F8C65;strokeColor=#3F8C65;fillColor=none;" vertex="1" parent="1"><mxGeometry x="190" y="615" width="960" height="55" as="geometry"/></mxCell>
+        <mxCell id="erd" value="事件相关去同步化（ERD）&lt;br&gt;运动想象时，mu/beta 功率通常下降" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#C65353;fillColor=#FFF7F7;strokeColor=#C65353;" vertex="1" parent="1"><mxGeometry x="1170" y="545" width="250" height="100" as="geometry"/></mxCell>
+        <mxCell id="erdarrow" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C65353;strokeWidth=2;" edge="1" parent="1" source="erd" target="mu"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

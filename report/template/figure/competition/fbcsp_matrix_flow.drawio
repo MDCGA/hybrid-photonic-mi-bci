@@ -1,0 +1,24 @@
+<mxfile host="app.diagrams.net" modified="2026-07-14T22:10:00.000Z" agent="Codex" version="26.0.14">
+  <diagram id="fbcsp-matrix-flow" name="FBCSP 数据流">
+    <mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="title" value="FBCSP 将多通道节律转为紧凑、可解释的特征" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;fontColor=#1D2939;" vertex="1" parent="1"><mxGeometry x="190" y="55" width="1220" height="40" as="geometry"/></mxCell>
+        <mxCell id="n1" value="&lt;b&gt;EEG 窗口&lt;/b&gt;&lt;br&gt;X：8 x T" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=18;fontColor=#FFFFFF;fillColor=#2F6DB0;strokeColor=#2F6DB0;" vertex="1" parent="1"><mxGeometry x="70" y="260" width="180" height="110" as="geometry"/></mxCell>
+        <mxCell id="n2" value="&lt;b&gt;滤波器组&lt;/b&gt;&lt;br&gt;6 个频带" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=18;fontColor=#FFFFFF;fillColor=#3F8C65;strokeColor=#3F8C65;" vertex="1" parent="1"><mxGeometry x="330" y="260" width="195" height="110" as="geometry"/></mxCell>
+        <mxCell id="n3" value="&lt;b&gt;OVR CSP&lt;/b&gt;&lt;br&gt;W(4x8) X(8xT)" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=17;fontColor=#FFFFFF;fillColor=#D9822B;strokeColor=#D9822B;" vertex="1" parent="1"><mxGeometry x="605" y="260" width="200" height="110" as="geometry"/></mxCell>
+        <mxCell id="n4" value="&lt;b&gt;对数方差&lt;/b&gt;&lt;br&gt;72 维特征" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=18;fontColor=#FFFFFF;fillColor=#C65353;strokeColor=#C65353;" vertex="1" parent="1"><mxGeometry x="885" y="260" width="180" height="110" as="geometry"/></mxCell>
+        <mxCell id="n5" value="&lt;b&gt;Fisher 选择&lt;/b&gt;&lt;br&gt;32 维特征" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=18;fontColor=#FFFFFF;fillColor=#2F6DB0;strokeColor=#2F6DB0;" vertex="1" parent="1"><mxGeometry x="1145" y="260" width="180" height="110" as="geometry"/></mxCell>
+        <mxCell id="n6" value="&lt;b&gt;编码器 / 候选线性头&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=17;fontColor=#FFFFFF;fillColor=#3F8C65;strokeColor=#3F8C65;" vertex="1" parent="1"><mxGeometry x="1405" y="260" width="175" height="110" as="geometry"/></mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#475467;strokeWidth=2;" edge="1" parent="1" source="n1" target="n2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#475467;strokeWidth=2;" edge="1" parent="1" source="n2" target="n3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#475467;strokeWidth=2;" edge="1" parent="1" source="n3" target="n4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#475467;strokeWidth=2;" edge="1" parent="1" source="n4" target="n5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#475467;strokeWidth=2;" edge="1" parent="1" source="n5" target="n6"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="note1" value="每个频带、每个类别：Z = W X" style="text;html=1;align=center;verticalAlign=middle;fontSize=17;fontColor=#344054;" vertex="1" parent="1"><mxGeometry x="500" y="450" width="410" height="32" as="geometry"/></mxCell>
+        <mxCell id="note2" value="线性矩阵乘：4 x 8 乘以 8 x T" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontColor=#D9822B;" vertex="1" parent="1"><mxGeometry x="480" y="495" width="450" height="32" as="geometry"/></mxCell>
+        <mxCell id="note3" value="仅线性步骤可作为 MVM 映射候选" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontColor=#344054;" vertex="1" parent="1"><mxGeometry x="1180" y="450" width="370" height="32" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

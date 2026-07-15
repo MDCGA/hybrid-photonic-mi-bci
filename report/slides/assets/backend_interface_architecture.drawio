@@ -1,0 +1,97 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="f8Xo4-nswW8KCB08598U">
+    <mxGraphModel dx="917" dy="-489" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-17" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=none;strokeColor=none;strokeWidth=2;fontColor=#203047;fontSize=24;" value="&lt;b&gt;分路径混合量化&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#667487&#39; style=&#39;font-size:12px&#39;&gt;主干保持数值稳定 · 候选扫描突出低位宽并行&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="1250" x="160.00272727272704" y="1114.272727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#3478B8;strokeColor=#3478B8;strokeWidth=2;fontColor=#FFFFFF;fontSize=14;" value="&lt;b&gt;前向线性算子&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size:11px&#39;&gt;统一 Backend 接管入口&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="145" x="160.00272727272704" y="1344.272727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-19" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#7656A8;strokeColor=#7656A8;strokeWidth=2;fontColor=#FFFFFF;fontSize=14;" value="&lt;b&gt;路径识别&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size:11px&#39;&gt;按算子用途选择策略&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="150" x="345.00272727272704" y="1344.272727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-20" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=none;strokeColor=none;strokeWidth=2;fontColor=#3478B8;fontSize=15;" value="&lt;b&gt;路径 A｜常规线性路径&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#667487&#39; style=&#39;font-size:11px&#39;&gt;FBCSP · 标准化 · small MLP 等&lt;/font&gt;" vertex="1">
+          <mxGeometry height="45" width="770" x="530.002727272727" y="1194.272727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#3478B8;strokeColor=#3478B8;strokeWidth=2;fontColor=#FFFFFF;fontSize=14;" value="&lt;b&gt;8-bit 逻辑精度&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size:11px&#39;&gt;兼顾动态范围与数值稳定性&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="175" x="530.002727272727" y="1254.272727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#3C9064;strokeColor=#3C9064;strokeWidth=2;fontColor=#FFFFFF;fontSize=14;" value="&lt;b&gt;radix-16 拆分&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size:11px&#39;&gt;展开为多个 4-bit slices&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="175" x="735.002727272727" y="1254.272727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-23" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#7656A8;strokeColor=#7656A8;strokeWidth=2;fontColor=#FFFFFF;fontSize=14;" value="&lt;b&gt;分片线性执行&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size:11px&#39;&gt;软件模拟执行核&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="175" x="940.002727272727" y="1254.272727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-24" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#F5F7FA;strokeColor=#3478B8;strokeWidth=2;fontColor=#203047;fontSize=14;" value="&lt;b&gt;数字端累加&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#667487&#39; style=&#39;font-size:11px&#39;&gt;重构线性输出&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="175" x="1145.002727272727" y="1254.272727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-25" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=none;strokeColor=none;strokeWidth=2;fontColor=#E58A2B;fontSize=15;" value="&lt;b&gt;路径 B｜候选 Head Bank 扫描&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#667487&#39; style=&#39;font-size:11px&#39;&gt;经验库候选线性头的重点低位宽路径&lt;/font&gt;" vertex="1">
+          <mxGeometry height="45" width="770" x="530.002727272727" y="1400.002727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-26" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#E58A2B;strokeColor=#E58A2B;strokeWidth=2;fontColor=#FFFFFF;fontSize=14;" value="&lt;b&gt;激活 uint4&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size:11px&#39;&gt;非负输入 4-bit 量化&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="175" x="530.002727272727" y="1460.002727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-27" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#C95757;strokeColor=#C95757;strokeWidth=2;fontColor=#FFFFFF;fontSize=14;" value="&lt;b&gt;权重 int4&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size:11px&#39;&gt;有符号权重 4-bit 量化&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="175" x="735.002727272727" y="1460.002727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-28" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#E58A2B;strokeColor=#E58A2B;strokeWidth=2;fontColor=#FFFFFF;fontSize=14;" value="&lt;b&gt;TiledMVM&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size:11px&#39;&gt;候选 Bank 单次低位宽扫描&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="175" x="940.002727272727" y="1460.002727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-29" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#F5F7FA;strokeColor=#E58A2B;strokeWidth=2;fontColor=#203047;fontSize=14;" value="&lt;b&gt;Top-K 融合&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#667487&#39; style=&#39;font-size:11px&#39;&gt;数字端加权融合并拒识&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="175" x="1145.002727272727" y="1460.002727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-30" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#F5F7FA;strokeColor=#7656A8;strokeWidth=2;fontColor=#203047;fontSize=14;" value="&lt;b&gt;输出&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#667487&#39; style=&#39;font-size:11px&#39;&gt;进入数字端&lt;/font&gt;" vertex="1">
+          <mxGeometry height="85" width="75" x="1345.002727272727" y="1344.272727272727" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-32" edge="1" parent="1" source="gD2Fk4rErk9ct8sBL4BO-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#3478B8;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontSize=11;fontColor=#3478B8;" target="gD2Fk4rErk9ct8sBL4BO-19" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-33" edge="1" parent="1" source="gD2Fk4rErk9ct8sBL4BO-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#3478B8;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontSize=11;fontColor=#3478B8;" target="gD2Fk4rErk9ct8sBL4BO-21" value="常规算子">
+          <mxGeometry relative="1" x="-0.5473" y="40" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="470" y="1297" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-34" edge="1" parent="1" source="gD2Fk4rErk9ct8sBL4BO-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#3478B8;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontSize=11;fontColor=#3478B8;" target="gD2Fk4rErk9ct8sBL4BO-22" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-35" edge="1" parent="1" source="gD2Fk4rErk9ct8sBL4BO-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#3C9064;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontSize=11;fontColor=#3C9064;" target="gD2Fk4rErk9ct8sBL4BO-23" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-36" edge="1" parent="1" source="gD2Fk4rErk9ct8sBL4BO-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#7656A8;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontSize=11;fontColor=#7656A8;" target="gD2Fk4rErk9ct8sBL4BO-24" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-37" edge="1" parent="1" source="gD2Fk4rErk9ct8sBL4BO-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#E58A2B;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontSize=11;fontColor=#E58A2B;" target="gD2Fk4rErk9ct8sBL4BO-26" value="候选扫描">
+          <mxGeometry relative="1" x="-0.3353" y="-40" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="470" y="1522" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-38" edge="1" parent="1" source="gD2Fk4rErk9ct8sBL4BO-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#E58A2B;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontSize=11;fontColor=#E58A2B;" target="gD2Fk4rErk9ct8sBL4BO-27" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-39" edge="1" parent="1" source="gD2Fk4rErk9ct8sBL4BO-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#C95757;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontSize=11;fontColor=#C95757;" target="gD2Fk4rErk9ct8sBL4BO-28" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-40" edge="1" parent="1" source="gD2Fk4rErk9ct8sBL4BO-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#E58A2B;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontSize=11;fontColor=#E58A2B;" target="gD2Fk4rErk9ct8sBL4BO-29" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-41" edge="1" parent="1" source="gD2Fk4rErk9ct8sBL4BO-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#3478B8;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontSize=11;fontColor=#3478B8;" target="gD2Fk4rErk9ct8sBL4BO-30" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gD2Fk4rErk9ct8sBL4BO-42" edge="1" parent="1" source="gD2Fk4rErk9ct8sBL4BO-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#E58A2B;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontSize=11;fontColor=#E58A2B;" target="gD2Fk4rErk9ct8sBL4BO-30" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1382.5" y="1410.002727272727" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
