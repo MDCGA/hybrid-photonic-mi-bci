@@ -15,3 +15,57 @@ artifacts/tmp/
 
 # Local host-application databases and live acquisition exports.
 artifacts/host/
+
+# LaTeX/Biber intermediate files. Keep source files and final PDFs tracked.
+report/template/*.aux
+report/template/*.bbl
+report/template/*.bcf
+report/template/*.blg
+report/template/*.fdb_latexmk
+report/template/*.fls
+report/template/*.lof
+report/template/*.lot
+report/template/*.out
+report/template/*.run.xml
+report/template/*.synctex.gz
+report/template/*.toc
+report/template/*.xdv
+report/template/*.nav
+report/template/*.snm
+report/template/*.vrb
+report/template/*.acn
+report/template/*.acr
+report/template/*.alg
+report/template/*.glg
+report/template/*.glo
+report/template/*.gls
+report/template/*.ist
+report/template/*.log
+
+report/template/out-competition/*.aux
+report/template/out-competition/*.bbl
+report/template/out-competition/*.bcf
+report/template/out-competition/*.blg
+report/template/out-competition/*.fdb_latexmk
+report/template/out-competition/*.fls
+report/template/out-competition/*.lof
+report/template/out-competition/*.lot
+report/template/out-competition/*.out
+report/template/out-competition/*.run.xml
+report/template/out-competition/*.synctex.gz
+report/template/out-competition/*.toc
+report/template/out-competition/*.xdv
+report/template/out-competition/*.nav
+report/template/out-competition/*.snm
+report/template/out-competition/*.vrb
+report/template/out-competition/*.acn
+report/template/out-competition/*.acr
+report/template/out-competition/*.alg
+report/template/out-competition/*.glg
+report/template/out-competition/*.glo
+report/template/out-competition/*.gls
+report/template/out-competition/*.ist
+report/template/out-competition/*.log
+
+# Local LaTeX build directories accidentally created by shell variables.
+report/template/\$out/

@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999998 (MiKTeX 26.2) (preloaded format=xelatex 2026.4.25)  15 JUL 2026 19:34
+This is XeTeX, Version 3.141592653-2.6-0.999998 (MiKTeX 26.2) (preloaded format=xelatex 2026.4.25)  15 JUL 2026 22:31
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1544,8 +1544,8 @@ Package hyperref Info: Option `colorlinks' set `true' on input line 17.
 Package translations Info: No language package found. I am going to use `englis
 h' as default language. on input line 25.
 
-(C:\Users\Goodmann\Desktop\report\template\out-competition\competition_report.a
-ux)
+(C:\Users\Goodmann\Desktop\report\hybrid-photonic-mi-bci\report\template\out-co
+mpetition\competition_report.aux)
 \openout1 = `competition_report.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 25.
@@ -1636,8 +1636,8 @@ Package biblatex Info: Automatic encoding selection.
 Package biblatex Info: Trying to load bibliographic data...
 Package biblatex Info: ... file 'competition_report.bbl' found.
 
-(C:\Users\Goodmann\Desktop\report\template\out-competition\competition_report.b
-bl
+(C:\Users\Goodmann\Desktop\report\hybrid-photonic-mi-bci\report\template\out-co
+mpetition\competition_report.bbl
 
 Package fontspec Info: 
 (fontspec)             Font family 'SimSun(1)' created for font 'SimSun' with
@@ -1709,24 +1709,24 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 
 ] [2]
-(C:\Users\Goodmann\Desktop\report\template\out-competition\competition_report.t
-oc [3
+(C:\Users\Goodmann\Desktop\report\hybrid-photonic-mi-bci\report\template\out-co
+mpetition\competition_report.toc [3
 
 ] [4])
 \tf@toc=\write4
 \openout4 = `competition_report.toc'.
 
  [5]
-(C:\Users\Goodmann\Desktop\report\template\out-competition\competition_report.l
-of [6
+(C:\Users\Goodmann\Desktop\report\hybrid-photonic-mi-bci\report\template\out-co
+mpetition\competition_report.lof [6
 
 ])
 \tf@lof=\write5
 \openout5 = `competition_report.lof'.
 
  [7]
-(C:\Users\Goodmann\Desktop\report\template\out-competition\competition_report.l
-ot)
+(C:\Users\Goodmann\Desktop\report\hybrid-photonic-mi-bci\report\template\out-co
+mpetition\competition_report.lot)
 \tf@lot=\write6
 \openout6 = `competition_report.lot'.
 
@@ -1734,14 +1734,15 @@ ot)
 
 ]
 1
-File: figure/competition/mi_bci_task_overview.png Graphic file (type bmp)
-<figure/competition/mi_bci_task_overview.png>
-File: figure/competition/eeg_1020_electrodes.jpg Graphic file (type bmp)
-<figure/competition/eeg_1020_electrodes.jpg>
+File: figure/competition/mi_bci_task_diagnostics_fig1.png Graphic file (type bm
+p)
+<figure/competition/mi_bci_task_diagnostics_fig1.png>
 [1
 
 
 ]
+File: figure/competition/eeg_1020_electrodes.jpg Graphic file (type bmp)
+<figure/competition/eeg_1020_electrodes.jpg>
 File: figure/competition/eeg_mi_signal_concepts.png Graphic file (type bmp)
 <figure/competition/eeg_mi_signal_concepts.png>
  [2]
@@ -1798,20 +1799,20 @@ File: figure/competition/tile_schedule.png Graphic file (type bmp)
 File: figure/competition/photonic_tile_mapping.drawio.png Graphic file (type bm
 p)
 <figure/competition/photonic_tile_mapping.drawio.png>
- [19] [20] [21] [22] [23] [24] [25] [26] [27]
+ [19] [20] [21] [22] [23] [24] [25] [26]
 4
-[28
+[27
 
-] [29]
+] [28]
 File: figure/competition/mainline_encoder_training.png Graphic file (type bmp)
 <figure/competition/mainline_encoder_training.png>
 File: figure/competition/mainline_embedding_pca.png Graphic file (type bmp)
 <figure/competition/mainline_embedding_pca.png>
- [30]
+ [29]
 File: figure/competition/mainline_cumulative_metrics.png Graphic file (type bmp
 )
 <figure/competition/mainline_cumulative_metrics.png>
- [31]
+ [30]
 File: figure/competition/mainline_retrieval_weights.png Graphic file (type bmp)
 
 <figure/competition/mainline_retrieval_weights.png>
@@ -1820,38 +1821,38 @@ File: figure/competition/mainline_candidate_head_quality.png Graphic file (type
 <figure/competition/mainline_candidate_head_quality.png>
 File: figure/competition/mainline_replay_traces.png Graphic file (type bmp)
 <figure/competition/mainline_replay_traces.png>
- [32]
+ [31]
 File: figure/competition/mainline_confusion.png Graphic file (type bmp)
 <figure/competition/mainline_confusion.png>
- [33] [34] [35]
+ [32] [33] [34]
 5
-[36
+[35
 
 ]
 6
-[37
+[36
 
 ]
 7
-[38
+[37
 
 ]
 8
-[39
+[38
 
 ]
 附录 A
-[40
+[39
 
 ]
 附录 B
-[41
+[40
 
-] [42
+] [41
 
 ]
-(C:\Users\Goodmann\Desktop\report\template\out-competition\competition_report.a
-ux)
+(C:\Users\Goodmann\Desktop\report\hybrid-photonic-mi-bci\report\template\out-co
+mpetition\competition_report.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2020/04/10>
@@ -1861,13 +1862,13 @@ Package logreq Info: Writing requests to 'competition_report.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 36035 strings out of 402807
- 798906 string characters out of 5444514
- 1870124 words of memory out of 5000000
- 64421 multiletter control sequences out of 15000+600000
- 642799 words of font info for 158 fonts, out of 8000000 for 9000
+ 36044 strings out of 402807
+ 799593 string characters out of 5444514
+ 1870236 words of memory out of 5000000
+ 64429 multiletter control sequences out of 15000+600000
+ 642807 words of font info for 159 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 107i,14n,125p,1231b,4899s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 107i,14n,125p,1231b,5188s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on C:\Users\Goodmann\Desktop\report\template\out-competition\com
-petition_report.pdf (51 pages).
+Output written on C:\Users\Goodmann\Desktop\report\hybrid-photonic-mi-bci\repor
+t\template\out-competition\competition_report.pdf (50 pages).

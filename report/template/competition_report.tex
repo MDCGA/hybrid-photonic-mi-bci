@@ -94,10 +94,10 @@ PPT/视频 & 系统流程、公开数据回放、候选扫描和拒识展示 \\ 
 
 \chapter{问题定义与方案概述}
 \section{运动想象 EEG-BCI 任务与信号挑战}
-运动想象（motor imagery，MI）指使用者只在脑中想象肢体动作而不真正运动。系统接收一段多通道 EEG 决策窗口 $X\in\mathbb{R}^{C\times T}$，需要识别其中的左手、右手或脚运动想象意图，并把分类结果转换为控制命令；若信号质量或判别置信度不足，则输出拒识，避免把不可靠结果直接发送给外部设备。图~\ref{fig:mi-task}给出这一任务边界。
+运动想象（motor imagery，MI）指使用者只在脑中想象肢体动作而不真正运动。系统接收一段多通道 EEG 决策窗口 $X\in\mathbb{R}^{C\times T}$，需要识别其中的左手、右手或脚运动想象意图，并把分类结果转换为控制命令；若信号质量或判别置信度不足，则输出拒识，避免把不可靠结果直接发送给外部设备。图~\ref{fig:mi-task}展示了视觉提示驱动的运动想象 EEG 采集场景，以及中央区电极与受试者任务之间的关系；原图来自 García-Murillo 等人的论文 Fig.~1\cite{diagnostics13061122}。
 \begin{figure}[H]\centering
-\includegraphics[width=0.92\linewidth]{competition/mi_bci_task_overview.png}
-\caption{MI-BCI 任务示意：系统从一个多通道 EEG 决策窗口推理运动想象意图，并输出控制命令或拒识。该图为系统任务说明，不是实验结果。}\label{fig:mi-task}
+\includegraphics[width=0.96\linewidth]{competition/mi_bci_task_diagnostics_fig1.png}
+\caption{视觉提示驱动的运动想象 EEG 采集场景。中央区电极记录受试者执行心理运动任务时的脑电响应，计算机负责呈现提示并接收 EEG 数据。\cite{diagnostics13061122}}\label{fig:mi-task}
 \end{figure}
 
 EEG 是头皮电极记录到的微弱电活动，具有低信噪比、小样本、非平稳和易受伪迹影响等特点。电极接触变化、眨眼、肌肉活动、工频干扰以及被试状态变化，都可能使同一任务在不同时段呈现不同分布。竞赛数据和实际校准数据通常又远少于图像、文本等任务的数据规模，因此模型不能只追求层数和参数量；它还需要可解释、对小样本稳定，并能明确处理坏窗口和会话漂移。
@@ -418,14 +418,14 @@ N_{\mathrm{tile}}=K\left\lceil\frac{M}{2}\right\rceil\left\lceil\frac{D+1}{8}\ri
 为了能复查光计算比例，我们不只看模块名称，而是逐个列出实际的线性计算。表~\ref{tab:matrix-split}给出主线单个窗口的拆分方式。``可映射'' 表示矩阵大小可以按 tile 切分；计入光计算时，需要有 LTSimulator 的调用、读回结果、量化配置和日志记录。
 \begin{table}[H]\centering\small
 \caption{主线算法到光子矩阵乘的拆分}\label{tab:matrix-split}
-\begin{tabularx}{0.96\linewidth}{|L{0.17\linewidth}|L{0.27\linewidth}|L{0.18\linewidth}|Y|}\hline
-算法步骤 & 矩阵表达式与大小 & $2\times8$ tile 数 & 当前处理建议 \\ \hline
-CAR 重参考 & $X'=(I-\frac1C\mathbf{1}\mathbf{1}^\top)X$，$8\times8$ 乘 $8\times T$ & $4T$ & 可以切块；在线时先在数字端完成，方便处理滤波状态和坏通道 \\ \hline
-OVR CSP 投影 & $Z=W X$，$4\times8$ 乘 $8\times T$ & $2T$/频带/类别 & 可以切块；6 个频带、3 类共 $36T$，调用次数较多 \\ \hline
-特征标准化 & $[D\;c][x;1]$，$32\times33$ 乘 $33\times1$ & 80 & 可以切块；后续可和编码器一起加入 \\ \hline
-MLP 编码器 & $W_1[\bar{x};1]$：$64\times33$；$W_2[h_1;1]$：$32\times65$ & 160 + 144 & 可以切块；GELU/dropout 在数字端计算 \\ \hline
-候选线性头 & $[A_i\;b_i][h;1]$，$8$ 个 $3\times33$ 乘 $33\times1$ & \textbf{80} & 首选 LTSimulator 热点；规则、批量、直接影响候选选择 \\ \hline
-候选融合 & $p=\alpha^\top P$，$1\times8$ 乘 $8\times3$ & 2 & 数字端执行，便于做概率校准和拒识 \\ \hline
+\begin{tabularx}{0.96\linewidth}{|L{0.18\linewidth}|L{0.50\linewidth}|Y|}\hline
+算法步骤 & 矩阵表达式与大小 & $2\times8$ tile 数 \\ \hline
+CAR 重参考 & $X'=(I-\frac1C\mathbf{1}\mathbf{1}^\top)X$，$8\times8$ 乘 $8\times T$ & $4T$ \\ \hline
+OVR CSP 投影 & $Z=W X$，$4\times8$ 乘 $8\times T$ & $2T$/频带/类别 \\ \hline
+特征标准化 & $[D\;c][x;1]$，$32\times33$ 乘 $33\times1$ & 80 \\ \hline
+MLP 编码器 & $W_1[\bar{x};1]$：$64\times33$；$W_2[h_1;1]$：$32\times65$ & 160 + 144 \\ \hline
+候选线性头 & $[A_i\;b_i][h;1]$，$8$ 个 $3\times33$ 乘 $33\times1$ & 80  \\ \hline
+候选融合 & $p=\alpha^\top P$，$1\times8$ 乘 $8\times3$ & 2 \\ \hline
 \end{tabularx}
 \end{table}
 

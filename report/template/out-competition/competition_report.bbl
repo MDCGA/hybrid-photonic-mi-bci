@@ -19,6 +19,85 @@
 
 \refsection{0}
   \datalist[entry]{none/global//global/global/global}
+    \entry{diagnostics13061122}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=304a1894e71a03813d29d58c45ac7ef6}{%
+           family={García-Murillo},
+           familyi={G\bibinithyphendelim M\bibinitperiod},
+           given={Daniel\bibnamedelima Guillermo},
+           giveni={D\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+        {{hash=37225a030a708c78a90b36b28f9b4908}{%
+           family={Álvarez-Meza},
+           familyi={Á\bibinithyphendelim M\bibinitperiod},
+           given={Andrés\bibnamedelima Marino},
+           giveni={A\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=48ff607fa3219665c91c2e8e8a5ed219}{%
+           family={Castellanos-Dominguez},
+           familyi={C\bibinithyphendelim D\bibinitperiod},
+           given={Cesar\bibnamedelima German},
+           giveni={C\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+      }
+      \name{namea}{3}{}{%
+        {{hash=304a1894e71a03813d29d58c45ac7ef6}{%
+           family={García-Murillo},
+           familyi={G\bibinithyphendelim M\bibinitperiod},
+           given={Daniel\bibnamedelima Guillermo},
+           giveni={D\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+        {{hash=37225a030a708c78a90b36b28f9b4908}{%
+           family={Álvarez-Meza},
+           familyi={Á\bibinithyphendelim M\bibinitperiod},
+           given={Andrés\bibnamedelima Marino},
+           giveni={A\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=48ff607fa3219665c91c2e8e8a5ed219}{%
+           family={Castellanos-Dominguez},
+           familyi={C\bibinithyphendelim D\bibinitperiod},
+           given={Cesar\bibnamedelima German},
+           giveni={C\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \strng{namehash}{27e1d8628e3fe6bc0d3498f7a0cbe500}
+      \strng{fullhash}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{fullhashraw}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{bibnamehash}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{authorbibnamehash}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{authornamehash}{27e1d8628e3fe6bc0d3498f7a0cbe500}
+      \strng{authorfullhash}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{authorfullhashraw}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{nameabibnamehash}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{nameanamehash}{27e1d8628e3fe6bc0d3498f7a0cbe500}
+      \strng{nameafullhash}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{nameafullhashraw}{fd147f197c6f19ead7f31ed057037da9}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Diagnostics}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{number}{6}
+      \field{title}{KCS-FCnet: Kernel Cross-Spectral Functional Connectivity Network for EEG-Based Motor Imagery Classification}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{13}
+      \field{year}{2023}
+      \field{dateera}{ce}
+      \field{pages}{1122}
+      \range{pages}{1}
+      \verb{doi}
+      \verb 10.3390/diagnostics13061122
+      \endverb
+      \verb{urlraw}
+      \verb https://www.mdpi.com/2075-4418/13/6/1122
+      \endverb
+      \verb{url}
+      \verb https://www.mdpi.com/2075-4418/13/6/1122
+      \endverb
+      \keyw{diagnostics13061122}
+    \endentry
     \entry{ang2012fbcsp}{article}{}{}
       \name{author}{4}{}{%
         {{hash=0266646fbf23960d4552e08bc7809fc6}{%
@@ -79,8 +158,8 @@
       \strng{nameanamehash}{a4d32bf8b73593b0378a9fd036b1907b}
       \strng{nameafullhash}{f21ca9bdbb808137b5a4090804385904}
       \strng{nameafullhashraw}{f21ca9bdbb808137b5a4090804385904}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Frontiers in Neuroscience}
@@ -131,8 +210,8 @@
       \strng{nameanamehash}{8107d0f654cea4f31c6d857205d155b5}
       \strng{nameafullhash}{8107d0f654cea4f31c6d857205d155b5}
       \strng{nameafullhashraw}{8107d0f654cea4f31c6d857205d155b5}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Frontiers in Neuroscience}
@@ -160,8 +239,8 @@
       \list{organization}{1}{%
         {曦智科技}%
       }
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
       \field{labeltitlesource}{title}
       \field{langid}{english}
       \field{languageid}{chinese}

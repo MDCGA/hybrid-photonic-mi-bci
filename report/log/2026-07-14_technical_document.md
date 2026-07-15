@@ -524,3 +524,17 @@
 - 新图以 MatrixOps（矩阵/张量）、SignalOps（CAR/SOS）和 TiledMVM（候选 Bank）三类接口为中心，展示上层算法通过稳定接口与具体执行核解耦。
 - 执行边界明确区分：全部前向线性算子由统一 Backend 接管，当前执行核为软件模拟；非线性、控制逻辑、拒识、经验库管理与流程调度仍保留在数字端。
 - 输出文件为 `slides/assets/backend_interface_architecture.png` 与 `slides/assets/backend_interface_architecture.drawio`，并新增可重复生成脚本 `slides/tools/generate_backend_interface_diagram.py`。
+
+## 第 1 章：插入文献 Fig. 1 的 MI-BCI 任务图
+
+- 读取附件 `diagnostics-v13-i06_20260715.bib`，确认图片来源为 García-Murillo 等发表于 Diagnostics 13(6), 1122 (2023) 的论文 `KCS-FCnet: Kernel Cross-Spectral Functional Connectivity Network for EEG-Based Motor Imagery Classification`，DOI 为 `10.3390/diagnostics13061122`。
+- 将论文 Fig. 1 原图复制为 `template/figure/competition/mi_bci_task_diagnostics_fig1.png`，放在“运动想象 EEG-BCI 任务与信号挑战”开头，替换原有通用任务流程图。
+- 正文补充视觉提示、中央区电极和运动想象 EEG 采集场景的说明，图注与正文均明确标注文献来源；项目算法与 Gazelle 平台的具体流程仍由后续系统图说明，避免混淆文献背景图与本项目实现图。
+- 首轮构建输出 50 页，图片与图注完整显示；同时发现量化章节的三列表格误声明为四列，修正列格式以消除该处 underfull alignment。
+- 最终构建输出 50 页，LaTeX Error、未定义引用、overfull box、underfull box 均为 0。
+
+## 工程维护：忽略 LaTeX 编译过程文件
+
+- 在仓库根目录 `.gitignore` 中加入 XeLaTeX、Biber、latexmk、目录/图表索引、SyncTeX、Beamer 和术语表等编译过程文件扩展名。
+- 保留 `.tex`、`.bib`、图片和最终 `.pdf` 可跟踪；同时忽略误由 PowerShell 变量字面量产生的 `report/template/$out/` 本地构建目录。
+- 已经纳入 Git 索引的历史中间文件不会仅因新增忽略规则而自动取消跟踪，本次未修改 Git 索引。
