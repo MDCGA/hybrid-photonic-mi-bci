@@ -422,7 +422,7 @@ N_{\mathrm{tile}}=K\left\lceil\frac{M}{2}\right\rceil\left\lceil\frac{D+1}{8}\ri
 \begin{table}[H]\centering\small
 \caption{主线算法到光子矩阵乘的拆分}\label{tab:matrix-split}
 \begin{tabularx}{0.96\linewidth}{|L{0.17\linewidth}|L{0.27\linewidth}|L{0.18\linewidth}|Y|}\hline
-算法步骤 & 矩阵表达式与大小 & $2\times8$ tile 数 & 当前处理建议 \\ \hline
+算法步骤 & 矩阵表达式与大小 & $2\times8$ tile 数 & 当前执行方式 \\ \hline
 CAR 重参考 & $X'=(I-\frac1C\mathbf{1}\mathbf{1}^\top)X$，$8\times8$ 乘 $8\times T$ & $4T$ & SignalOps 展开后由 adaptive MatrixOps 接管，4-bit 起步 \\ \hline
 SOS 滤波状态 & $s_{n+1}=As_n+Bx_n$，$y_n=Cs_n+Dx_n$ & 按频带、通道、section 和 direction 逐样本调度 & SignalOps 展开后由 adaptive MatrixOps 接管，6-bit 起步 \\ \hline
 OVR CSP 投影 & $Z=W X$，$4\times8$ 乘 $8\times T$ & $2T$/频带/类别 & MatrixOps 接管；每个频带和类别独立监测，6-bit 起步 \\ \hline
