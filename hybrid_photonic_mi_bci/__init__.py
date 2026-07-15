@@ -1,13 +1,17 @@
 """Hybrid photonic MI-BCI simulation toolkit.
 
 The package keeps matrix products behind a backend interface. The default
-MatrixOps backend reconstructs 8-bit logical values from physical uint4/int4
-photonic slices. The candidate-scan backend uses a single 4-bit pass by default.
-Both paths decompose system-level matrices into ``2 x 8`` hardware tiles and
-can call the optional Gazelle simulator when installed.
+MatrixOps backend uses monitored adaptive logical precision: CAR starts at
+4-bit, SOS/FBCSP front-end operators start at 6-bit, and numerically sensitive
+operators remain at 8-bit. Reduced-precision results are periodically checked
+against an 8-bit digital shadow and promoted when needed. Every logical value is
+executed through physical uint4/int4 slices and ``2 x 8`` hardware tiles. The
+candidate-scan backend uses a single 4-bit pass by default.
 """
 
 from .backends import (
+    AdaptivePrecisionPhotonicMatrixOpsBackend,
+    AdaptivePrecisionRule,
     BitSlicedPhotonicConfig,
     BitSlicedPhotonicMatrixOpsBackend,
     MVMBackend,
@@ -58,6 +62,8 @@ from .pipeline import HybridBCIPipeline, PipelineOutput
 from .projection_library import ProjectionCandidate, ProjectionLibrary
 
 __all__ = [
+    "AdaptivePrecisionPhotonicMatrixOpsBackend",
+    "AdaptivePrecisionRule",
     "BitSlicedPhotonicConfig",
     "BitSlicedPhotonicMatrixOpsBackend",
     "DecisionConfig",

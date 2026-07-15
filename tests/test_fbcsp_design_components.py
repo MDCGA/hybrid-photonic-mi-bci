@@ -3,6 +3,8 @@ import unittest
 import numpy as np
 
 from hybrid_photonic_mi_bci.backends import (
+    AdaptivePrecisionPhotonicMatrixOpsBackend,
+    AdaptivePrecisionRule,
     BitSlicedPhotonicMatrixOpsBackend,
     MatrixOpsBackend,
     QuantizedPhotonicMatrixOpsBackend,
@@ -30,8 +32,54 @@ from hybrid_photonic_mi_bci.workflows.common import make_replay_split
 
 class FBCSPDesignComponentsTest(unittest.TestCase):
     def test_default_matrix_ops_backend_is_photonic_handoff(self) -> None:
-        self.assertIsInstance(get_matrix_ops_backend(), BitSlicedPhotonicMatrixOpsBackend)
+        self.assertIsInstance(
+            get_matrix_ops_backend(),
+            AdaptivePrecisionPhotonicMatrixOpsBackend,
+        )
         self.assertIsInstance(get_signal_ops_backend(), SimulatedPhotonicSignalOpsBackend)
+
+    def test_adaptive_precision_keeps_exact_car_operation_at_four_bits(self) -> None:
+        backend = AdaptivePrecisionPhotonicMatrixOpsBackend(
+            use_gazelle_model=False,
+            announce=False,
+        )
+        features = np.array([[0.0, 1.0, 2.0, 3.0]], dtype=np.float64)
+        weights = np.eye(4, dtype=np.float64)
+
+        result = backend.matmul(features, weights, name="common_average_reference")
+        row = backend.precision_report()[0]
+
+        np.testing.assert_allclose(result, features, atol=0.25)
+        self.assertEqual(row["current_bits"], 4)
+        self.assertEqual(row["escalations"], 0)
+        self.assertEqual(row["monitored_calls"], 1)
+
+    def test_adaptive_precision_recomputes_and_promotes_on_shadow_error(self) -> None:
+        rule = AdaptivePrecisionRule(
+            label="forced_monitor",
+            patterns=("monitored",),
+            initial_bits=4,
+            max_bits=8,
+            monitor_every=1,
+            relative_error_limit=1e-6,
+        )
+        backend = AdaptivePrecisionPhotonicMatrixOpsBackend(
+            rules=(rule,),
+            use_gazelle_model=False,
+            announce=False,
+        )
+        rng = np.random.default_rng(47)
+        left = rng.normal(size=(3, 11))
+        right = rng.normal(size=(11, 5))
+
+        result = backend.matmul(left, right, name="monitored_operator")
+        row = backend.precision_report()[0]
+
+        self.assertEqual(row["current_bits"], 8)
+        self.assertEqual(row["escalations"], 2)
+        self.assertEqual(row["monitored_calls"], 1)
+        self.assertGreater(row["tile_evaluations"], 0)
+        np.testing.assert_allclose(result, left @ right, atol=0.12, rtol=0.08)
 
     def test_simulated_photonic_backend_tiles_and_reconstructs_large_matmul(self) -> None:
         backend = SimulatedPhotonicMatrixOpsBackend(tile_shape=(2, 8))
@@ -242,7 +290,9 @@ class FBCSPDesignComponentsTest(unittest.TestCase):
             _decisions = head.decide_all(np.array([[0.8, 0.2]], dtype=np.float64))
 
         self.assertIn("fbcsp_trial_covariance", backend.names)
-        self.assertIn("fbcsp_spatial_projection", backend.names)
+        self.assertTrue(
+            any(name.startswith("fbcsp_spatial_projection_") for name in backend.names)
+        )
         self.assertIn("feature_standardizer_affine", backend.names)
         self.assertIn("lda_pooled_covariance", backend.names)
         self.assertIn("linear_head_scores", backend.names)
@@ -287,7 +337,9 @@ class FBCSPDesignComponentsTest(unittest.TestCase):
             )
             _features = fbcsp.fit_transform(trials, labels, 100.0, ("left", "right"))
 
-        self.assertIn("fbcsp_filter_bank_sosfiltfilt", backend.names)
+        self.assertTrue(
+            any("fbcsp_filter_bank_" in name and "sosfiltfilt" in name for name in backend.names)
+        )
 
 
 if __name__ == "__main__":

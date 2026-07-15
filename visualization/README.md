@@ -24,6 +24,7 @@ visualization/fbcsp_design/
   plot_small_network.py
   plot_experience_photonic.py
   plot_compute_accounting.py
+  plot_adaptive_precision.py
   plot_summary.py
 ```
 
@@ -34,6 +35,7 @@ Generated figure groups:
 - `small_network`: compact MLP training and embedding diagnostics.
 - `experience_photonic`: experience retrieval and tiled candidate-scan diagnostics.
 - `compute_accounting`: forward MatrixOps/SignalOps-vs-digital linear MAC split.
+- `adaptive_precision`: selected bit widths, 8-bit-shadow errors, promotions, tile use, and adaptive-vs-fixed-8-bit A/B validation.
 - `summary`: final line comparison.
 
 The older `generate_bciciv_figures.py` script is retained for the legacy

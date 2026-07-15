@@ -12,6 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from visualization.fbcsp_design import plot_compute_accounting  # noqa: E402
+from visualization.fbcsp_design import plot_adaptive_precision  # noqa: E402
 from visualization.fbcsp_design import plot_experience_photonic  # noqa: E402
 from visualization.fbcsp_design import plot_reference  # noqa: E402
 from visualization.fbcsp_design import plot_small_network  # noqa: E402
@@ -30,6 +31,7 @@ def main() -> None:
     generated.extend(plot_small_network.plot(metrics_dir, output_root / "small_network", formats))
     generated.extend(plot_experience_photonic.plot(metrics_dir, output_root / "experience_photonic", formats))
     generated.extend(plot_compute_accounting.plot(metrics_dir, output_root / "compute_accounting", formats))
+    generated.extend(plot_adaptive_precision.plot(metrics_dir, output_root / "adaptive_precision", formats))
     generated.extend(plot_summary.plot(metrics_dir, output_root / "summary", formats))
     print("Generated FBCSP design figures:")
     for path in generated:

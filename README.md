@@ -190,11 +190,14 @@ the same photonic MVM path as the weights.
 Algorithm code should route matrix products and forward signal-processing
 linear operations through `hybrid_photonic_mi_bci.backends` instead of calling
 `np @`, `np.einsum`, or direct filtering kernels from workflow code. The default
-matrix path is `BitSlicedPhotonicMatrixOpsBackend`: it represents ordinary
-forward operators at 8-bit logical precision, decomposes each value into
-radix-16 slices, evaluates every slice pair with physical uint4/int4 calls, and
-reconstructs the result by positional-weight accumulation. System-level matrices
-are independently decomposed into `2 x 8` spatial tiles.
+matrix path is `AdaptivePrecisionPhotonicMatrixOpsBackend`. CAR starts at 4-bit
+logical precision; SOS state transitions, FBCSP spatial projections, and feature
+standardization start at 6-bit; MLP layers and other sensitive paths stay at
+8-bit. The first call and periodic samples are checked against a digital 8-bit
+bit-sliced shadow. An operation that exceeds its incremental-error limit is
+immediately recomputed at the next precision and remains promoted. Every logical
+precision is decomposed into radix-16 physical uint4/int4 slice pairs, while
+system-level matrices are independently split into `2 x 8` spatial tiles.
 
 The tiled candidate scan uses `QuantizedPhotonicMatrixOpsBackend` internally by
 default and intentionally remains a single-pass 4-bit path. Both the candidate
@@ -345,12 +348,15 @@ loading, model fitting, bulk replay feature caching, and threshold calibration
 use the NumPy/SciPy reference backend. After setup, the selected raw EEG window
 runs FBCSP filtering/projection, standardization, compact-MLP inference, and the
 candidate scan through the photonic backends. Terminal output reports elapsed
-time and physical bit-sliced tile evaluations for each online stage.
+time, physical bit-sliced tile evaluations, selected precision, 8-bit-shadow
+error, and escalation counts. Detailed per-operation telemetry is saved under
+`artifacts/metrics/fbcsp_design/adaptive_precision_eval_XXXX.json`.
 
 Useful parameters:
 
 ```bash
 python examples/run_fbcsp_design_comparison.py --help
+python examples/run_single_window_inference.py --help
 ```
 
 Common knobs:
@@ -362,6 +368,8 @@ Common knobs:
 - `--experience-top-k`: scanned candidates, default `8`.
 - `--calibration-trials-per-subject`: replay windows used for library query, default `6`.
 - `--tile-rows`, `--tile-cols`: photonic tile shape, default `2 x 8`.
+- `--online-repeats`: repeat one held-out window after a single setup and report median/P90 timing.
+- `--precision-validation-windows`: compare adaptive and fixed-8-bit raw-window forward paths on N held-out windows.
 
 ## Current Results
 
@@ -483,6 +491,7 @@ artifacts/figures/fbcsp_design/reference/
 artifacts/figures/fbcsp_design/small_network/
 artifacts/figures/fbcsp_design/experience_photonic/
 artifacts/figures/fbcsp_design/compute_accounting/
+artifacts/figures/fbcsp_design/adaptive_precision/
 artifacts/figures/fbcsp_design/summary/
 ```
 
@@ -494,15 +503,19 @@ Key figures:
 - `experience_photonic_scan_diagnostics`: library weights, head quality, replay trace, confusion.
 - `photonic_tile_schedule`: `2 x 8` tile work per decision window.
 - `compute_accounting_summary`: forward MatrixOps/SignalOps-vs-digital linear MAC split and online share.
+- `adaptive_precision_diagnostics`: selected bit widths, 8-bit-shadow errors, promotions, and tile use.
+- `adaptive_vs_fixed8_validation`: preliminary task-metric, runtime, tile, and probability A/B comparison.
 - `design_line_summary`: final line comparison.
 
 ## Precision and Hardware Roadmap
 
-The current policy is deliberately mixed:
+The current monitored policy is deliberately mixed:
 
 - candidate-head scan: one physical uint4/int4 pass per spatial tile;
-- other forward linear operators: 8-bit logical fixed point reconstructed from
-  multiple uint4/int4 slice pairs;
+- CAR: 4-bit logical precision with 8-bit-shadow monitoring;
+- SOS/FBCSP/feature standardization: 6-bit starting precision, promoted to
+  8-bit per operation when sampled shadow error exceeds its limit;
+- compact-MLP and other sensitive linear operators: 8-bit logical precision;
 - matrix shape: independently tiled into `2 x 8` blocks;
 - nonlinear activations, variance/log operations, sorting, rejection, and
   control flow: digital execution outside the linear-MAC denominator.
@@ -525,6 +538,22 @@ its measured accuracy and reject behavior remain inside engineering limits while
 effective throughput, latency, and energy improve. Results should be reported as
 a Pareto comparison over task metrics, injected hardware noise, effective bits,
 physical tile/slice calls, latency, and energy.
+
+Current engineering validation repeated one 3-second BCICIV_1_asc window five
+times after one setup. The steady-state physical tile count fell from the
+fixed-8-bit baseline of `916,148` to `777,444` (`15.1%`). Prediction agreement
+was `1.000`; every repeat kept the correct `left` decision and non-reject state.
+Online software timing had a `1.545 s` median and `1.600 s` P90 in that run.
+This is a path and resource check, not a dataset-level accuracy claim. Numerical
+shadow checks guard individual linear operators; labeled public-dataset replay
+must still verify command accuracy and reject behavior over complete subjects.
+
+A preliminary three-window adaptive-vs-fixed-8-bit A/B run produced `1.000`
+prediction agreement, equal `1.000` command accuracy, zero rejects, and a mean
+probability L2 difference of `0.00775`. Adaptive precision reduced mean physical
+tile evaluations by `15.7%`; median software time was `1.540 s` versus `1.634 s`
+for fixed 8-bit in the same process. Three windows are only an engineering
+sanity check; subject-level conclusions require the complete replay protocol.
 
 ## Tests
 

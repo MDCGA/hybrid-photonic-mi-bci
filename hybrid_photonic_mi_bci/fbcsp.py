@@ -139,7 +139,10 @@ class FilterBankCSP:
                 spatial = csp_spatial_project(
                     self.filters_[band_index, class_index],
                     band_trials,
-                    name="fbcsp_spatial_projection",
+                    name=(
+                        "fbcsp_spatial_projection_"
+                        f"b{band_index}_c{class_index}"
+                    ),
                 )
                 variances = np.var(spatial, axis=2) + 1e-10
                 normalized = variances / variances.sum(axis=1, keepdims=True)
@@ -197,7 +200,7 @@ def _bandpass_trials(
         sos,
         trials,
         axis=2,
-        name="fbcsp_filter_bank_sosfiltfilt",
+        name=f"fbcsp_filter_bank_{band[0]:g}_{band[1]:g}hz_sosfiltfilt",
     )
 
 

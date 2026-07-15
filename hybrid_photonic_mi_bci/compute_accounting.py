@@ -113,8 +113,11 @@ class LinearComputeLedger:
             "photonic_rule": (
                 "Algorithm-path MatrixOpsBackend matrix products are counted "
                 "as photonic because the active forward backend is "
-                "BitSlicedPhotonicMatrixOpsBackend. It reconstructs 8-bit logical "
-                "values from physical uint4/int4 calls and decomposes every matrix "
+                "AdaptivePrecisionPhotonicMatrixOpsBackend. CAR uses monitored "
+                "4-bit logical precision, SOS/FBCSP front-end operations start at "
+                "6-bit and promote to 8-bit when their sampled 8-bit-shadow error "
+                "exceeds policy limits. All logical precisions are reconstructed "
+                "from physical uint4/int4 calls, and every matrix is decomposed "
                 "into 2 x 8 tiles. Forward signal operations routed through "
                 "SignalOpsBackend are also counted as photonic: CAR is an explicit "
                 "channel-mixing matrix and each SOS section is a 3 x 3 state "

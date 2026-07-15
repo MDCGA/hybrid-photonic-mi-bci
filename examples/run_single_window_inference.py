@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+import json
 from pathlib import Path
 import sys
 from time import perf_counter
@@ -18,6 +19,8 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from fbcsp_design_args import add_design_arguments, config_from_args  # noqa: E402
 from hybrid_photonic_mi_bci.backends import (  # noqa: E402
+    BitSlicedPhotonicConfig,
+    BitSlicedPhotonicMatrixOpsBackend,
     NumpyMatrixOpsBackend,
     ScipySignalOpsBackend,
     get_matrix_ops_backend,
@@ -68,7 +71,23 @@ def main() -> None:
         default=0,
         help="Evaluation-window index to infer, relative to the held-out online split.",
     )
+    parser.add_argument(
+        "--online-repeats",
+        type=int,
+        default=1,
+        help="Repeat the same online window after one setup and report timing statistics.",
+    )
+    parser.add_argument(
+        "--precision-validation-windows",
+        type=int,
+        default=0,
+        help="Compare adaptive precision with fixed 8-bit forward on N held-out windows.",
+    )
     args = parser.parse_args()
+    if args.online_repeats <= 0:
+        raise ValueError("--online-repeats must be positive")
+    if args.precision_validation_windows < 0:
+        raise ValueError("--precision-validation-windows must be non-negative")
     cfg = config_from_args(args)
 
     timings: dict[str, float] = {}
@@ -95,14 +114,28 @@ def main() -> None:
     true_label = prepared.dataset.class_names[true_index]
     trial = prepared.dataset.trials[absolute_index : absolute_index + 1]
 
-    online_timings: dict[str, float] = {}
-    online_tile_counts: dict[str, int] = {}
-    output = run_one_online_forward(
-        prepared,
-        trial,
-        online_timings,
-        online_tile_counts,
-    )
+    online_runs: list[dict[str, object]] = []
+    output = None
+    for _repeat_index in range(args.online_repeats):
+        run_timings: dict[str, float] = {}
+        run_tile_counts: dict[str, int] = {}
+        output = run_one_online_forward(
+            prepared,
+            trial,
+            run_timings,
+            run_tile_counts,
+        )
+        online_runs.append(
+            {
+                "timings": run_timings,
+                "tile_counts": run_tile_counts,
+                "predicted_label": output.decisions[0].label,
+                "rejected": output.decisions[0].rejected,
+            }
+        )
+    assert output is not None
+    online_timings = dict(online_runs[-1]["timings"])
+    online_tile_counts = dict(online_runs[-1]["tile_counts"])
     decision = output.decisions[0]
     probabilities = output.probabilities[0]
 
@@ -154,6 +187,181 @@ def main() -> None:
         "online_bit_sliced_photonic_tiles: "
         f"{sum(online_tile_counts.values())}"
     )
+    if len(online_runs) > 1:
+        repeat_totals = np.array(
+            [sum(dict(run["timings"]).values()) for run in online_runs],
+            dtype=np.float64,
+        )
+        repeat_labels = [str(run["predicted_label"]) for run in online_runs]
+        print("\nRepeated online timing")
+        print(f"repeats: {len(online_runs)}")
+        print(f"first: {repeat_totals[0] * 1000.0:.3f} ms")
+        print(f"median: {np.median(repeat_totals) * 1000.0:.3f} ms")
+        print(f"p90: {np.percentile(repeat_totals, 90) * 1000.0:.3f} ms")
+        print(f"last: {repeat_totals[-1] * 1000.0:.3f} ms")
+        print(
+            "prediction_agreement: "
+            f"{sum(label == repeat_labels[0] for label in repeat_labels) / len(repeat_labels):.3f}"
+        )
+    precision_validation = None
+    if args.precision_validation_windows > 0:
+        precision_validation = validate_precision_windows(
+            prepared,
+            count=min(args.precision_validation_windows, evaluation_count),
+        )
+        print("\nAdaptive vs fixed-8-bit validation")
+        for key, value in precision_validation["summary"].items():
+            print(f"{key}: {value}")
+    precision_summary = getattr(online_backend, "precision_summary", lambda: [])()
+    if precision_summary:
+        print("\nAdaptive precision monitor")
+        print(
+            "policy | bits | operations | monitored/calls | "
+            "max_8bit_shadow_error | escalations | tiles"
+        )
+        for row in precision_summary:
+            print(
+                f"{row['policy']} | {row['current_bits']} | {row['operations']} | "
+                f"{row['monitored_calls']}/{row['calls']} | "
+                f"{row['max_8bit_shadow_error']:.5f} | {row['escalations']} | "
+                f"{row['tile_evaluations']}"
+            )
+        precision_report = getattr(online_backend, "precision_report", lambda: [])()
+        report_path = cfg.metrics_dir / (
+            f"adaptive_precision_eval_{args.evaluation_index:04d}.json"
+        )
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(
+            json.dumps(
+                {
+                    "dataset": "BCICIV_1_asc",
+                    "evaluation_index": args.evaluation_index,
+                    "absolute_trial_index": absolute_index,
+                    "true_label": true_label,
+                    "predicted_label": decision.label,
+                    "rejected": decision.rejected,
+                    "confidence": decision.confidence,
+                    "online_backend": getattr(
+                        online_backend,
+                        "execution_backend",
+                        type(online_backend).__name__,
+                    ),
+                    "online_timings_seconds": online_timings,
+                    "online_tile_counts": online_tile_counts,
+                    "online_repeats": online_runs,
+                    "precision_validation": precision_validation,
+                    "precision_summary": precision_summary,
+                    "precision_operations": precision_report,
+                },
+                indent=2,
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        print(f"precision_report: {report_path}")
+
+
+def validate_precision_windows(prepared: PreparedRuntime, *, count: int) -> dict[str, object]:
+    adaptive_rows = []
+    fixed_backend = BitSlicedPhotonicMatrixOpsBackend(
+        config=BitSlicedPhotonicConfig(
+            logical_input_bits=8,
+            logical_weight_bits=8,
+        ),
+        use_gazelle_model=False,
+        announce=False,
+    )
+    for index in range(count):
+        absolute_index = int(prepared.split.evaluation_abs[index])
+        true_index = int(prepared.dataset.labels[absolute_index])
+        true_label = prepared.dataset.class_names[true_index]
+        trial = prepared.dataset.trials[absolute_index : absolute_index + 1]
+
+        adaptive_timings: dict[str, float] = {}
+        adaptive_tiles: dict[str, int] = {}
+        adaptive_output = run_one_online_forward(
+            prepared,
+            trial,
+            adaptive_timings,
+            adaptive_tiles,
+        )
+        with use_matrix_ops_backend(fixed_backend):
+            fixed_timings: dict[str, float] = {}
+            fixed_tiles: dict[str, int] = {}
+            fixed_output = run_one_online_forward(
+                prepared,
+                trial,
+                fixed_timings,
+                fixed_tiles,
+            )
+
+        adaptive_decision = adaptive_output.decisions[0]
+        fixed_decision = fixed_output.decisions[0]
+        probability_error = float(
+            np.linalg.norm(adaptive_output.probabilities[0] - fixed_output.probabilities[0])
+        )
+        adaptive_rows.append(
+            {
+                "evaluation_index": index,
+                "absolute_trial_index": absolute_index,
+                "true_label": true_label,
+                "adaptive_label": adaptive_decision.label,
+                "fixed_8bit_label": fixed_decision.label,
+                "adaptive_rejected": adaptive_decision.rejected,
+                "fixed_8bit_rejected": fixed_decision.rejected,
+                "adaptive_correct": adaptive_decision.label == true_label,
+                "fixed_8bit_correct": fixed_decision.label == true_label,
+                "prediction_agreement": adaptive_decision.label == fixed_decision.label,
+                "probability_l2_error": probability_error,
+                "adaptive_seconds": sum(adaptive_timings.values()),
+                "fixed_8bit_seconds": sum(fixed_timings.values()),
+                "adaptive_tiles": sum(adaptive_tiles.values()),
+                "fixed_8bit_tiles": sum(fixed_tiles.values()),
+            }
+        )
+        current = len(adaptive_rows)
+        agreement = np.mean([row["prediction_agreement"] for row in adaptive_rows])
+        adaptive_accuracy = np.mean([row["adaptive_correct"] for row in adaptive_rows])
+        print(
+            f"[precision-validation] {current}/{count} "
+            f"adaptive_acc={adaptive_accuracy:.3f} agreement={agreement:.3f}"
+        )
+
+    adaptive_seconds = np.array([row["adaptive_seconds"] for row in adaptive_rows])
+    fixed_seconds = np.array([row["fixed_8bit_seconds"] for row in adaptive_rows])
+    adaptive_tiles = np.array([row["adaptive_tiles"] for row in adaptive_rows], dtype=np.int64)
+    fixed_tiles = np.array([row["fixed_8bit_tiles"] for row in adaptive_rows], dtype=np.int64)
+    accepted_adaptive = [row for row in adaptive_rows if not row["adaptive_rejected"]]
+    accepted_fixed = [row for row in adaptive_rows if not row["fixed_8bit_rejected"]]
+    summary = {
+        "windows": count,
+        "adaptive_command_accuracy": float(np.mean([row["adaptive_correct"] for row in adaptive_rows])),
+        "fixed_8bit_command_accuracy": float(np.mean([row["fixed_8bit_correct"] for row in adaptive_rows])),
+        "prediction_agreement": float(np.mean([row["prediction_agreement"] for row in adaptive_rows])),
+        "adaptive_reject_rate": float(np.mean([row["adaptive_rejected"] for row in adaptive_rows])),
+        "fixed_8bit_reject_rate": float(np.mean([row["fixed_8bit_rejected"] for row in adaptive_rows])),
+        "adaptive_accepted_accuracy": _accepted_accuracy(
+            accepted_adaptive,
+            key="adaptive_correct",
+        ),
+        "fixed_8bit_accepted_accuracy": _accepted_accuracy(
+            accepted_fixed,
+            key="fixed_8bit_correct",
+        ),
+        "mean_probability_l2_error": float(np.mean([row["probability_l2_error"] for row in adaptive_rows])),
+        "adaptive_median_ms": float(np.median(adaptive_seconds) * 1000.0),
+        "fixed_8bit_median_ms": float(np.median(fixed_seconds) * 1000.0),
+        "adaptive_mean_tiles": float(np.mean(adaptive_tiles)),
+        "fixed_8bit_mean_tiles": float(np.mean(fixed_tiles)),
+        "mean_tile_reduction": float(1.0 - np.mean(adaptive_tiles) / np.mean(fixed_tiles)),
+    }
+    return {"summary": summary, "windows": adaptive_rows}
+
+
+def _accepted_accuracy(rows: list[dict[str, object]], *, key: str) -> float:
+    if not rows:
+        return 0.0
+    return float(np.mean([bool(row[key]) for row in rows]))
 
 
 def prepare_runtime(cfg, timings: dict[str, float]) -> PreparedRuntime:

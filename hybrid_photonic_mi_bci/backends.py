@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Iterator
 
 import numpy as np
@@ -308,6 +308,315 @@ class BitSlicedPhotonicMatrixOpsBackend(MatrixOpsBackend):
         if self.record_calls:
             self.calls.append(("einsum", name))
         return _einsum_via_matmul(self, subscripts, operands, name=name)
+
+
+@dataclass(frozen=True)
+class AdaptivePrecisionRule:
+    """Precision and shadow-monitoring policy for a group of forward operators."""
+
+    label: str
+    patterns: tuple[str, ...]
+    initial_bits: int
+    max_bits: int = 8
+    monitor_every: int = 64
+    relative_error_limit: float = 0.04
+
+    def __post_init__(self) -> None:
+        if self.initial_bits not in {4, 6, 8} or self.max_bits not in {4, 6, 8}:
+            raise ValueError("adaptive logical precision must be one of 4, 6, or 8 bits")
+        if self.initial_bits > self.max_bits:
+            raise ValueError("initial_bits must not exceed max_bits")
+        if self.monitor_every <= 0:
+            raise ValueError("monitor_every must be positive")
+        if self.relative_error_limit <= 0:
+            raise ValueError("relative_error_limit must be positive")
+
+
+@dataclass
+class _AdaptivePrecisionState:
+    rule: AdaptivePrecisionRule
+    current_bits: int
+    calls: int = 0
+    monitored_calls: int = 0
+    escalations: int = 0
+    tile_evaluations: int = 0
+    error_sum: float = 0.0
+    last_relative_error: float = 0.0
+    max_relative_error: float = 0.0
+    error_sum_by_bits: dict[int, float] = field(default_factory=dict)
+    error_count_by_bits: dict[int, int] = field(default_factory=dict)
+    max_error_by_bits: dict[int, float] = field(default_factory=dict)
+
+
+def default_adaptive_precision_rules() -> tuple[AdaptivePrecisionRule, ...]:
+    """Return conservative low-precision defaults for the EEG front end."""
+
+    return (
+        AdaptivePrecisionRule(
+            label="car",
+            patterns=("common_average_reference", "_car"),
+            initial_bits=4,
+            monitor_every=1,
+            relative_error_limit=0.03,
+        ),
+        AdaptivePrecisionRule(
+            label="sos_filter",
+            patterns=("sosfiltfilt",),
+            initial_bits=6,
+            monitor_every=64,
+            relative_error_limit=0.06,
+        ),
+        AdaptivePrecisionRule(
+            label="fbcsp_projection",
+            patterns=("fbcsp_spatial_projection",),
+            initial_bits=6,
+            monitor_every=1,
+            relative_error_limit=0.05,
+        ),
+        AdaptivePrecisionRule(
+            label="feature_standardization",
+            patterns=("feature_standardizer_affine",),
+            initial_bits=6,
+            monitor_every=1,
+            relative_error_limit=0.04,
+        ),
+    )
+
+
+class AdaptivePrecisionPhotonicMatrixOpsBackend(MatrixOpsBackend):
+    """Bit-sliced photonic backend with sampled 8-bit shadow checks.
+
+    Selected front-end operators start at reduced logical precision. The first
+    call and every ``monitor_every`` calls are compared with a digital emulation
+    of the established 8-bit bit-sliced photonic reference. If the incremental
+    error from lowering precision exceeds the rule limit, that same call is
+    recomputed at the next precision and the operation remains promoted for the
+    rest of the process. Precision never decreases automatically.
+    """
+
+    _ALLOWED_BITS = (4, 6, 8)
+
+    def __init__(
+        self,
+        rules: tuple[AdaptivePrecisionRule, ...] | None = None,
+        *,
+        default_bits: int = 8,
+        tile_shape: tuple[int, int] = (2, 8),
+        record_calls: bool = False,
+        use_gazelle_model: bool = True,
+        announce: bool = True,
+    ) -> None:
+        if default_bits not in self._ALLOWED_BITS:
+            raise ValueError("default_bits must be one of 4, 6, or 8")
+        tile_rows, tile_cols = tile_shape
+        if tile_rows <= 0 or tile_cols <= 0:
+            raise ValueError("tile dimensions must be positive")
+        self.rules = tuple(rules or default_adaptive_precision_rules())
+        self.default_bits = int(default_bits)
+        self.tile_shape = (int(tile_rows), int(tile_cols))
+        self.record_calls = bool(record_calls)
+        self.calls: list[tuple[str, str]] = []
+        self.last_tile_count = 0
+        self.total_tile_count = 0
+        self.last_slice_pair_count = 0
+        self._states: dict[str, _AdaptivePrecisionState] = {}
+        self._gazelle_model = _load_gazelle_model() if use_gazelle_model else None
+        self.execution_backend = (
+            "gazelle_simulator_adaptive_bit_sliced"
+            if self._gazelle_model is not None
+            else "numpy_integer_matmul_adaptive_bit_sliced"
+        )
+        if announce:
+            print(
+                "[photonic-matmul] "
+                f"backend={self.execution_backend}, default_bits={self.default_bits}, "
+                "front_end_start_bits=mixed_4_6, physical_slice=uint4/int4, "
+                f"tile={self.tile_shape}, shadow_monitor=enabled"
+            )
+
+    def matmul(self, left: ArrayLike, right: ArrayLike, *, name: str = "matmul") -> FloatArray:
+        if self.record_calls:
+            self.calls.append(("matmul", name))
+        state = self._state_for(name)
+        state.calls += 1
+        monitor = state.current_bits < state.rule.max_bits and (
+            state.calls == 1 or state.calls % state.rule.monitor_every == 0
+        )
+        reference = None
+        if monitor:
+            reference, _shadow_tiles, _shadow_slice_pairs = _bit_sliced_photonic_matmul(
+                left,
+                right,
+                config=BitSlicedPhotonicConfig(
+                    logical_input_bits=state.rule.max_bits,
+                    logical_weight_bits=state.rule.max_bits,
+                ),
+                gazelle_model=None,
+                tile_shape=self.tile_shape,
+            )
+
+        bits = state.current_bits
+        total_tiles = 0
+        total_slice_pairs = 0
+        while True:
+            result, tile_count, slice_pair_count = _bit_sliced_photonic_matmul(
+                left,
+                right,
+                config=BitSlicedPhotonicConfig(
+                    logical_input_bits=bits,
+                    logical_weight_bits=bits,
+                ),
+                gazelle_model=self._gazelle_model,
+                tile_shape=self.tile_shape,
+            )
+            total_tiles += tile_count
+            total_slice_pairs += slice_pair_count
+            if reference is None:
+                break
+            relative_error = _normalized_matmul_error(result, reference, left, right)
+            state.error_sum_by_bits[bits] = state.error_sum_by_bits.get(bits, 0.0) + relative_error
+            state.error_count_by_bits[bits] = state.error_count_by_bits.get(bits, 0) + 1
+            state.max_error_by_bits[bits] = max(
+                state.max_error_by_bits.get(bits, 0.0),
+                relative_error,
+            )
+            if relative_error <= state.rule.relative_error_limit or bits >= state.rule.max_bits:
+                state.monitored_calls += 1
+                state.error_sum += relative_error
+                state.last_relative_error = relative_error
+                state.max_relative_error = max(state.max_relative_error, relative_error)
+                break
+            bits = self._next_bits(bits, state.rule.max_bits)
+            state.current_bits = bits
+            state.escalations += 1
+
+        state.current_bits = bits
+        state.tile_evaluations += total_tiles
+        self.last_tile_count = total_tiles
+        self.total_tile_count += total_tiles
+        self.last_slice_pair_count = total_slice_pairs
+        return result
+
+    def einsum(self, subscripts: str, *operands: ArrayLike, name: str = "einsum") -> FloatArray:
+        if self.record_calls:
+            self.calls.append(("einsum", name))
+        return _einsum_via_matmul(self, subscripts, operands, name=name)
+
+    def precision_report(self) -> list[dict[str, object]]:
+        """Return per-operation precision, error, escalation, and tile telemetry."""
+
+        rows = []
+        for name, state in sorted(self._states.items()):
+            mean_error = state.error_sum / state.monitored_calls if state.monitored_calls else 0.0
+            rows.append(
+                {
+                    "operation": name,
+                    "policy": state.rule.label,
+                    "current_bits": state.current_bits,
+                    "calls": state.calls,
+                    "monitored_calls": state.monitored_calls,
+                    "escalations": state.escalations,
+                    "last_relative_error": state.last_relative_error,
+                    "max_relative_error": state.max_relative_error,
+                    "mean_relative_error": mean_error,
+                    "relative_error_limit": state.rule.relative_error_limit,
+                    "tile_evaluations": state.tile_evaluations,
+                    "mean_error_by_bits": {
+                        bits: float(
+                            state.error_sum_by_bits[bits] / state.error_count_by_bits[bits]
+                        )
+                        for bits in sorted(state.error_sum_by_bits)
+                    },
+                    "max_error_by_bits": {
+                        bits: float(state.max_error_by_bits[bits])
+                        for bits in sorted(state.max_error_by_bits)
+                    },
+                }
+            )
+        return rows
+
+    def precision_summary(self) -> list[dict[str, object]]:
+        """Aggregate precision telemetry by policy and selected logical bits."""
+
+        grouped: dict[tuple[str, int], dict[str, object]] = {}
+        for state in self._states.values():
+            key = (state.rule.label, state.current_bits)
+            row = grouped.setdefault(
+                key,
+                {
+                    "policy": state.rule.label,
+                    "current_bits": state.current_bits,
+                    "operations": 0,
+                    "calls": 0,
+                    "monitored_calls": 0,
+                    "escalations": 0,
+                    "max_8bit_shadow_error": 0.0,
+                    "tile_evaluations": 0,
+                },
+            )
+            row["operations"] = int(row["operations"]) + 1
+            row["calls"] = int(row["calls"]) + state.calls
+            row["monitored_calls"] = int(row["monitored_calls"]) + state.monitored_calls
+            row["escalations"] = int(row["escalations"]) + state.escalations
+            row["max_8bit_shadow_error"] = max(
+                float(row["max_8bit_shadow_error"]),
+                state.max_relative_error,
+            )
+            row["tile_evaluations"] = int(row["tile_evaluations"]) + state.tile_evaluations
+        return [grouped[key] for key in sorted(grouped)]
+
+    def _state_for(self, name: str) -> _AdaptivePrecisionState:
+        state = self._states.get(name)
+        if state is not None:
+            return state
+        lowered_name = name.lower()
+        rule = next(
+            (
+                candidate
+                for candidate in self.rules
+                if any(pattern in lowered_name for pattern in candidate.patterns)
+            ),
+            AdaptivePrecisionRule(
+                label="default",
+                patterns=(),
+                initial_bits=self.default_bits,
+                max_bits=self.default_bits,
+                monitor_every=256,
+                relative_error_limit=0.02,
+            ),
+        )
+        state = _AdaptivePrecisionState(rule=rule, current_bits=rule.initial_bits)
+        self._states[name] = state
+        return state
+
+    @classmethod
+    def _next_bits(cls, current: int, maximum: int) -> int:
+        for candidate in cls._ALLOWED_BITS:
+            if current < candidate <= maximum:
+                return candidate
+        return maximum
+
+
+def _normalized_matmul_error(
+    actual: ArrayLike,
+    reference: ArrayLike,
+    left: ArrayLike,
+    right: ArrayLike,
+    eps: float = 1e-12,
+) -> float:
+    """Return RMSE normalized by observed or expected matmul output scale."""
+
+    actual_arr = np.asarray(actual, dtype=np.float64)
+    reference_arr = np.asarray(reference, dtype=np.float64)
+    left_arr = np.asarray(left, dtype=np.float64)
+    right_arr = np.asarray(right, dtype=np.float64)
+    rmse = float(np.sqrt(np.mean((actual_arr - reference_arr) ** 2)))
+    reference_rms = float(np.sqrt(np.mean(reference_arr**2)))
+    left_rms = float(np.sqrt(np.mean(left_arr**2)))
+    right_rms = float(np.sqrt(np.mean(right_arr**2)))
+    expected_rms = left_rms * right_rms * np.sqrt(left_arr.shape[-1])
+    denominator = max(reference_rms, 0.05 * expected_rms, eps)
+    return rmse / denominator
 
 
 def _load_gazelle_model():
@@ -911,7 +1220,9 @@ class PhotonicMatrixOpsBackendStub(MatrixOpsBackend):
         raise NotImplementedError(f"Photonic einsum op {name!r} is not connected yet")
 
 
-_MATRIX_OPS_BACKEND: MatrixOpsBackend = BitSlicedPhotonicMatrixOpsBackend(announce=False)
+_MATRIX_OPS_BACKEND: MatrixOpsBackend = AdaptivePrecisionPhotonicMatrixOpsBackend(
+    announce=False
+)
 _SIGNAL_OPS_BACKEND: SignalOpsBackend = SimulatedPhotonicSignalOpsBackend()
 
 

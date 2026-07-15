@@ -587,13 +587,13 @@ Raw EEG window
 ### 6.1 当前支持
 
 - 两层位宽口径  
-  需要区分算法逻辑精度与光计算单元单次调用位宽。当前普通前向线性路径使用 8-bit 逻辑定点值，但将其拆为多个 4-bit slice 交给光计算单元；candidate scan 使用单次 4-bit。
+  需要区分算法逻辑精度与光计算单元单次调用位宽。当前逻辑精度按算子自适应选择 4/6/8-bit，但所有路径仍拆为 4-bit physical slices 交给光计算单元；candidate scan 使用单次 4-bit。
 
 - 物理调用位宽  
   所有 bit-sliced 子计算均满足 `uint4 input + int4 weight`，即 `qin=[0,15]`、`qwt=[-8,7]`。
 
 - 当前主线策略  
-  FBCSP、CAR、SOS 状态转移、标准化、MLP、LDA、距离交叉项和概率融合使用“8-bit 逻辑精度 + 4-bit 物理 slice”；photonic candidate scan 使用单次 4-bit tiled MVM。
+  CAR 从4-bit开始；SOS状态转移、FBCSP空间投影和标准化从6-bit开始；MLP、LDA及其他敏感路径保持8-bit。低精度算子周期性与8-bit bit-sliced数字影子比较，超差时对当前调用立即升档重算并保持该档位。Photonic candidate scan使用单次4-bit tiled MVM。
 
 ### 6.2 4-bit 配置
 
@@ -614,7 +614,7 @@ weight:           int4,  qwt=[-8, 7]
 - Candidate scan  
   候选头扫描直接使用单次 4-bit，是当前真正的一次调用低位宽路径。
 
-### 6.3 位权拆分与 8-bit 逻辑精度
+### 6.3 位权拆分与自适应逻辑精度
 
 ```text
 input activation: uint8, qin=[0, 255]
@@ -628,7 +628,7 @@ weight:           int8,  qwt=[-128, 127]
   矩阵尺寸先按输出维 2 行、输入维 8 列拆成 `2 x 8` tile；每个 tile 再按输入/权重 slice 组合多次调用，最后按 `16^(i+j)` 累加 partial sum。
 
 - 当前状态  
-  普通前向线性路径当前默认采用 8-bit 逻辑精度，由多个 uint4/int4 物理调用重构；这不是一次原生 uint8/int8 调用。
+  普通前向线性路径当前采用4/6/8-bit混合逻辑精度，各档位均由多个uint4/int4物理调用重构；这不是一次原生4/6/8-bit光计算调用。
 
 ### 6.4 当前实现边界
 
@@ -636,10 +636,16 @@ weight:           int8,  qwt=[-128, 127]
   候选头扫描路径使用单次 uint4/int4 量化 tiled MVM。
 
 - 其他 MatrixOps 路径  
-  其他前向线性计算由 BitSlicedPhotonicMatrixOpsBackend 接管，以 8-bit 逻辑精度量化后拆成多个 uint4/int4 物理计算并按位权重构，不是直接截断为单次 4-bit。
+  其他前向线性计算由 AdaptivePrecisionPhotonicMatrixOpsBackend 接管。精度状态按频带、SOS section、滤波方向、CSP类别投影和其他算子分别维护，避免一个高敏感算子迫使全部前端路径升到8-bit。
 
 - SignalOps 路径  
   CAR 展开为通道混合矩阵；SOS 每个二阶节展开为 `3 x 3` 状态转移矩阵，前向与反向滤波中的系数乘加均调用 bit-sliced MatrixOpsBackend。
+
+- 持续精度监测
+  每个低精度算子首次调用及之后按固定间隔生成8-bit bit-sliced数字影子，计算低位宽相对8-bit基准的新增归一化误差。超出阈值时当前调用按下一档位重算，并只升不降，避免运行期间精度来回抖动。
+
+- 监测记录
+  单窗口脚本在终端汇总各策略的当前位宽、监测次数、最大8-bit影子误差、升档次数和tile数，并将逐算子报告保存到`artifacts/metrics/fbcsp_design/adaptive_precision_eval_XXXX.json`。
 
 - QAT 表述边界  
   当前采用运行时动态定点量化和位权拆分，不是 QAT。只有后续发现小型 MLP 的低位宽误差明显影响准确率时，才需要引入 QAT。
@@ -666,9 +672,9 @@ weight:           int8,  qwt=[-128, 127]
 
 注意点：
 
-- 不要把“8-bit 逻辑精度”写成一次原生 8-bit 光计算调用。
+- 不要把4/6/8-bit逻辑精度写成对应位宽的一次原生光计算调用。
 - 不要把 bit-sliced 动态量化写成 QAT。
-- 要区分单次 4-bit candidate scan、8-bit 逻辑值的 4-bit 位权拆分，以及尚未完成的真实光芯片实测。
+- 要区分单次4-bit candidate scan、自适应逻辑精度的4-bit位权拆分、数字影子监测，以及尚未完成的真实光芯片实测。
 
 ## 7. 前向传播、进度与耗时
 
@@ -728,8 +734,17 @@ weight:           int8,  qwt=[-128, 127]
 - 物理 tile/slice 调用  
   除阶段耗时外，还应记录每个在线阶段的 bit-sliced physical tile evaluations。该值包含 `2 x 8` 空间分块和位权 slice 组合，不能只报告 candidate scan 的逻辑 tile 数。
 
+- 重复计时
+  使用`--online-repeats N`可在一次setup后重复同一在线窗口，报告首轮、中位数、P90、末轮和预测一致率。首轮包含影子监测与可能的升档重算，末轮更接近稳定精度配置下的软件模拟耗时。
+
+- 自适应/固定8-bit A/B
+  使用`--precision-validation-windows N`可在相同原始EEG窗口上比较自适应精度与固定8-bit完整前向，实时报告累计准确率和预测一致率，最终输出command accuracy、accepted accuracy、reject rate、概率L2差、耗时和tile下降比例。
+
 - 当前通路验证示例  
-  在 3 秒 BCICIV_1_asc 窗口、缩短训练配置和固定拒识阈值的工程验证中，单窗口在线总耗时约 1.73 s，共约 91.6 万次 physical tile evaluation，其中 FBCSP 前端约占 91.4 万次。该数字用于定位软件模拟开销，不作为正式模型精度或真实芯片延迟结论。
+  在3秒BCICIV_1_asc窗口、缩短训练配置和固定拒识阈值的工程验证中，同一窗口连续运行5次后，稳态末轮约77.7万次physical tile evaluation，其中FBCSP前端约77.6万次；全8-bit逻辑精度基线约91.6万次，因此tile调用下降约15.1%。5次预测一致率为1.000，均保持正确的`left`且未拒识；在线软件耗时中位数约1.545 s、P90约1.600 s。该结果用于验证路径和资源变化，不作为完整数据集精度或真实芯片延迟结论。
+
+- 初步跨窗口验证
+  3个不同evaluation窗口的自适应/固定8-bit A/B中，两者command accuracy均为1.000、reject rate均为0、预测一致率为1.000，平均概率L2差为0.00775；自适应平均tile下降15.7%，同进程中位耗时约1.540 s，对照约1.634 s。窗口数过少，该结果只能作为工程sanity check，正式结论必须扩大到完整被试与session。
 
 建议表格：
 
@@ -993,6 +1008,12 @@ python examples/run_bnci2014_004_personalization.py
 - Compute accounting summary  
   展示 photonic/digital 线性计算量占比。
 
+- Adaptive precision diagnostics
+  展示CAR、SOS、FBCSP投影、标准化和其他线性算子的最终4/6/8-bit分布、各位宽tile消耗、逐算子8-bit影子误差与阈值、升档次数和单窗口各阶段tile构成。
+
+- Adaptive vs fixed-8-bit validation
+  展示两种精度策略的command/accepted accuracy、reject rate、归一化耗时、平均tile数、逐窗口概率L2差和预测一致性。
+
 - 经验库候选头质量和权重分布  
   展示 top-K 候选头的来源、质量和融合权重。
 
@@ -1128,7 +1149,7 @@ python examples/run_bnci2014_004_personalization.py
   当前 photonic backend 是软件模拟或接口占位，不是真实光芯片功耗/延迟结果。
 
 - 混合精度仍需系统评估  
-  全部前向线性计算均已由光计算 backend 接管。Candidate scan 使用单次 4-bit，其他路径使用 8-bit 逻辑精度的 4-bit 位权拆分；仍需系统比较不同逻辑位宽、slice 数、噪声和累加误差对准确率、拒识率与延迟的影响。
+  全部前向线性计算均已由光计算 backend 接管。Candidate scan使用单次4-bit，其他路径使用受8-bit影子监测的4/6/8-bit自适应逻辑精度；仍需在更多窗口和被试上比较位宽、slice数、噪声和累加误差对准确率、拒识率与延迟的影响。
 
 - 真实硬件执行尚未完成  
   FBCSP、滤波、标准化、MLP、线性头扫描和概率融合等前向线性路径已经统一暴露并交由光计算 backend 接管，但当前主要是软件模拟、接口路由与 MAC-equivalent 统计，尚未在真实光芯片上逐算子完成执行与测量。
@@ -1205,7 +1226,8 @@ python examples/run_bnci2014_004_personalization.py
 ## 17. 文档检查清单
 
 - [ ] 是否明确 candidate scan 默认是单次 4-bit。
-- [ ] 是否明确其他前向线性路径默认是 8-bit 逻辑精度，并由 4-bit physical slices 按位权重构。
+- [ ] 是否明确CAR从4-bit开始、SOS/FBCSP/标准化从6-bit开始、敏感路径保持8-bit，并统一由4-bit physical slices按位权重构。
+- [ ] 是否说明低精度路径持续与8-bit数字影子比较，超差后当前调用立即升档重算且只升不降。
 - [ ] 是否提出逐算子确认最低可用逻辑精度，避免统一高精度造成资源浪费。
 - [ ] 是否讨论拓宽光计算单元物理位宽后抗噪能力与计算效率的折中。
 - [ ] 是否说明 `2 x 8` 是 tile 尺寸，不是系统矩阵大小限制。
