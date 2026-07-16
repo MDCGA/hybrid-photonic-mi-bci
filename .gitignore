@@ -68,8 +68,6 @@ report/template/out-competition/*.ist
 report/template/out-competition/*.log
 
 # Local LaTeX build directories accidentally created by shell variables.
-report/template/\$out/
-report/template/out/
 
 # Office temporary lock files.
 report/slides/~$*.pptx

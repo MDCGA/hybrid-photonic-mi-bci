@@ -1,0 +1,258 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global/global}
+    \entry{diagnostics13061122}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=304a1894e71a03813d29d58c45ac7ef6}{%
+           family={García-Murillo},
+           familyi={G\bibinithyphendelim M\bibinitperiod},
+           given={Daniel\bibnamedelima Guillermo},
+           giveni={D\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+        {{hash=37225a030a708c78a90b36b28f9b4908}{%
+           family={Álvarez-Meza},
+           familyi={Á\bibinithyphendelim M\bibinitperiod},
+           given={Andrés\bibnamedelima Marino},
+           giveni={A\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=48ff607fa3219665c91c2e8e8a5ed219}{%
+           family={Castellanos-Dominguez},
+           familyi={C\bibinithyphendelim D\bibinitperiod},
+           given={Cesar\bibnamedelima German},
+           giveni={C\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+      }
+      \name{namea}{3}{}{%
+        {{hash=304a1894e71a03813d29d58c45ac7ef6}{%
+           family={García-Murillo},
+           familyi={G\bibinithyphendelim M\bibinitperiod},
+           given={Daniel\bibnamedelima Guillermo},
+           giveni={D\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+        {{hash=37225a030a708c78a90b36b28f9b4908}{%
+           family={Álvarez-Meza},
+           familyi={Á\bibinithyphendelim M\bibinitperiod},
+           given={Andrés\bibnamedelima Marino},
+           giveni={A\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=48ff607fa3219665c91c2e8e8a5ed219}{%
+           family={Castellanos-Dominguez},
+           familyi={C\bibinithyphendelim D\bibinitperiod},
+           given={Cesar\bibnamedelima German},
+           giveni={C\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \strng{namehash}{27e1d8628e3fe6bc0d3498f7a0cbe500}
+      \strng{fullhash}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{fullhashraw}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{bibnamehash}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{authorbibnamehash}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{authornamehash}{27e1d8628e3fe6bc0d3498f7a0cbe500}
+      \strng{authorfullhash}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{authorfullhashraw}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{nameabibnamehash}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{nameanamehash}{27e1d8628e3fe6bc0d3498f7a0cbe500}
+      \strng{nameafullhash}{fd147f197c6f19ead7f31ed057037da9}
+      \strng{nameafullhashraw}{fd147f197c6f19ead7f31ed057037da9}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{This paper uses EEG data to introduce an approach for classifying right and left-hand classes in Motor Imagery (MI) tasks. The Kernel Cross-Spectral Functional Connectivity Network (KCS-FCnet) method addresses these limitations by providing richer spatial-temporal-spectral feature maps, a simpler architecture, and a more interpretable approach for EEG-driven MI discrimination. In particular, KCS-FCnet uses a single 1D-convolutional-based neural network to extract temporal-frequency features from raw EEG data and a cross-spectral Gaussian kernel connectivity layer to model channel functional relationships. As a result, the functional connectivity feature map reduces the number of parameters, improving interpretability by extracting meaningful patterns related to MI tasks. These patterns can be adapted to the subject’s unique characteristics. The validation results prove that introducing KCS-FCnet shallow architecture is a promising approach for EEG-based MI classification with the potential for real-world use in brain–computer interface systems.}
+      \field{issn}{2075-4418}
+      \field{journaltitle}{Diagnostics}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{number}{6}
+      \field{title}{KCS-FCnet: Kernel Cross-Spectral Functional Connectivity Network for EEG-Based Motor Imagery Classification}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{13}
+      \field{year}{2023}
+      \field{dateera}{ce}
+      \verb{doi}
+      \verb 10.3390/diagnostics13061122
+      \endverb
+      \verb{urlraw}
+      \verb https://www.mdpi.com/2075-4418/13/6/1122
+      \endverb
+      \verb{url}
+      \verb https://www.mdpi.com/2075-4418/13/6/1122
+      \endverb
+      \keyw{diagnostics13061122}
+    \endentry
+    \entry{ang2012fbcsp}{article}{}{}
+      \name{author}{4}{}{%
+        {{hash=0266646fbf23960d4552e08bc7809fc6}{%
+           family={Ang},
+           familyi={A\bibinitperiod},
+           given={Kai\bibnamedelima Keng},
+           giveni={K\bibinitperiod\bibinitdelim K\bibinitperiod}}}%
+        {{hash=0b93f2085027ffe0299b616aeabb08e0}{%
+           family={Chin},
+           familyi={C\bibinitperiod},
+           given={Zheng\bibnamedelima Yang},
+           giveni={Z\bibinitperiod\bibinitdelim Y\bibinitperiod}}}%
+        {{hash=5454145ed84f8e674a6c975f73a48882}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Haihong},
+           giveni={H\bibinitperiod}}}%
+        {{hash=906cecbbab6ab1d858feb039a4ebbdcd}{%
+           family={Guan},
+           familyi={G\bibinitperiod},
+           given={Cuntai},
+           giveni={C\bibinitperiod}}}%
+      }
+      \name{namea}{4}{}{%
+        {{hash=0266646fbf23960d4552e08bc7809fc6}{%
+           family={Ang},
+           familyi={A\bibinitperiod},
+           given={Kai\bibnamedelima Keng},
+           giveni={K\bibinitperiod\bibinitdelim K\bibinitperiod}}}%
+        {{hash=0b93f2085027ffe0299b616aeabb08e0}{%
+           family={Chin},
+           familyi={C\bibinitperiod},
+           given={Zheng\bibnamedelima Yang},
+           giveni={Z\bibinitperiod\bibinitdelim Y\bibinitperiod}}}%
+        {{hash=5454145ed84f8e674a6c975f73a48882}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Haihong},
+           giveni={H\bibinitperiod}}}%
+        {{hash=906cecbbab6ab1d858feb039a4ebbdcd}{%
+           family={Guan},
+           familyi={G\bibinitperiod},
+           given={Cuntai},
+           giveni={C\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \strng{namehash}{a4d32bf8b73593b0378a9fd036b1907b}
+      \strng{fullhash}{f21ca9bdbb808137b5a4090804385904}
+      \strng{fullhashraw}{f21ca9bdbb808137b5a4090804385904}
+      \strng{bibnamehash}{7a2fb306447227ab7a278c094948891a}
+      \strng{authorbibnamehash}{7a2fb306447227ab7a278c094948891a}
+      \strng{authornamehash}{a4d32bf8b73593b0378a9fd036b1907b}
+      \strng{authorfullhash}{f21ca9bdbb808137b5a4090804385904}
+      \strng{authorfullhashraw}{f21ca9bdbb808137b5a4090804385904}
+      \strng{nameabibnamehash}{7a2fb306447227ab7a278c094948891a}
+      \strng{nameanamehash}{a4d32bf8b73593b0378a9fd036b1907b}
+      \strng{nameafullhash}{f21ca9bdbb808137b5a4090804385904}
+      \strng{nameafullhashraw}{f21ca9bdbb808137b5a4090804385904}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Frontiers in Neuroscience}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{title}{Filter Bank Common Spatial Pattern Algorithm on BCI Competition IV Datasets 2a and 2b}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{6}
+      \field{year}{2012}
+      \field{dateera}{ce}
+      \field{pages}{39}
+      \range{pages}{1}
+      \keyw{ang2012fbcsp}
+    \endentry
+    \entry{blankertz2008}{article}{}{}
+      \true{moreauthor}
+      \true{morelabelname}
+      \name{author}{1}{}{%
+        {{hash=b061ab38031e0396e2f0fc3308cccf7d}{%
+           family={Blankertz},
+           familyi={B\bibinitperiod},
+           given={Benjamin},
+           giveni={B\bibinitperiod}}}%
+      }
+      \true{morenamea}
+      \name{namea}{1}{}{%
+        {{hash=b061ab38031e0396e2f0fc3308cccf7d}{%
+           family={Blankertz},
+           familyi={B\bibinitperiod},
+           given={Benjamin},
+           giveni={B\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \strng{namehash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{fullhash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{fullhashraw}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{bibnamehash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{authorbibnamehash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{authornamehash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{authorfullhash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{authorfullhashraw}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{nameabibnamehash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{nameanamehash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{nameafullhash}{8107d0f654cea4f31c6d857205d155b5}
+      \strng{nameafullhashraw}{8107d0f654cea4f31c6d857205d155b5}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Frontiers in Neuroscience}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{title}{The Berlin Brain--Computer Interface: Non-medical Uses of BCI Technology}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{4}
+      \field{year}{2010}
+      \field{dateera}{ce}
+      \field{pages}{198}
+      \range{pages}{1}
+      \keyw{blankertz2008}
+    \endentry
+    \entry{gazellemanual}{manual}{}{}
+      \list{institution}{1}{%
+        {曦智科技}%
+      }
+      \list{language}{1}{%
+        {chinese}%
+      }
+      \list{organization}{1}{%
+        {曦智科技}%
+      }
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labeltitlesource}{title}
+      \field{langid}{english}
+      \field{languageid}{chinese}
+      \field{lansortorder}{1}
+      \field{title}{Gazelle 光子计算评估板产品手册 v1.0.1}
+      \field{usera}{A}
+      \field{userd}{chinese}
+      \field{year}{2026}
+      \field{dateera}{ce}
+      \keyw{gazellemanual}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+
