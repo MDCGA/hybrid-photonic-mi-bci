@@ -71,5 +71,4 @@
 \contentsline {chapter}{\numberline {7\hspace {.3em}}后续工作}{38}{chapter.0.7}%
 \contentsline {chapter}{\numberline {8\hspace {.3em}}结论}{39}{chapter.0.8}%
 \contentsline {chapter}{\numberline {附录 A\hspace {.3em}}线性算子与计算量清单}{40}{appendix.A}%
-\contentsline {chapter}{\numberline {附录 B\hspace {.3em}}提交材料核查表}{41}{appendix.B}%
-\contentsline {chapter}{参考文献}{42}{appendix*.26}%
+\contentsline {chapter}{参考文献}{41}{appendix*.25}%
