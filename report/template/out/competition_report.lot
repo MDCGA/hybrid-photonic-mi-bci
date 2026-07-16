@@ -5,7 +5,7 @@
 \contentsline {table}{\numberline {3.1}{\ignorespaces 主线算法到光子矩阵乘的拆分}}{21}{table.caption.11}%
 \contentsline {table}{\numberline {3.2}{\ignorespaces 当前前向线性算子的量化策略}}{22}{table.caption.12}%
 \contentsline {table}{\numberline {3.3}{\ignorespaces Gazelle 模拟器单窗口 online forward 耗时与 tile 数（终端截图转录）}}{25}{table.caption.13}%
-\contentsline {table}{\numberline {3.4}{\ignorespaces 软件 photonic backend 接管口径下的前向线性计算占比（主线，518 个评估窗口）}}{27}{table.caption.14}%
+\contentsline {table}{\numberline {3.4}{\ignorespaces 软件 photonic backend 接管口径下的前向线性计算占比（主线，518 个评估窗口）}}{26}{table.caption.14}%
 \addvspace {10.0pt}
 \contentsline {table}{\numberline {4.1}{\ignorespaces BCICIV\_1\_asc 数据用途与边界}}{28}{table.caption.15}%
 \contentsline {table}{\numberline {4.2}{\ignorespaces BCICIV\_1\_asc 三条实验线当前结果}}{29}{table.caption.16}%

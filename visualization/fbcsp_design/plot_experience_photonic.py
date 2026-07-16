@@ -197,19 +197,22 @@ def plot(metrics_dir: Path, output_dir: Path, formats: tuple[str, ...] = ("png",
     col_tiles = int(np.ceil(augmented_dim / tile_cols))
     values = [row["top_k"], row_tiles, col_tiles, total_tiles]
     names = [
-        "Candidates K",
-        f"row tiles\nceil({class_count}/{tile_rows})",
-        f"col tiles\nceil({augmented_dim}/{tile_cols})",
-        "tile evals\nper window",
+        r"Candidates $K$",
+        f"row tiles\n" + rf"$\lceil {class_count}/{tile_rows} \rceil$",
+        f"column tiles\n" + rf"$\lceil {augmented_dim}/{tile_cols} \rceil$",
+        "tile evaluations\nper window",
     ]
     bars = ax.bar(names, values, color=["#2563eb", "#16a34a", "#16a34a", "#dc2626"])
-    ax.set_title("2 x 8 photonic tile schedule for scanned linear heads")
+    ax.set_title(r"$2 \times 8$ photonic tile schedule for scanned linear heads")
     ax.set_ylabel("Count")
     ax.text(
         0.02,
         0.92,
-        f"Each candidate head computes A_i [h, 1] with A_i in R^({class_count} x {augmented_dim}).\n"
-        f"4-bit tile: qin 0..15, qwt -8..7; bias uses the constant input.",
+        rf"Each candidate head computes $A_i[\mathbf{{h}}, 1]$ with "
+        rf"$A_i \in \mathbb{{R}}^{{{class_count} \times {augmented_dim}}}$."
+        "\n"
+        r"$4$-bit tile: $q_{\mathrm{in}} \in [0, 15]$, "
+        r"$q_{\mathrm{wt}} \in [-8, 7]$; bias uses the constant input.",
         transform=ax.transAxes,
         ha="left",
         va="top",
