@@ -5,9 +5,9 @@
     {
       "line": "FBCSP + shrinkage LDA",
       "total": 560,
-      "command_accuracy": 0.7125,
-      "balanced_command_accuracy": 0.7328295267950441,
-      "accepted_accuracy": 0.7241379310344828,
+      "command_accuracy": 0.6925,
+      "balanced_command_accuracy": 0.7128,
+      "accepted_accuracy": 0.7038112522686025,
       "reject_rate": 0.01607142857142857,
       "raw_fbcsp_dim": 72,
       "selected_features": 32,

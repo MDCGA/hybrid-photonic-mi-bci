@@ -380,7 +380,7 @@ Default results saved in `artifacts/metrics/fbcsp_design/summary.json`:
 
 | Line | Eval windows | Command acc. | Balanced acc. | Reject rate | Forward MACs | Forward share | Inference share |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| FBCSP + shrinkage LDA | 560 | 0.713 | 0.733 | 0.016 | 0.576 GMAC | 1.000 | 1.000 |
+| FBCSP + shrinkage LDA | 560 | 0.693 | 0.713 | 0.016 | 0.576 GMAC | 1.000 | 1.000 |
 | FBCSP + small MLP embedding | 560 | 0.723 | 0.709 | 0.075 | 0.584 GMAC | 1.000 | 1.000 |
 | FBCSP + MLP embedding + library + photonic scan | 518 | 0.705 | 0.732 | 0.027 | 0.585 GMAC | 1.000 | 1.000 |
 

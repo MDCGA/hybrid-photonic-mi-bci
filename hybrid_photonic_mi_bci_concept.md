@@ -678,8 +678,8 @@ FBCSP：6 个频带，one-vs-rest CSP，raw 72D
 
 ```text
 FBCSP + shrinkage LDA:
-  command accuracy = 0.713
-  balanced accuracy = 0.732
+  command accuracy = 0.693
+  balanced accuracy = 0.712
   reject rate = 0.014
 
 FBCSP + 小型 MLP embedding:
