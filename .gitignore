@@ -73,3 +73,5 @@ report/template/out/
 
 # Office temporary lock files.
 report/slides/~$*.pptx
+
+video/

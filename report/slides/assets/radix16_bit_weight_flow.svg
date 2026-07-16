@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="400" viewBox="0 0 1600 400" role="img" aria-labelledby="title desc">
+  <title id="title">Radix-16 位权拆分与数字重构流程</title>
+  <desc id="desc">将 6 或 8 bit 逻辑输入和权重拆为多个 4 bit slice，在光计算端分别计算部分和，数字端按十六进制位权重构输出。</desc>
+  <defs>
+    <marker id="arrow-blue" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto">
+      <path d="M0,0 L11,5.5 L0,11 Z" fill="#3478B8"/>
+    </marker>
+    <style>
+      .zh { font-family: 'Microsoft YaHei', 'Microsoft YaHei UI', Arial, sans-serif; }
+      .title { font-size: 23px; font-weight: 700; fill: #3478B8; }
+      .sub { font-size: 14px; fill: #667487; }
+      .head { font-size: 20px; font-weight: 700; fill: #203047; }
+      .body { font-size: 16px; fill: #203047; }
+      .small { font-size: 14px; fill: #667487; }
+      .white-head { font-size: 19px; font-weight: 700; fill: #fff; }
+      .white-body { font-size: 15px; fill: #fff; }
+      .formula { font-family: 'Cambria Math', Cambria, 'Times New Roman', serif; font-size: 17px; fill: #203047; }
+    </style>
+  </defs>
+
+  <rect x="3" y="3" width="1594" height="394" rx="30" fill="#F5F8FB" stroke="#B9C9D9" stroke-width="2"/>
+  <text class="zh title" x="42" y="47">补充｜Radix-16 位权拆分：高逻辑精度由多个 4-bit 物理调用重构</text>
+  <text class="zh sub" x="42" y="75">4-bit 仅需 1 个 slice；6/8-bit 按输入/权重 slice 对展开，绝非一次原生 6/8-bit 光计算</text>
+
+  <!-- Flow arrows -->
+  <path d="M315 214 H355" fill="none" stroke="#3478B8" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <path d="M665 214 H705" fill="none" stroke="#3478B8" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <path d="M1110 214 H1150" fill="none" stroke="#3478B8" stroke-width="3" marker-end="url(#arrow-blue)"/>
+
+  <!-- 1. Logical integers -->
+  <rect x="42" y="116" width="273" height="195" rx="17" fill="#EAF2FA" stroke="#3478B8" stroke-width="2.5"/>
+  <text class="zh head" text-anchor="middle" x="178" y="153">逻辑量化张量</text>
+  <text class="zh body" text-anchor="middle" x="178" y="187">6-bit / 8-bit 输入与权重</text>
+  <line x1="73" y1="207" x2="284" y2="207" stroke="#B9C9D9" stroke-width="1.5"/>
+  <text class="formula" text-anchor="middle" x="178" y="240">x, w</text>
+  <text class="zh small" text-anchor="middle" x="178" y="271">逻辑精度 ≠ 物理位宽</text>
+
+  <!-- 2. Split -->
+  <rect x="355" y="116" width="310" height="195" rx="17" fill="#FFF8F0" stroke="#E58A2B" stroke-width="2.5"/>
+  <text class="zh head" text-anchor="middle" x="510" y="153">Radix-16 拆分</text>
+  <text class="formula" text-anchor="middle" x="510" y="193">x = x₀ + 16x₁</text>
+  <text class="formula" text-anchor="middle" x="510" y="222">w = w₀ + 16w₁</text>
+  <line x1="386" y1="241" x2="634" y2="241" stroke="#F0C38D" stroke-width="1.5"/>
+  <text class="zh small" text-anchor="middle" x="510" y="271">xᵢ：uint4 [0,15]　wⱼ：int4 [-8,7]</text>
+
+  <!-- 3. Photonic partial sums -->
+  <rect x="705" y="116" width="405" height="195" rx="17" fill="#7656A8" stroke="#7656A8" stroke-width="2.5"/>
+  <text class="zh white-head" text-anchor="middle" x="907" y="151">4-bit 光计算：slice 对 MVM</text>
+  <rect x="735" y="174" width="157" height="43" rx="8" fill="#fff" fill-opacity=".16"/>
+  <rect x="922" y="174" width="157" height="43" rx="8" fill="#fff" fill-opacity=".16"/>
+  <rect x="735" y="230" width="157" height="43" rx="8" fill="#fff" fill-opacity=".16"/>
+  <rect x="922" y="230" width="157" height="43" rx="8" fill="#fff" fill-opacity=".16"/>
+  <text class="zh white-body" text-anchor="middle" x="813" y="201">p₀₀ = MVM(x₀,w₀)</text>
+  <text class="zh white-body" text-anchor="middle" x="1000" y="201">p₀₁ = MVM(x₀,w₁)</text>
+  <text class="zh white-body" text-anchor="middle" x="813" y="257">p₁₀ = MVM(x₁,w₀)</text>
+  <text class="zh white-body" text-anchor="middle" x="1000" y="257">p₁₁ = MVM(x₁,w₁)</text>
+  <text class="zh white-body" text-anchor="middle" x="907" y="295">每次物理乘加始终是 uint4 × int4</text>
+
+  <!-- 4. Digital rebuild -->
+  <rect x="1150" y="116" width="408" height="195" rx="17" fill="#EAF6EF" stroke="#3C9064" stroke-width="2.5"/>
+  <text class="zh head" text-anchor="middle" x="1354" y="153">数字端：按位权累加与反量化</text>
+  <text class="formula" text-anchor="middle" x="1354" y="195">y = Σᵢⱼ 16⁽ⁱ⁺ʲ⁾ · pᵢⱼ</text>
+  <line x1="1182" y1="216" x2="1526" y2="216" stroke="#A9D4BA" stroke-width="1.5"/>
+  <text class="zh body" text-anchor="middle" x="1354" y="247">零点补偿 · 部分和累加 · 反量化</text>
+  <text class="zh small" text-anchor="middle" x="1354" y="275">得到 6/8-bit 逻辑精度输出</text>
+
+  <text class="zh small" x="49" y="357">调用量级：空间 tile 数 × SₓSᵥ；4-bit 为 1×1，6/8-bit 常见为 2×2 slice 对（示意）。</text>
+  <rect x="1210" y="335" width="315" height="36" rx="18" fill="#3478B8"/>
+  <text class="zh" x="1367" y="359" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">物理 4-bit → 逻辑 6/8-bit</text>
+</svg>

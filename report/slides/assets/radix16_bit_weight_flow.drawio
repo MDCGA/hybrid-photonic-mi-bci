@@ -1,0 +1,40 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Radix-16 位权拆分" id="Bqpxx9VY5kZTPd0gyMY2">
+    <mxGraphModel dx="1723" dy="1358" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="800" pageHeight="400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="NmMO6G9vJg6jRddH4gu--14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#F5F8FB;strokeColor=#B9C9D9;fontColor=#203047;fontSize=14;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry height="280" width="1594" x="840" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="NmMO6G9vJg6jRddH4gu--15" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=none;strokeColor=none;fontColor=#3478B8;fontSize=22;strokeWidth=1;" value="&lt;b&gt;Radix-16 位权拆分：高逻辑精度由多个 4-bit 物理调用重构&lt;/b&gt;" vertex="1">
+          <mxGeometry height="30" width="649" x="853" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="NmMO6G9vJg6jRddH4gu--17" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#EAF2FA;strokeColor=#3478B8;fontColor=#203047;fontSize=16;strokeWidth=2;" value="&lt;b&gt;逻辑量化张量&lt;/b&gt;&lt;br&gt;&lt;br&gt;6-bit / 8-bit 输入与权重&lt;hr&gt;&lt;i&gt;x, w&lt;/i&gt;&lt;br&gt;&lt;font color=&#39;#667487&#39;&gt;逻辑精度 ≠ 物理位宽&lt;/font&gt;" vertex="1">
+          <mxGeometry height="195" width="273" x="879.0000406901045" y="93.00335367838548" as="geometry" />
+        </mxCell>
+        <mxCell id="NmMO6G9vJg6jRddH4gu--18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#FFF8F0;strokeColor=#E58A2B;fontColor=#203047;fontSize=16;strokeWidth=2;" value="&lt;b&gt;Radix-16 拆分&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;i&gt;x = x₀ + 16x₁&lt;/i&gt;&lt;br&gt;&lt;i&gt;w = w₀ + 16w₁&lt;/i&gt;&lt;hr&gt;&lt;font color=&#39;#667487&#39;&gt;xᵢ：uint4 [0,15]；wⱼ：int4 [-8,7]&lt;/font&gt;" vertex="1">
+          <mxGeometry height="195" width="310" x="1192.0000406901045" y="93.00335367838548" as="geometry" />
+        </mxCell>
+        <mxCell id="NmMO6G9vJg6jRddH4gu--19" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#7656A8;strokeColor=#7656A8;fontColor=#FFFFFF;fontSize=16;strokeWidth=2;" value="&lt;font color=&#39;#FFFFFF&#39;&gt;&lt;b&gt;4-bit 光计算：slice 对 MVM&lt;/b&gt;&lt;br&gt;&lt;br&gt;p₀₀ = MVM(x₀,w₀)　　p₀₁ = MVM(x₀,w₁)&lt;br&gt;&lt;br&gt;p₁₀ = MVM(x₁,w₀)　　p₁₁ = MVM(x₁,w₁)&lt;br&gt;&lt;br&gt;每次物理乘加始终是 uint4 × int4&lt;/font&gt;" vertex="1">
+          <mxGeometry height="195" width="405" x="1542.0000406901045" y="93.00335367838548" as="geometry" />
+        </mxCell>
+        <mxCell id="NmMO6G9vJg6jRddH4gu--20" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#EAF6EF;strokeColor=#3C9064;fontColor=#203047;fontSize=16;strokeWidth=2;" value="&lt;b&gt;数字端：按位权累加与反量化&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;i&gt;y = Σᵢⱼ 16⁽ⁱ⁺ʲ⁾ · pᵢⱼ&lt;/i&gt;&lt;hr&gt;零点补偿 · 部分和累加 · 反量化&lt;br&gt;&lt;font color=&#39;#667487&#39;&gt;得到 6/8-bit 逻辑精度输出&lt;/font&gt;" vertex="1">
+          <mxGeometry height="195" width="408" x="1987.0000406901045" y="93.00335367838548" as="geometry" />
+        </mxCell>
+        <mxCell id="NmMO6G9vJg6jRddH4gu--22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fillColor=#3478B8;strokeColor=#3478B8;fontColor=#FFFFFF;fontSize=15;strokeWidth=1;" value="&lt;b&gt;物理 4-bit → 逻辑 6/8-bit&lt;/b&gt;" vertex="1">
+          <mxGeometry height="36" width="315" x="2033.5000406901045" y="47.00335367838545" as="geometry" />
+        </mxCell>
+        <mxCell id="NmMO6G9vJg6jRddH4gu--23" edge="1" parent="1" source="NmMO6G9vJg6jRddH4gu--17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2.4;strokeColor=#3478B8;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontColor=#3478B8;fontSize=12;" target="NmMO6G9vJg6jRddH4gu--18" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NmMO6G9vJg6jRddH4gu--24" edge="1" parent="1" source="NmMO6G9vJg6jRddH4gu--18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2.4;strokeColor=#3478B8;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontColor=#3478B8;fontSize=12;" target="NmMO6G9vJg6jRddH4gu--19" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NmMO6G9vJg6jRddH4gu--25" edge="1" parent="1" source="NmMO6G9vJg6jRddH4gu--19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2.4;strokeColor=#3478B8;endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontColor=#3478B8;fontSize=12;" target="NmMO6G9vJg6jRddH4gu--20" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
