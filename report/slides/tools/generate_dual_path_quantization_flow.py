@@ -4,152 +4,174 @@ from xml.etree.ElementTree import Element, SubElement, ElementTree
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
-
 ROOT = Path(__file__).resolve().parents[2]
-OUT_DIR = ROOT / "slides" / "assets"
-PNG = OUT_DIR / "dual_path_quantization_flow.png"
-DRAWIO = OUT_DIR / "dual_path_quantization_flow.drawio"
+OUT = ROOT / "slides" / "assets"
+PNG = OUT / "dual_path_quantization_flow.png"
+DRAWIO = OUT / "dual_path_quantization_flow.drawio"
 
 plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 
-INK = "#203047"
-MUTED = "#667487"
-BLUE = "#3478B8"
-GREEN = "#3C9064"
-ORANGE = "#E58A2B"
-PURPLE = "#7656A8"
-RED = "#C95757"
-LINE = "#CAD5E1"
+INK, MUTED = "#203047", "#667487"
+BLUE, GREEN, ORANGE = "#3478B8", "#3C9064", "#E58A2B"
+PURPLE, RED, LINE = "#7656A8", "#C95757", "#CAD5E1"
+
+
+def rounded(ax, x, y, w, h, face, edge=LINE, lw=1.4):
+    ax.add_patch(FancyBboxPatch(
+        (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.06",
+        facecolor=face, edgecolor=edge, linewidth=lw,
+    ))
 
 
 def box(ax, x, y, w, h, title, detail, color, light=False):
-    face = "#F5F7FA" if light else color
-    edge = color
-    patch = FancyBboxPatch(
-        (x, y), w, h,
-        boxstyle="round,pad=0.02,rounding_size=0.07",
-        facecolor=face, edgecolor=edge, linewidth=1.5,
-    )
-    ax.add_patch(patch)
-    tc = INK if light else "white"
-    dc = MUTED if light else "white"
-    ax.text(x + w / 2, y + h * 0.65, title, ha="center", va="center",
-            fontsize=11.4, weight="bold", color=tc)
-    ax.text(x + w / 2, y + h * 0.30, detail, ha="center", va="center",
-            fontsize=8.6, color=dc, linespacing=1.15)
+    rounded(ax, x, y, w, h, "#F5F7FA" if light else color, color)
+    ax.text(x + w / 2, y + h * .66, title, ha="center", va="center",
+            fontsize=10.7, weight="bold", color=INK if light else "white")
+    ax.text(x + w / 2, y + h * .28, detail, ha="center", va="center",
+            fontsize=8.0, linespacing=1.12, color=MUTED if light else "white")
 
 
-def arrow(ax, a, b, color=MUTED, label=None, label_dy=0.16):
-    ax.add_patch(FancyArrowPatch(a, b, arrowstyle="-|>", mutation_scale=13,
-                                linewidth=1.55, color=color))
-    if label:
-        ax.text((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + label_dy, label,
-                ha="center", va="center", fontsize=8.5, color=color, weight="bold")
+def arrow(ax, a, b, color=MUTED, dashed=False):
+    ax.add_patch(FancyArrowPatch(
+        a, b, arrowstyle="-|>", mutation_scale=12, linewidth=1.5,
+        linestyle="--" if dashed else "-", color=color,
+    ))
 
 
 def generate_png():
-    fig, ax = plt.subplots(figsize=(13.33, 6.3))
-    ax.set_xlim(0, 13.33)
-    ax.set_ylim(0, 6.3)
+    fig, ax = plt.subplots(figsize=(13.33, 7.15))
+    ax.set(xlim=(0, 13.33), ylim=(0, 7.15))
     ax.axis("off")
     fig.patch.set_facecolor("white")
 
-    ax.text(0.38, 5.93, "分路径混合量化", fontsize=19, weight="bold", color=INK)
-    ax.text(0.39, 5.58, "主干保持数值稳定 · 候选扫描突出低位宽并行", fontsize=10.5, color=MUTED)
+    ax.text(0.38, 6.80, "量化策略：逻辑精度不等于单次物理位宽",
+            fontsize=18.5, weight="bold", color=INK)
+    ax.text(0.39, 6.45, "原生单次 4-bit 执行 · 更高逻辑精度由多个 4-bit slices 位权重构",
+            fontsize=10.4, color=MUTED)
 
-    box(ax, 0.42, 2.55, 1.48, 1.02, "前向线性算子", "统一 Backend\n接管入口", BLUE)
-    box(ax, 2.30, 2.55, 1.52, 1.02, "路径识别", "按算子用途选择\n量化与执行策略", PURPLE)
-    arrow(ax, (1.92, 3.06), (2.27, 3.06), BLUE)
+    # Candidate Scan: fixed single-call 4-bit path.
+    rounded(ax, .38, 4.12, 12.55, 1.92, "#FFF8F0", "#F0C38D", 1.1)
+    ax.text(.67, 5.70, "路径 A｜Candidate Scan：固定单次 4-bit",
+            fontsize=12.2, weight="bold", color=ORANGE)
+    ax.text(.68, 5.39, "候选 Head Bank 的重点低位宽路径", fontsize=8.8, color=MUTED)
+    items = [
+        (.68, 2.18, "输入 uint4", "qinmin=0 · qinmax=15", ORANGE, False),
+        (3.30, 2.18, "权重 int4", "qwtmin=-8 · qwtmax=7", RED, False),
+        (5.92, 2.08, "单次 4-bit 执行", "不进行多 slice 拆分", ORANGE, False),
+        (8.44, 2.05, "TiledMVM", "候选 Bank 并行扫描", PURPLE, False),
+        (10.93, 1.70, "数字端", "Top-K 融合 / 拒识", ORANGE, True),
+    ]
+    for x, w, title, detail, color, light in items:
+        box(ax, x, 4.43, w, .78, title, detail, color, light)
+    for a, b, c in [((2.88, 4.82), (3.27, 4.82), ORANGE),
+                    ((5.50, 4.82), (5.89, 4.82), RED),
+                    ((8.02, 4.82), (8.41, 4.82), ORANGE),
+                    ((10.51, 4.82), (10.90, 4.82), PURPLE)]:
+        arrow(ax, a, b, c)
 
-    # Upper path.
-    ax.text(4.15, 5.08, "路径 A｜常规线性路径", fontsize=11.2, weight="bold", color=BLUE)
-    ax.text(4.15, 4.79, "FBCSP · 标准化 · small MLP 等", fontsize=8.9, color=MUTED)
-    box(ax, 4.12, 3.78, 1.65, 0.92, "8-bit 逻辑精度", "兼顾动态范围与\n数值稳定性", BLUE)
-    box(ax, 6.18, 3.78, 1.70, 0.92, "radix-16 拆分", "展开为多个\n4-bit slices", GREEN)
-    box(ax, 8.29, 3.78, 1.76, 0.92, "分片线性执行", "软件模拟执行核\n逐 slice 计算", PURPLE)
-    box(ax, 10.46, 3.78, 1.72, 0.92, "数字端累加", "重构较高逻辑精度\n线性输出", BLUE, light=True)
-    arrow(ax, (3.84, 3.24), (4.08, 4.18), BLUE)
-    arrow(ax, (5.79, 4.24), (6.15, 4.24), BLUE)
-    arrow(ax, (7.90, 4.24), (8.26, 4.24), GREEN)
-    arrow(ax, (10.07, 4.24), (10.43, 4.24), PURPLE)
+    # Other operators: adaptive logical precision.
+    rounded(ax, .38, 1.14, 12.55, 2.65, "#F5F8FB", "#B9C9D9", 1.1)
+    ax.text(.67, 3.47, "路径 B｜其他前向线性算子：自适应逻辑精度",
+            fontsize=12.2, weight="bold", color=BLUE)
+    ax.text(.68, 3.18, "起始精度按敏感度分层；策略仍在完善，不代表已定版的最优配置",
+            fontsize=8.8, color=MUTED)
 
-    # Lower path.
-    ax.text(4.15, 2.13, "路径 B｜候选 Head Bank 扫描", fontsize=11.2, weight="bold", color=ORANGE)
-    ax.text(4.15, 1.84, "经验库候选线性头的重点低位宽路径", fontsize=8.9, color=MUTED)
-    box(ax, 4.12, 0.82, 1.65, 0.92, "激活 uint4", "非负输入\n4-bit 量化", ORANGE)
-    box(ax, 6.18, 0.82, 1.70, 0.92, "权重 int4", "有符号权重\n4-bit 量化", RED)
-    box(ax, 8.29, 0.82, 1.76, 0.92, "TiledMVM", "候选 Bank\n单次低位宽扫描", ORANGE)
-    box(ax, 10.46, 0.82, 1.72, 0.92, "Top-K 融合", "数字端加权融合\n并执行拒识", ORANGE, light=True)
-    arrow(ax, (3.84, 2.88), (4.08, 1.33), ORANGE)
-    arrow(ax, (5.79, 1.28), (6.15, 1.28), ORANGE)
-    arrow(ax, (7.90, 1.28), (8.26, 1.28), RED)
-    arrow(ax, (10.07, 1.28), (10.43, 1.28), ORANGE)
+    rounded(ax, .68, 1.53, 2.43, 1.38, "#EAF2FA", BLUE)
+    ax.text(1.895, 2.66, "算子起始逻辑精度", ha="center", fontsize=10.3,
+            weight="bold", color=INK)
+    for y, bits, ops, color in [
+        (2.28, "4-bit", "CAR", ORANGE),
+        (1.96, "6-bit", "SOS · FBCSP · 标准化", GREEN),
+        (1.64, "8-bit", "MLP 等敏感路径", PURPLE),
+    ]:
+        ax.text(.92, y, bits, fontsize=9.4, weight="bold", color=color)
+        ax.text(1.55, y, ops, fontsize=8.5, color=INK)
 
-    # Shared output.
-    box(ax, 12.52, 2.55, 0.55, 1.02, "输出", "进入数字端", PURPLE, light=True)
-    arrow(ax, (12.20, 4.24), (12.48, 3.38), BLUE)
-    arrow(ax, (12.20, 1.28), (12.48, 2.74), ORANGE)
+    box(ax, 3.53, 1.72, 1.73, .96, "当前精度执行", "4-bit 原生或\n多 slice 路径", BLUE)
+    box(ax, 5.67, 1.72, 1.78, .96, "8-bit Shadow", "参考结果监测\n低位宽误差", PURPLE)
+    box(ax, 7.86, 1.72, 1.58, .96, "误差比较", "超过阈值？", RED, True)
+    box(ax, 9.85, 2.34, 2.64, .76, "精度单调提升", "4 → 6 → 8（不回退）", RED)
+    box(ax, 9.85, 1.36, 2.64, .76, "输出 / 位权重构", "4-bit 直接输出\n6/8-bit 按 slice 位权重构", GREEN)
+    for a, b, c in [((3.13, 2.22), (3.50, 2.22), BLUE),
+                    ((5.28, 2.22), (5.64, 2.22), BLUE),
+                    ((7.47, 2.22), (7.83, 2.22), PURPLE),
+                    ((9.46, 2.38), (9.82, 2.70), RED),
+                    ((9.46, 2.05), (9.82, 1.74), GREEN)]:
+        arrow(ax, a, b, c)
+    ax.add_patch(FancyArrowPatch(
+        (11.15, 3.12), (4.38, 2.72), connectionstyle="arc3,rad=0.13",
+        arrowstyle="-|>", mutation_scale=12, linewidth=1.35,
+        linestyle="--", color=RED,
+    ))
+    ax.text(7.75, 3.02, "超阈值：提升后重算", ha="center", fontsize=8.1,
+            color=RED, weight="bold")
+    ax.text(9.58, 2.54, "是", fontsize=8.1, color=RED, weight="bold")
+    ax.text(9.50, 1.82, "否 / 满足", fontsize=8.1, color=GREEN, weight="bold")
 
-    ax.text(0.42, 0.25,
-            "边界：量化对象是前向线性计算；非线性、控制逻辑、经验库管理与拒识仍在数字端。当前执行核为软件模拟。",
-            fontsize=9.5, color=MUTED)
-    fig.savefig(PNG, dpi=220, bbox_inches="tight", facecolor="white", pad_inches=0.08)
+    rounded(ax, .38, .34, 12.55, .52, "#EEF3F8", LINE, 1.0)
+    ax.text(6.655, .60,
+            "物理执行边界：每次光计算乘加均为 4-bit；6/8-bit 是由多个 4-bit slices 组合得到的逻辑精度。",
+            ha="center", va="center", fontsize=9.7, weight="bold", color=INK)
+    fig.savefig(PNG, dpi=220, bbox_inches="tight", facecolor="white", pad_inches=.08)
     plt.close(fig)
 
 
-BASE_STYLE = "rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;"
+BASE = "rounded=1;whiteSpace=wrap;html=1;arcSize=10;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;"
 
 
-def vertex(root, ident, value, x, y, w, h, fill, stroke, font="#FFFFFF", size=14):
-    style = BASE_STYLE + f"fillColor={fill};strokeColor={stroke};strokeWidth=2;fontColor={font};fontSize={size};"
+def vertex(root, ident, value, x, y, w, h, fill, stroke, font=INK, size=14, sw=2):
+    style = BASE + f"fillColor={fill};strokeColor={stroke};strokeWidth={sw};fontColor={font};fontSize={size};"
     cell = SubElement(root, "mxCell", id=ident, value=value, style=style, vertex="1", parent="1")
     SubElement(cell, "mxGeometry", x=str(x), y=str(y), width=str(w), height=str(h), **{"as": "geometry"})
 
 
-def edge(root, ident, source, target, color, label=""):
-    style = f"edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor={color};endArrow=block;endFill=1;fontFamily=Microsoft YaHei;fontSize=11;fontColor={color};"
-    cell = SubElement(root, "mxCell", id=ident, value=label, style=style, edge="1", parent="1", source=source, target=target)
+def edge(root, ident, source, target, color=MUTED, label="", dashed=False):
+    dash = "dashed=1;" if dashed else ""
+    style = f"edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor={color};endArrow=block;endFill=1;{dash}fontFamily=Microsoft YaHei;fontSize=11;fontColor={color};"
+    cell = SubElement(root, "mxCell", id=ident, value=label, style=style,
+                      edge="1", parent="1", source=source, target=target)
     SubElement(cell, "mxGeometry", relative="1", **{"as": "geometry"})
 
 
 def generate_drawio():
-    mx = Element("mxfile", host="app.diagrams.net", modified="2026-07-15T00:00:00.000Z", agent="Codex", version="24.7.17")
-    diagram = SubElement(mx, "diagram", id="dual-quant", name="Page-1")
-    model = SubElement(diagram, "mxGraphModel", dx="1365", dy="767", grid="1", gridSize="10", guides="1", tooltips="1", connect="1", arrows="1", fold="1", page="1", pageScale="1", pageWidth="1333", pageHeight="630", math="0", shadow="0")
+    mx = Element("mxfile", host="app.diagrams.net", modified="2026-07-16T00:00:00.000Z", agent="Codex", version="24.7.17")
+    diagram = SubElement(mx, "diagram", id="dual-quant-v2", name="Page-1")
+    model = SubElement(diagram, "mxGraphModel", dx="1365", dy="767", grid="1", gridSize="10", guides="1", tooltips="1", connect="1", arrows="1", fold="1", page="1", pageScale="1", pageWidth="1333", pageHeight="715", math="0", shadow="0")
     root = SubElement(model, "root")
     SubElement(root, "mxCell", id="0")
     SubElement(root, "mxCell", id="1", parent="0")
-    vertex(root, "title", "<b>分路径混合量化</b><br><font color='#667487' style='font-size:12px'>主干保持数值稳定 · 候选扫描突出低位宽并行</font>", 40, 25, 1250, 60, "none", "none", INK, 24)
-    vertex(root, "input", "<b>前向线性算子</b><br><font style='font-size:11px'>统一 Backend 接管入口</font>", 40, 255, 145, 85, BLUE, BLUE)
-    vertex(root, "route", "<b>路径识别</b><br><font style='font-size:11px'>按算子用途选择策略</font>", 225, 255, 150, 85, PURPLE, PURPLE)
-    vertex(root, "a_label", "<b>路径 A｜常规线性路径</b><br><font color='#667487' style='font-size:11px'>FBCSP · 标准化 · small MLP 等</font>", 410, 105, 770, 45, "none", "none", BLUE, 15)
-    vertex(root, "a1", "<b>8-bit 逻辑精度</b><br><font style='font-size:11px'>兼顾动态范围与数值稳定性</font>", 410, 165, 175, 85, BLUE, BLUE)
-    vertex(root, "a2", "<b>radix-16 拆分</b><br><font style='font-size:11px'>展开为多个 4-bit slices</font>", 615, 165, 175, 85, GREEN, GREEN)
-    vertex(root, "a3", "<b>分片线性执行</b><br><font style='font-size:11px'>软件模拟执行核</font>", 820, 165, 175, 85, PURPLE, PURPLE)
-    vertex(root, "a4", "<b>数字端累加</b><br><font color='#667487' style='font-size:11px'>重构线性输出</font>", 1025, 165, 175, 85, "#F5F7FA", BLUE, INK)
-    vertex(root, "b_label", "<b>路径 B｜候选 Head Bank 扫描</b><br><font color='#667487' style='font-size:11px'>经验库候选线性头的重点低位宽路径</font>", 410, 330, 770, 45, "none", "none", ORANGE, 15)
-    vertex(root, "b1", "<b>激活 uint4</b><br><font style='font-size:11px'>非负输入 4-bit 量化</font>", 410, 390, 175, 85, ORANGE, ORANGE)
-    vertex(root, "b2", "<b>权重 int4</b><br><font style='font-size:11px'>有符号权重 4-bit 量化</font>", 615, 390, 175, 85, RED, RED)
-    vertex(root, "b3", "<b>TiledMVM</b><br><font style='font-size:11px'>候选 Bank 单次低位宽扫描</font>", 820, 390, 175, 85, ORANGE, ORANGE)
-    vertex(root, "b4", "<b>Top-K 融合</b><br><font color='#667487' style='font-size:11px'>数字端加权融合并拒识</font>", 1025, 390, 175, 85, "#F5F7FA", ORANGE, INK)
-    vertex(root, "output", "<b>输出</b><br><font color='#667487' style='font-size:11px'>进入数字端</font>", 1225, 255, 75, 85, "#F5F7FA", PURPLE, INK)
-    vertex(root, "note", "边界：量化对象是前向线性计算；非线性、控制逻辑、经验库管理与拒识仍在数字端。当前执行核为软件模拟。", 40, 540, 1260, 35, "none", "none", MUTED, 12)
-    edge(root, "e0", "input", "route", BLUE)
-    edge(root, "ea0", "route", "a1", BLUE, "常规算子")
-    edge(root, "ea1", "a1", "a2", BLUE)
-    edge(root, "ea2", "a2", "a3", GREEN)
-    edge(root, "ea3", "a3", "a4", PURPLE)
-    edge(root, "eb0", "route", "b1", ORANGE, "候选扫描")
-    edge(root, "eb1", "b1", "b2", ORANGE)
-    edge(root, "eb2", "b2", "b3", RED)
-    edge(root, "eb3", "b3", "b4", ORANGE)
-    edge(root, "eo1", "a4", "output", BLUE)
-    edge(root, "eo2", "b4", "output", ORANGE)
+    vertex(root, "title", "<b>量化策略：逻辑精度不等于单次物理位宽</b><br><font color='#667487' style='font-size:12px'>原生单次 4-bit 执行 · 更高逻辑精度由多个 4-bit slices 位权重构</font>", 35, 20, 1260, 65, "none", "none", INK, 23, 0)
+    vertex(root, "lane_a", "", 35, 105, 1260, 190, "#FFF8F0", "#F0C38D", INK, 14, 1)
+    vertex(root, "label_a", "<b>路径 A｜Candidate Scan：固定单次 4-bit</b><br><font color='#667487' style='font-size:11px'>候选 Head Bank 的重点低位宽路径</font>", 60, 120, 500, 45, "none", "none", ORANGE, 15, 0)
+    vertex(root, "qin", "<b>输入 uint4</b><br><font style='font-size:11px'>qinmin=0 · qinmax=15</font>", 65, 185, 205, 75, ORANGE, ORANGE, "#FFFFFF")
+    vertex(root, "qwt", "<b>权重 int4</b><br><font style='font-size:11px'>qwtmin=-8 · qwtmax=7</font>", 315, 185, 205, 75, RED, RED, "#FFFFFF")
+    vertex(root, "single", "<b>单次 4-bit 执行</b><br><font style='font-size:11px'>不进行多 slice 拆分</font>", 565, 185, 195, 75, ORANGE, ORANGE, "#FFFFFF")
+    vertex(root, "tiled", "<b>TiledMVM</b><br><font style='font-size:11px'>候选 Bank 并行扫描</font>", 805, 185, 195, 75, PURPLE, PURPLE, "#FFFFFF")
+    vertex(root, "topk", "<b>数字端</b><br><font color='#667487' style='font-size:11px'>Top-K 融合 / 拒识</font>", 1045, 185, 205, 75, "#F5F7FA", ORANGE)
+    vertex(root, "lane_b", "", 35, 320, 1260, 300, "#F5F8FB", "#B9C9D9", INK, 14, 1)
+    vertex(root, "label_b", "<b>路径 B｜其他前向线性算子：自适应逻辑精度</b><br><font color='#667487' style='font-size:11px'>起始精度按敏感度分层；策略仍在完善，不代表已定版的最优配置</font>", 60, 335, 760, 48, "none", "none", BLUE, 15, 0)
+    vertex(root, "start", "<b>算子起始逻辑精度</b><br><font color='#E58A2B'><b>4-bit</b></font>　CAR<br><font color='#3C9064'><b>6-bit</b></font>　SOS · FBCSP · 标准化<br><font color='#7656A8'><b>8-bit</b></font>　MLP 等敏感路径", 65, 415, 245, 145, "#EAF2FA", BLUE, INK, 13)
+    vertex(root, "execute", "<b>当前精度执行</b><br><font style='font-size:11px'>4-bit 原生或多 slice 路径</font>", 350, 440, 170, 90, BLUE, BLUE, "#FFFFFF")
+    vertex(root, "shadow", "<b>8-bit Shadow</b><br><font style='font-size:11px'>参考结果监测低位宽误差</font>", 560, 440, 175, 90, PURPLE, PURPLE, "#FFFFFF")
+    vertex(root, "compare", "<b>误差比较</b><br><font color='#667487' style='font-size:11px'>超过阈值？</font>", 775, 440, 155, 90, "#F5F7FA", RED)
+    vertex(root, "upgrade", "<b>精度单调提升</b><br><font style='font-size:11px'>4 → 6 → 8（不回退）</font>", 970, 395, 270, 75, RED, RED, "#FFFFFF")
+    vertex(root, "rebuild", "<b>输出 / 位权重构</b><br><font style='font-size:11px'>4-bit 直接输出<br>6/8-bit 按 slice 位权重构</font>", 970, 500, 270, 85, GREEN, GREEN, "#FFFFFF")
+    vertex(root, "boundary", "<b>物理执行边界：每次光计算乘加均为 4-bit；6/8-bit 是由多个 4-bit slices 组合得到的逻辑精度。</b>", 35, 645, 1260, 45, "#EEF3F8", LINE, INK, 13, 1)
+    for ident, source, target, color in [
+        ("a1", "qin", "qwt", ORANGE), ("a2", "qwt", "single", RED),
+        ("a3", "single", "tiled", ORANGE), ("a4", "tiled", "topk", PURPLE),
+        ("b1", "start", "execute", BLUE), ("b2", "execute", "shadow", BLUE),
+        ("b3", "shadow", "compare", PURPLE),
+    ]:
+        edge(root, ident, source, target, color)
+    edge(root, "b4", "compare", "upgrade", RED, "超阈值")
+    edge(root, "b5", "compare", "rebuild", GREEN, "满足阈值")
+    edge(root, "loop", "upgrade", "execute", RED, "提升后重算", True)
     ElementTree(mx).write(DRAWIO, encoding="utf-8", xml_declaration=True)
 
 
 if __name__ == "__main__":
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
     generate_png()
     generate_drawio()

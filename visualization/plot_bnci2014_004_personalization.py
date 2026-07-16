@@ -45,10 +45,9 @@ def _plot_line_summary(rows: list[dict[str, object]], output_dir: Path, formats:
     command = np.asarray([row["command_accuracy"] for row in rows], dtype=float)
     balanced = np.asarray([row["balanced_command_accuracy"] for row in rows], dtype=float)
     reject = np.asarray([row["reject_rate"] for row in rows], dtype=float)
-    cmd_std = np.asarray([row["command_accuracy_std"] for row in rows], dtype=float)
     fig, axes = plt.subplots(1, 2, figsize=(11.4, 4.8), gridspec_kw={"width_ratios": [1.3, 1.0]})
     width = 0.34
-    axes[0].bar(x - width / 2, command, width=width, color="#2563eb", yerr=cmd_std, capsize=4, label="command")
+    axes[0].bar(x - width / 2, command, width=width, color="#2563eb", label="command")
     axes[0].bar(x + width / 2, balanced, width=width, color="#0f766e", label="balanced")
     axes[0].set_xticks(x, labels)
     axes[0].set_ylim(0.45, 0.90)
@@ -128,11 +127,11 @@ def _plot_compute_accounting(lines: list[dict[str, object]], output_dir: Path, f
 
 def _short_label(label: str) -> str:
     if "library" in label:
-        return "Mainline"
+        return "MLP + Lib + scan"
     if "MLP" in label:
-        return "FBCSP+MLP"
+        return "MLP"
     if "LDA" in label:
-        return "FBCSP+LDA"
+        return "LDA"
     return label
 
 

@@ -1,20 +1,20 @@
 [0] Config.pm:328> INFO - This is Biber 2.21
 [0] Config.pm:331> INFO - Logfile is 'out-competition\competition_report.blg'
-[91] biber-MSWIN64:342> INFO - === 
-[131] Biber.pm:421> INFO - Reading 'out-competition\competition_report.bcf'
-[234] Biber.pm:1002> INFO - Found 4 citekeys in bib section 0
-[243] Biber.pm:4487> INFO - Processing section 0
-[253] Biber.pm:4678> INFO - Looking for bibtex file 'body/ref.bib' for section 0
-[323] bibtex.pm:1713> INFO - LaTeX decoding ...
-[331] bibtex.pm:1519> INFO - Found BibTeX data source 'body/ref.bib'
-[344] Biber.pm:4678> INFO - Looking for bibtex file 'competition_report.bib' for section 0
-[407] bibtex.pm:1713> INFO - LaTeX decoding ...
-[415] bibtex.pm:1519> INFO - Found BibTeX data source 'competition_report.bib'
-[461] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
-[461] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
-[461] Biber.pm:4307> INFO - Sorting list 'none/global//global/global/global' of type 'entry' with template 'none' and locale 'en-US'
-[461] Biber.pm:4313> INFO - No sort tailoring available for locale 'en-US'
-[468] bbl.pm:676> INFO - Writing 'out-competition\competition_report.bbl' with encoding 'UTF-8'
-[471] bbl.pm:779> INFO - Output to out-competition\competition_report.bbl
-[471] Biber.pm:132> WARN - Duplicate entry key: 'diagnostics13061122' in file 'competition_report.bib', skipping ...
-[471] Biber.pm:134> INFO - WARNINGS: 1
+[98] biber-MSWIN64:342> INFO - === 
+[134] Biber.pm:421> INFO - Reading 'out-competition\competition_report.bcf'
+[237] Biber.pm:1002> INFO - Found 4 citekeys in bib section 0
+[246] Biber.pm:4487> INFO - Processing section 0
+[257] Biber.pm:4678> INFO - Looking for bibtex file 'body/ref.bib' for section 0
+[328] bibtex.pm:1713> INFO - LaTeX decoding ...
+[337] bibtex.pm:1519> INFO - Found BibTeX data source 'body/ref.bib'
+[351] Biber.pm:4678> INFO - Looking for bibtex file 'competition_report.bib' for section 0
+[404] bibtex.pm:1713> INFO - LaTeX decoding ...
+[428] bibtex.pm:1519> INFO - Found BibTeX data source 'competition_report.bib'
+[492] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[493] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[493] Biber.pm:4307> INFO - Sorting list 'none/global//global/global/global' of type 'entry' with template 'none' and locale 'en-US'
+[493] Biber.pm:4313> INFO - No sort tailoring available for locale 'en-US'
+[499] bbl.pm:676> INFO - Writing 'out-competition\competition_report.bbl' with encoding 'UTF-8'
+[503] bbl.pm:779> INFO - Output to out-competition\competition_report.bbl
+[504] Biber.pm:132> WARN - Duplicate entry key: 'diagnostics13061122' in file 'competition_report.bib', skipping ...
+[504] Biber.pm:134> INFO - WARNINGS: 1
