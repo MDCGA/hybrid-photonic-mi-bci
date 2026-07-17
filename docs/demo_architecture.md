@@ -14,19 +14,23 @@ port.
 5. Scan Top-K experience heads on 2x8 photonic tiles.
 6. Fuse probabilities, apply rejection, and display the command.
 
-## Live inference mode
+## Subject-personalized inference mode
 
-The service directly reuses `prepare_runtime()` and `run_one_online_forward()`
-from `examples/run_single_window_inference.py`. At FastAPI startup it loads the
-real BCICIV_1_asc trials, fits FBCSP, trains the compact MLP, builds the
-experience library, calibrates the runtime, and keeps the prepared runtime in
-memory. Each inference request selects one held-out evaluation window and runs
-the complete online forward path once.
+For target subject `a`, subjects `b` through `g` provide the base training
+trials. Their first 120 trials per subject fit FBCSP, the feature standardizer,
+the compact MLP, and the candidate experience library. Subject `a` contributes
+no samples to this base training stage.
 
-The EEG waveform, class probabilities, rejection decision, timings, selected
-experience entries, adaptive-precision telemetry, and tile counts returned to
-the GUI are produced by that real request. Startup can take significant time
-because it intentionally follows the example's offline preparation exactly.
+From subject `a`'s trials after index 120, six class-balanced windows are used
+only to select and weight Top-K experience heads and calibrate subject `a`'s
+rejection threshold. Every remaining subject `a` replay window is held out for
+single-window inference. The same leave-one-subject-out protocol is applied to
+subjects `b` through `g`.
+
+At startup the service loads all seven recordings and prepares subject `a` so
+the default demonstration is immediately available. Other subject runtimes are
+prepared on first use and cached in memory. Online inference still calls
+`run_one_online_forward()` from `examples/run_single_window_inference.py`.
 
 ## Start
 

@@ -53,36 +53,42 @@ app.add_middleware(
 
 @app.get("/api/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "mode": "live_inference"}
+    return {"status": "ok", "mode": "subject_personalized_inference"}
 
 
 @app.get("/api/demo")
-def demo_metadata() -> dict[str, object]:
-    return ENGINE.metadata()
+def demo_metadata(
+    subject: str = Query(default="a", pattern="^[a-g]$"),
+) -> dict[str, object]:
+    return ENGINE.metadata(subject)
 
 
 @app.get("/api/inference/stream")
 async def inference_stream(
     request: Request,
+    subject: str = Query(default="a", pattern="^[a-g]$"),
     evaluation_index: int = Query(default=0, ge=0),
 ) -> StreamingResponse:
     try:
-        window = ENGINE.window_info(evaluation_index)
+        window = ENGINE.window_info(subject, evaluation_index)
     except ValueError as exc:
         LOGGER.warning(
-            "inference_request_rejected evaluation_index=%d reason=%s",
+            "inference_request_rejected subject=%s evaluation_index=%d reason=%s",
+            subject,
             evaluation_index,
             exc,
         )
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     client = request.client.host if request.client else "unknown"
     LOGGER.info(
-        "inference_requested client=%s test_window=%d evaluation_index=%d absolute_trial_index=%d true_label=%s",
+        "inference_requested client=%s subject=%s test_window=%d evaluation_index=%d subject_trial_index=%d true_label=%s runtime_ready=%s",
         client,
+        subject,
         evaluation_index + 1,
         evaluation_index,
-        window["absolute_trial_index"],
+        window["subject_trial_index"],
         window["true_label"],
+        subject in ENGINE.runtimes,
     )
 
     async def event_stream():
@@ -94,7 +100,7 @@ async def inference_stream(
                     **window,
                     "signal": None,
                     "dataset": "BCICIV_1_asc",
-                    "mode": "live_inference",
+                    "mode": "subject_personalized_inference",
                 },
             },
         )
@@ -113,10 +119,11 @@ async def inference_stream(
         fbcsp_stage = _stage_payload(STAGES[1], status="running")
         yield _sse("stage_started", {"type": "stage_started", "stage": fbcsp_stage})
         try:
-            result = await asyncio.to_thread(ENGINE.infer, evaluation_index)
+            result = await asyncio.to_thread(ENGINE.infer, subject, evaluation_index)
         except Exception as exc:
             LOGGER.exception(
-                "inference_failed test_window=%d evaluation_index=%d",
+                "inference_failed subject=%s test_window=%d evaluation_index=%d",
+                subject,
                 evaluation_index + 1,
                 evaluation_index,
             )
@@ -131,10 +138,13 @@ async def inference_stream(
             return
 
         LOGGER.info(
-            "inference_completed test_window=%d evaluation_index=%d absolute_trial_index=%d true_label=%s predicted_label=%s rejected=%s confidence=%.6f margin=%.6f online_ms=%.3f tiles=%d",
+            "inference_completed subject=%s training_subjects=%s calibration_windows=%d test_window=%d evaluation_index=%d subject_trial_index=%d true_label=%s predicted_label=%s rejected=%s confidence=%.6f margin=%.6f online_ms=%.3f tiles=%d",
+            subject,
+            result["training_subjects"],
+            result["calibration_windows"],
             evaluation_index + 1,
             evaluation_index,
-            result["absolute_trial_index"],
+            result["subject_trial_index"],
             result["true_label"],
             result["predicted_label"],
             result["rejected"],
@@ -168,7 +178,7 @@ async def inference_stream(
             )
             await asyncio.sleep(0.28)
 
-        result["notice"] = "EEG window, probabilities, decision, timing, and tile counts are produced by the real single-window interface."
+        result["notice"] = "基础模型与经验库来自其他受试者；Top-K、拒识阈值和测试窗口均针对当前受试者。"
         yield _sse("run_completed", {"type": "run_completed", "result": result})
 
     return StreamingResponse(
