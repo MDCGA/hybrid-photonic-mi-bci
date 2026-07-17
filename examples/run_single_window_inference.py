@@ -17,7 +17,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from fbcsp_design_args import add_design_arguments, config_from_args  # noqa: E402
+from examples.fbcsp_design_args import add_design_arguments, config_from_args  # noqa: E402
 from hybrid_photonic_mi_bci.backends import (  # noqa: E402
     BitSlicedPhotonicConfig,
     BitSlicedPhotonicMatrixOpsBackend,
