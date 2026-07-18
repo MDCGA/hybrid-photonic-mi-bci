@@ -509,12 +509,16 @@ def run_one_online_forward(
     tile_counts: dict[str, int] | None = None,
 ):
     counts = tile_counts if tile_counts is not None else {}
-    raw_features = timed_photonic(
-        "fbcsp_transform_one_window",
-        timings,
-        counts,
-        lambda: prepared.fbcsp.transform(trial).vector[:, prepared.selected_indices],
-    )
+    # Quantizing every recursive SOS state transition compounds error across the
+    # window. Keep temporal filtering digital while retaining the installed
+    # photonic matrix backend for CSP projection and all downstream operators.
+    with use_signal_ops_backend(ScipySignalOpsBackend()):
+        raw_features = timed_photonic(
+            "fbcsp_transform_one_window",
+            timings,
+            counts,
+            lambda: prepared.fbcsp.transform(trial).vector[:, prepared.selected_indices],
+        )
     features = timed_photonic(
         "standardize_one_window",
         timings,

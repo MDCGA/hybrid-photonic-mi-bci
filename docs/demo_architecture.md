@@ -14,23 +14,26 @@ port.
 5. Scan Top-K experience heads on 2x8 photonic tiles.
 6. Fuse probabilities, apply rejection, and display the command.
 
-## Subject-personalized inference mode
+## Dataset protocols
 
-For target subject `a`, subjects `b` through `g` provide the base training
-trials. Their first 120 trials per subject fit FBCSP, the feature standardizer,
-the compact MLP, and the candidate experience library. Subject `a` contributes
-no samples to this base training stage.
+For `BCICIV_1_asc`, the FastAPI demo intentionally matches
+`examples/run_single_window_inference.py`: subjects `a` through `g` each
+contribute their first 120 trials to pooled FBCSP/MLP/experience-library
+training. The following six trials from every subject form a 42-window pooled
+calibration set. For a selected subject, local trial 126 is therefore
+evaluation index 0.
 
-From subject `a`'s trials after index 120, six class-balanced windows are used
-only to select and weight Top-K experience heads and calibrate subject `a`'s
-rejection threshold. Every remaining subject `a` replay window is held out for
-single-window inference. The same leave-one-subject-out protocol is applied to
-subjects `b` through `g`.
+For `BNCI2014_004`, sessions 01T-02T train the subject-specific runtime. Sixteen
+class-balanced windows from session 03T calibrate it, and the remaining session
+03T windows are held out for evaluation.
 
-At startup the service loads all seven recordings and prepares subject `a` so
-the default demonstration is immediately available. Other subject runtimes are
-prepared on first use and cached in memory. Online inference still calls
+At startup the service loads all seven BCICIV recordings and prepares subject
+`a` so the default demonstration is immediately available. Other runtimes are
+prepared on first use and cached in memory. Online inference calls
 `run_one_online_forward()` from `examples/run_single_window_inference.py`.
+Recursive SOS filtering stays on the full-precision SciPy signal backend;
+CSP projection, feature standardization, MLP layers, and experience-head scan
+continue through the installed photonic matrix backend.
 
 ## Start
 

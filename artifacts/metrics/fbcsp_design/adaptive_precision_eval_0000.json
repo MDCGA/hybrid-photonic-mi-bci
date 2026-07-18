@@ -3,18 +3,18 @@
   "evaluation_index": 0,
   "absolute_trial_index": 846,
   "true_label": "foot",
-  "predicted_label": "right",
+  "predicted_label": "foot",
   "rejected": false,
-  "confidence": 0.9999999999979989,
+  "confidence": 0.9999999999979992,
   "online_backend": "numpy_integer_matmul_adaptive_bit_sliced",
   "online_timings_seconds": {
-    "fbcsp_transform_one_window": 1.7620628999939072,
-    "standardize_one_window": 0.004408699998748489,
-    "small_mlp_forward_one_window": 0.007505900000978727,
-    "pure_runtime_photonic_scan_one_window": 0.0042754000023705885
+    "fbcsp_transform_one_window": 0.021616999998514075,
+    "standardize_one_window": 0.004524299998593051,
+    "small_mlp_forward_one_window": 0.007954000000609085,
+    "pure_runtime_photonic_scan_one_window": 0.004284900001948699
   },
   "online_tile_counts": {
-    "fbcsp_transform_one_window": 765040,
+    "fbcsp_transform_one_window": 97200,
     "standardize_one_window": 800,
     "small_mlp_forward_one_window": 2344,
     "pure_runtime_photonic_scan_one_window": 80
@@ -22,55 +22,55 @@
   "online_repeats": [
     {
       "timings": {
-        "fbcsp_transform_one_window": 1.7620628999939072,
-        "standardize_one_window": 0.004408699998748489,
-        "small_mlp_forward_one_window": 0.007505900000978727,
-        "pure_runtime_photonic_scan_one_window": 0.0042754000023705885
+        "fbcsp_transform_one_window": 0.021616999998514075,
+        "standardize_one_window": 0.004524299998593051,
+        "small_mlp_forward_one_window": 0.007954000000609085,
+        "pure_runtime_photonic_scan_one_window": 0.004284900001948699
       },
       "tile_counts": {
-        "fbcsp_transform_one_window": 765040,
+        "fbcsp_transform_one_window": 97200,
         "standardize_one_window": 800,
         "small_mlp_forward_one_window": 2344,
         "pure_runtime_photonic_scan_one_window": 80
       },
-      "predicted_label": "right",
+      "predicted_label": "foot",
       "rejected": false
     }
   ],
   "precision_validation": {
     "summary": {
       "windows": 1,
-      "adaptive_command_accuracy": 0.0,
-      "fixed_8bit_command_accuracy": 0.0,
+      "adaptive_command_accuracy": 1.0,
+      "fixed_8bit_command_accuracy": 1.0,
       "prediction_agreement": 1.0,
       "adaptive_reject_rate": 0.0,
       "fixed_8bit_reject_rate": 0.0,
-      "adaptive_accepted_accuracy": 0.0,
-      "fixed_8bit_accepted_accuracy": 0.0,
-      "mean_probability_l2_error": 1.480732582637424e-18,
-      "adaptive_median_ms": 1821.9801999948686,
-      "fixed_8bit_median_ms": 1909.6207999973558,
-      "adaptive_mean_tiles": 757832.0,
-      "fixed_8bit_mean_tiles": 912864.0,
-      "mean_tile_reduction": 0.16983033617274867
+      "adaptive_accepted_accuracy": 1.0,
+      "fixed_8bit_accepted_accuracy": 1.0,
+      "mean_probability_l2_error": 0.0,
+      "adaptive_median_ms": 24.6396000002278,
+      "fixed_8bit_median_ms": 25.212099993950687,
+      "adaptive_mean_tiles": 59304.0,
+      "fixed_8bit_mean_tiles": 60504.0,
+      "mean_tile_reduction": 0.01983339944466478
     },
     "windows": [
       {
         "evaluation_index": 0,
         "absolute_trial_index": 846,
         "true_label": "foot",
-        "adaptive_label": "right",
-        "fixed_8bit_label": "right",
+        "adaptive_label": "foot",
+        "fixed_8bit_label": "foot",
         "adaptive_rejected": false,
         "fixed_8bit_rejected": false,
-        "adaptive_correct": false,
-        "fixed_8bit_correct": false,
+        "adaptive_correct": true,
+        "fixed_8bit_correct": true,
         "prediction_agreement": true,
-        "probability_l2_error": 1.480732582637424e-18,
-        "adaptive_seconds": 1.8219801999948686,
-        "fixed_8bit_seconds": 1.9096207999973558,
-        "adaptive_tiles": 757832,
-        "fixed_8bit_tiles": 912864
+        "probability_l2_error": 0.0,
+        "adaptive_seconds": 0.0246396000002278,
+        "fixed_8bit_seconds": 0.025212099993950687,
+        "adaptive_tiles": 59304,
+        "fixed_8bit_tiles": 60504
       }
     ]
   },
@@ -88,22 +88,22 @@
     {
       "policy": "fbcsp_projection",
       "current_bits": 6,
-      "operations": 14,
-      "calls": 28,
-      "monitored_calls": 28,
+      "operations": 1,
+      "calls": 2,
+      "monitored_calls": 2,
       "escalations": 0,
-      "max_8bit_shadow_error": 0.04784781957341949,
-      "tile_evaluations": 38400
+      "max_8bit_shadow_error": 0.04795990987592835,
+      "tile_evaluations": 4800
     },
     {
       "policy": "fbcsp_projection",
       "current_bits": 8,
-      "operations": 4,
-      "calls": 8,
-      "monitored_calls": 4,
-      "escalations": 4,
+      "operations": 17,
+      "calls": 34,
+      "monitored_calls": 17,
+      "escalations": 17,
       "max_8bit_shadow_error": 0.0,
-      "tile_evaluations": 36000
+      "tile_evaluations": 148800
     },
     {
       "policy": "feature_standardization",
@@ -114,26 +114,6 @@
       "escalations": 1,
       "max_8bit_shadow_error": 0.0,
       "tile_evaluations": 1280
-    },
-    {
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "operations": 64,
-      "calls": 19224,
-      "monitored_calls": 344,
-      "escalations": 0,
-      "max_8bit_shadow_error": 0.05591746916600282,
-      "tile_evaluations": 919744
-    },
-    {
-      "policy": "sos_filter",
-      "current_bits": 8,
-      "operations": 8,
-      "calls": 5472,
-      "monitored_calls": 8,
-      "escalations": 8,
-      "max_8bit_shadow_error": 0.0,
-      "tile_evaluations": 525824
     }
   ],
   "precision_operations": [
@@ -153,1390 +133,6 @@
       "max_error_by_bits": {}
     },
     {
-      "operation": "fbcsp_filter_bank_12_16hz_sosfiltfilt_backward_initial_state_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.018912611159646178,
-      "max_relative_error": 0.018912611159646178,
-      "mean_relative_error": 0.018912611159646178,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.018912611159646178
-      },
-      "max_error_by_bits": {
-        "6": 0.018912611159646178
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_12_16hz_sosfiltfilt_backward_initial_state_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.018044111361939907,
-      "max_relative_error": 0.018044111361939907,
-      "mean_relative_error": 0.018044111361939907,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.018044111361939907
-      },
-      "max_error_by_bits": {
-        "6": 0.018044111361939907
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_12_16hz_sosfiltfilt_backward_initial_state_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_12_16hz_sosfiltfilt_backward_section_s0",
-      "policy": "sos_filter",
-      "current_bits": 8,
-      "calls": 684,
-      "monitored_calls": 1,
-      "escalations": 1,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 65728,
-      "mean_error_by_bits": {
-        "6": 0.27667662684410754,
-        "8": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.27667662684410754,
-        "8": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_12_16hz_sosfiltfilt_backward_section_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.030822931750781886,
-      "max_relative_error": 0.04494974273144371,
-      "mean_relative_error": 0.03421173175067023,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.03421173175067023
-      },
-      "max_error_by_bits": {
-        "6": 0.04494974273144371
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_12_16hz_sosfiltfilt_backward_section_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.02845435822555888,
-      "max_relative_error": 0.03515189831703272,
-      "mean_relative_error": 0.027774686440671936,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.027774686440671936
-      },
-      "max_error_by_bits": {
-        "6": 0.03515189831703272
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_12_16hz_sosfiltfilt_forward_initial_state_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.01699498454657764,
-      "max_relative_error": 0.01699498454657764,
-      "mean_relative_error": 0.01699498454657764,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.01699498454657764
-      },
-      "max_error_by_bits": {
-        "6": 0.01699498454657764
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_12_16hz_sosfiltfilt_forward_initial_state_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.015114407976437018,
-      "max_relative_error": 0.015114407976437018,
-      "mean_relative_error": 0.015114407976437018,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.015114407976437018
-      },
-      "max_error_by_bits": {
-        "6": 0.015114407976437018
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_12_16hz_sosfiltfilt_forward_initial_state_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_12_16hz_sosfiltfilt_forward_section_s0",
-      "policy": "sos_filter",
-      "current_bits": 8,
-      "calls": 684,
-      "monitored_calls": 1,
-      "escalations": 1,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 65728,
-      "mean_error_by_bits": {
-        "6": 0.28610506517741074,
-        "8": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.28610506517741074,
-        "8": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_12_16hz_sosfiltfilt_forward_section_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.037131755608340346,
-      "max_relative_error": 0.05591746916600282,
-      "mean_relative_error": 0.037039934344764845,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.037039934344764845
-      },
-      "max_error_by_bits": {
-        "6": 0.05591746916600282
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_12_16hz_sosfiltfilt_forward_section_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.0334026775808777,
-      "max_relative_error": 0.03455274245495178,
-      "mean_relative_error": 0.027666251390177067,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.027666251390177067
-      },
-      "max_error_by_bits": {
-        "6": 0.03455274245495178
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_16_20hz_sosfiltfilt_backward_initial_state_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.012656613934427817,
-      "max_relative_error": 0.012656613934427817,
-      "mean_relative_error": 0.012656613934427817,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.012656613934427817
-      },
-      "max_error_by_bits": {
-        "6": 0.012656613934427817
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_16_20hz_sosfiltfilt_backward_initial_state_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.010719309047280056,
-      "max_relative_error": 0.010719309047280056,
-      "mean_relative_error": 0.010719309047280056,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.010719309047280056
-      },
-      "max_error_by_bits": {
-        "6": 0.010719309047280056
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_16_20hz_sosfiltfilt_backward_initial_state_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_16_20hz_sosfiltfilt_backward_section_s0",
-      "policy": "sos_filter",
-      "current_bits": 8,
-      "calls": 684,
-      "monitored_calls": 1,
-      "escalations": 1,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 65728,
-      "mean_error_by_bits": {
-        "6": 0.29635284437380444,
-        "8": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.29635284437380444,
-        "8": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_16_20hz_sosfiltfilt_backward_section_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.03800771096418468,
-      "max_relative_error": 0.04601256093193618,
-      "mean_relative_error": 0.03536386598592378,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.03536386598592378
-      },
-      "max_error_by_bits": {
-        "6": 0.04601256093193618
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_16_20hz_sosfiltfilt_backward_section_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.027553894714906726,
-      "max_relative_error": 0.032821120774628176,
-      "mean_relative_error": 0.02497681303724465,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.02497681303724465
-      },
-      "max_error_by_bits": {
-        "6": 0.032821120774628176
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_16_20hz_sosfiltfilt_forward_initial_state_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.01676943386996184,
-      "max_relative_error": 0.01676943386996184,
-      "mean_relative_error": 0.01676943386996184,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.01676943386996184
-      },
-      "max_error_by_bits": {
-        "6": 0.01676943386996184
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_16_20hz_sosfiltfilt_forward_initial_state_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.015114407976437002,
-      "max_relative_error": 0.015114407976437002,
-      "mean_relative_error": 0.015114407976437002,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.015114407976437002
-      },
-      "max_error_by_bits": {
-        "6": 0.015114407976437002
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_16_20hz_sosfiltfilt_forward_initial_state_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_16_20hz_sosfiltfilt_forward_section_s0",
-      "policy": "sos_filter",
-      "current_bits": 8,
-      "calls": 684,
-      "monitored_calls": 1,
-      "escalations": 1,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 65728,
-      "mean_error_by_bits": {
-        "6": 0.31229748483379377,
-        "8": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.31229748483379377,
-        "8": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_16_20hz_sosfiltfilt_forward_section_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.0298882227183444,
-      "max_relative_error": 0.04826093383383656,
-      "mean_relative_error": 0.03430295046505354,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.03430295046505354
-      },
-      "max_error_by_bits": {
-        "6": 0.04826093383383656
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_16_20hz_sosfiltfilt_forward_section_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.02851818662480781,
-      "max_relative_error": 0.03409814904490507,
-      "mean_relative_error": 0.02657481814511199,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.02657481814511199
-      },
-      "max_error_by_bits": {
-        "6": 0.03409814904490507
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_20_24hz_sosfiltfilt_backward_initial_state_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.01951410163014666,
-      "max_relative_error": 0.01951410163014666,
-      "mean_relative_error": 0.01951410163014666,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.01951410163014666
-      },
-      "max_error_by_bits": {
-        "6": 0.01951410163014666
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_20_24hz_sosfiltfilt_backward_initial_state_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.019461861996208113,
-      "max_relative_error": 0.019461861996208113,
-      "mean_relative_error": 0.019461861996208113,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.019461861996208113
-      },
-      "max_error_by_bits": {
-        "6": 0.019461861996208113
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_20_24hz_sosfiltfilt_backward_initial_state_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_20_24hz_sosfiltfilt_backward_section_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_20_24hz_sosfiltfilt_backward_section_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_20_24hz_sosfiltfilt_backward_section_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_20_24hz_sosfiltfilt_forward_initial_state_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.015120831866080613,
-      "max_relative_error": 0.015120831866080613,
-      "mean_relative_error": 0.015120831866080613,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.015120831866080613
-      },
-      "max_error_by_bits": {
-        "6": 0.015120831866080613
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_20_24hz_sosfiltfilt_forward_initial_state_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.015114407976437049,
-      "max_relative_error": 0.015114407976437049,
-      "mean_relative_error": 0.015114407976437049,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.015114407976437049
-      },
-      "max_error_by_bits": {
-        "6": 0.015114407976437049
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_20_24hz_sosfiltfilt_forward_initial_state_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_20_24hz_sosfiltfilt_forward_section_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_20_24hz_sosfiltfilt_forward_section_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.039936994796445004,
-      "max_relative_error": 0.047182375366423765,
-      "mean_relative_error": 0.041657987002484353,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.041657987002484353
-      },
-      "max_error_by_bits": {
-        "6": 0.047182375366423765
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_20_24hz_sosfiltfilt_forward_section_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.028479333700449878,
-      "max_relative_error": 0.03855702721329742,
-      "mean_relative_error": 0.027953487065152324,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.027953487065152324
-      },
-      "max_error_by_bits": {
-        "6": 0.03855702721329742
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_24_28hz_sosfiltfilt_backward_initial_state_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_24_28hz_sosfiltfilt_backward_initial_state_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_24_28hz_sosfiltfilt_backward_initial_state_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_24_28hz_sosfiltfilt_backward_section_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_24_28hz_sosfiltfilt_backward_section_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_24_28hz_sosfiltfilt_backward_section_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_24_28hz_sosfiltfilt_forward_initial_state_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.015114407976437082,
-      "max_relative_error": 0.015114407976437082,
-      "mean_relative_error": 0.015114407976437082,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.015114407976437082
-      },
-      "max_error_by_bits": {
-        "6": 0.015114407976437082
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_24_28hz_sosfiltfilt_forward_initial_state_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_24_28hz_sosfiltfilt_forward_initial_state_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_24_28hz_sosfiltfilt_forward_section_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_24_28hz_sosfiltfilt_forward_section_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_24_28hz_sosfiltfilt_forward_section_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_28_32hz_sosfiltfilt_backward_initial_state_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.015830003556968893,
-      "max_relative_error": 0.015830003556968893,
-      "mean_relative_error": 0.015830003556968893,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.015830003556968893
-      },
-      "max_error_by_bits": {
-        "6": 0.015830003556968893
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_28_32hz_sosfiltfilt_backward_initial_state_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_28_32hz_sosfiltfilt_backward_initial_state_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_28_32hz_sosfiltfilt_backward_section_s0",
-      "policy": "sos_filter",
-      "current_bits": 8,
-      "calls": 684,
-      "monitored_calls": 1,
-      "escalations": 1,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 65728,
-      "mean_error_by_bits": {
-        "6": 0.15977116519117598,
-        "8": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.15977116519117598,
-        "8": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_28_32hz_sosfiltfilt_backward_section_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.03360551664804313,
-      "max_relative_error": 0.04509773373146129,
-      "mean_relative_error": 0.033470465889840824,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43648,
-      "mean_error_by_bits": {
-        "6": 0.033470465889840824
-      },
-      "max_error_by_bits": {
-        "6": 0.04509773373146129
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_28_32hz_sosfiltfilt_backward_section_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.030214972468488505,
-      "max_relative_error": 0.031911283678945045,
-      "mean_relative_error": 0.023513787671315792,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43648,
-      "mean_error_by_bits": {
-        "6": 0.023513787671315792
-      },
-      "max_error_by_bits": {
-        "6": 0.031911283678945045
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_28_32hz_sosfiltfilt_forward_initial_state_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.015114407976437058,
-      "max_relative_error": 0.015114407976437058,
-      "mean_relative_error": 0.015114407976437058,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.015114407976437058
-      },
-      "max_error_by_bits": {
-        "6": 0.015114407976437058
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_28_32hz_sosfiltfilt_forward_initial_state_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_28_32hz_sosfiltfilt_forward_initial_state_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_28_32hz_sosfiltfilt_forward_section_s0",
-      "policy": "sos_filter",
-      "current_bits": 8,
-      "calls": 684,
-      "monitored_calls": 1,
-      "escalations": 1,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 65728,
-      "mean_error_by_bits": {
-        "6": 0.1597514952490243,
-        "8": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.1597514952490243,
-        "8": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_28_32hz_sosfiltfilt_forward_section_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.04649215613273513,
-      "max_relative_error": 0.046762747468285085,
-      "mean_relative_error": 0.032021430342425224,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43648,
-      "mean_error_by_bits": {
-        "6": 0.032021430342425224
-      },
-      "max_error_by_bits": {
-        "6": 0.046762747468285085
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_28_32hz_sosfiltfilt_forward_section_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.028848973566836217,
-      "max_relative_error": 0.03303085392948334,
-      "mean_relative_error": 0.023805876170066798,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43648,
-      "mean_error_by_bits": {
-        "6": 0.023805876170066798
-      },
-      "max_error_by_bits": {
-        "6": 0.03303085392948334
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_8_12hz_sosfiltfilt_backward_initial_state_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.010225089597283167,
-      "max_relative_error": 0.010225089597283167,
-      "mean_relative_error": 0.010225089597283167,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.010225089597283167
-      },
-      "max_error_by_bits": {
-        "6": 0.010225089597283167
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_8_12hz_sosfiltfilt_backward_initial_state_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.003485983250211367,
-      "max_relative_error": 0.003485983250211367,
-      "mean_relative_error": 0.003485983250211367,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.003485983250211367
-      },
-      "max_error_by_bits": {
-        "6": 0.003485983250211367
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_8_12hz_sosfiltfilt_backward_initial_state_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_8_12hz_sosfiltfilt_backward_section_s0",
-      "policy": "sos_filter",
-      "current_bits": 8,
-      "calls": 684,
-      "monitored_calls": 1,
-      "escalations": 1,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 65728,
-      "mean_error_by_bits": {
-        "6": 0.7270339768902876,
-        "8": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.7270339768902876,
-        "8": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_8_12hz_sosfiltfilt_backward_section_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.021287156192008688,
-      "max_relative_error": 0.04279348859158732,
-      "mean_relative_error": 0.027833060225301107,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43520,
-      "mean_error_by_bits": {
-        "6": 0.027833060225301107
-      },
-      "max_error_by_bits": {
-        "6": 0.04279348859158732
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_8_12hz_sosfiltfilt_backward_section_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.025826674719560717,
-      "max_relative_error": 0.04390837886672396,
-      "mean_relative_error": 0.024786813188384858,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.024786813188384858
-      },
-      "max_error_by_bits": {
-        "6": 0.04390837886672396
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_8_12hz_sosfiltfilt_forward_initial_state_s0",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.01878721836366796,
-      "max_relative_error": 0.01878721836366796,
-      "mean_relative_error": 0.01878721836366796,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.01878721836366796
-      },
-      "max_error_by_bits": {
-        "6": 0.01878721836366796
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_8_12hz_sosfiltfilt_forward_initial_state_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.015114407976437035,
-      "max_relative_error": 0.015114407976437035,
-      "mean_relative_error": 0.015114407976437035,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 64,
-      "mean_error_by_bits": {
-        "6": 0.015114407976437035
-      },
-      "max_error_by_bits": {
-        "6": 0.015114407976437035
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_8_12hz_sosfiltfilt_forward_initial_state_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 2,
-      "monitored_calls": 1,
-      "escalations": 0,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 0,
-      "mean_error_by_bits": {
-        "6": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_8_12hz_sosfiltfilt_forward_section_s0",
-      "policy": "sos_filter",
-      "current_bits": 8,
-      "calls": 684,
-      "monitored_calls": 1,
-      "escalations": 1,
-      "last_relative_error": 0.0,
-      "max_relative_error": 0.0,
-      "mean_relative_error": 0.0,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 65728,
-      "mean_error_by_bits": {
-        "6": 0.5833935768190854,
-        "8": 0.0
-      },
-      "max_error_by_bits": {
-        "6": 0.5833935768190854,
-        "8": 0.0
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_8_12hz_sosfiltfilt_forward_section_s1",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.019774098871600854,
-      "max_relative_error": 0.04826856605100201,
-      "mean_relative_error": 0.02818251758522443,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.02818251758522443
-      },
-      "max_error_by_bits": {
-        "6": 0.04826856605100201
-      }
-    },
-    {
-      "operation": "fbcsp_filter_bank_8_12hz_sosfiltfilt_forward_section_s2",
-      "policy": "sos_filter",
-      "current_bits": 6,
-      "calls": 684,
-      "monitored_calls": 11,
-      "escalations": 0,
-      "last_relative_error": 0.016440674075477033,
-      "max_relative_error": 0.02679420011688408,
-      "mean_relative_error": 0.02040236434619706,
-      "relative_error_limit": 0.06,
-      "tile_evaluations": 43776,
-      "mean_error_by_bits": {
-        "6": 0.02040236434619706
-      },
-      "max_error_by_bits": {
-        "6": 0.02679420011688408
-      }
-    },
-    {
       "operation": "fbcsp_spatial_projection_b0_c0",
       "policy": "fbcsp_projection",
       "current_bits": 8,
@@ -1549,11 +145,11 @@
       "relative_error_limit": 0.05,
       "tile_evaluations": 9600,
       "mean_error_by_bits": {
-        "6": 0.05430965614902579,
+        "6": 0.0540232996448353,
         "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.05430965614902579,
+        "6": 0.0540232996448353,
         "8": 0.0
       }
     },
@@ -1570,88 +166,96 @@
       "relative_error_limit": 0.05,
       "tile_evaluations": 9600,
       "mean_error_by_bits": {
-        "6": 0.05111371482838111,
+        "6": 0.06109394528537807,
         "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.05111371482838111,
+        "6": 0.06109394528537807,
         "8": 0.0
       }
     },
     {
       "operation": "fbcsp_spatial_projection_b0_c2",
       "policy": "fbcsp_projection",
-      "current_bits": 6,
+      "current_bits": 8,
       "calls": 2,
-      "monitored_calls": 2,
-      "escalations": 0,
-      "last_relative_error": 0.03470166782545818,
-      "max_relative_error": 0.03470166782545818,
-      "mean_relative_error": 0.03470166782545818,
+      "monitored_calls": 1,
+      "escalations": 1,
+      "last_relative_error": 0.0,
+      "max_relative_error": 0.0,
+      "mean_relative_error": 0.0,
       "relative_error_limit": 0.05,
-      "tile_evaluations": 4800,
+      "tile_evaluations": 9600,
       "mean_error_by_bits": {
-        "6": 0.03470166782545818
+        "6": 0.07706340562876553,
+        "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.03470166782545818
+        "6": 0.07706340562876553,
+        "8": 0.0
       }
     },
     {
       "operation": "fbcsp_spatial_projection_b1_c0",
       "policy": "fbcsp_projection",
-      "current_bits": 6,
+      "current_bits": 8,
       "calls": 2,
-      "monitored_calls": 2,
-      "escalations": 0,
-      "last_relative_error": 0.038723312612001286,
-      "max_relative_error": 0.038723312612001286,
-      "mean_relative_error": 0.038723312612001286,
+      "monitored_calls": 1,
+      "escalations": 1,
+      "last_relative_error": 0.0,
+      "max_relative_error": 0.0,
+      "mean_relative_error": 0.0,
       "relative_error_limit": 0.05,
-      "tile_evaluations": 4800,
+      "tile_evaluations": 9600,
       "mean_error_by_bits": {
-        "6": 0.038723312612001286
+        "6": 0.053512281005757,
+        "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.038723312612001286
+        "6": 0.053512281005757,
+        "8": 0.0
       }
     },
     {
       "operation": "fbcsp_spatial_projection_b1_c1",
       "policy": "fbcsp_projection",
-      "current_bits": 6,
+      "current_bits": 8,
       "calls": 2,
-      "monitored_calls": 2,
-      "escalations": 0,
-      "last_relative_error": 0.03990542334482134,
-      "max_relative_error": 0.03990542334482134,
-      "mean_relative_error": 0.03990542334482134,
+      "monitored_calls": 1,
+      "escalations": 1,
+      "last_relative_error": 0.0,
+      "max_relative_error": 0.0,
+      "mean_relative_error": 0.0,
       "relative_error_limit": 0.05,
-      "tile_evaluations": 4800,
+      "tile_evaluations": 9600,
       "mean_error_by_bits": {
-        "6": 0.03990542334482134
+        "6": 0.0527030434874921,
+        "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.03990542334482134
+        "6": 0.0527030434874921,
+        "8": 0.0
       }
     },
     {
       "operation": "fbcsp_spatial_projection_b1_c2",
       "policy": "fbcsp_projection",
-      "current_bits": 6,
+      "current_bits": 8,
       "calls": 2,
-      "monitored_calls": 2,
-      "escalations": 0,
-      "last_relative_error": 0.045508588533595656,
-      "max_relative_error": 0.045508588533595656,
-      "mean_relative_error": 0.045508588533595656,
+      "monitored_calls": 1,
+      "escalations": 1,
+      "last_relative_error": 0.0,
+      "max_relative_error": 0.0,
+      "mean_relative_error": 0.0,
       "relative_error_limit": 0.05,
-      "tile_evaluations": 4800,
+      "tile_evaluations": 9600,
       "mean_error_by_bits": {
-        "6": 0.045508588533595656
+        "6": 0.05294475336858632,
+        "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.045508588533595656
+        "6": 0.05294475336858632,
+        "8": 0.0
       }
     },
     {
@@ -1667,31 +271,33 @@
       "relative_error_limit": 0.05,
       "tile_evaluations": 7200,
       "mean_error_by_bits": {
-        "6": 0.06022940619540437,
+        "6": 0.05080284756441724,
         "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.06022940619540437,
+        "6": 0.05080284756441724,
         "8": 0.0
       }
     },
     {
       "operation": "fbcsp_spatial_projection_b2_c1",
       "policy": "fbcsp_projection",
-      "current_bits": 6,
+      "current_bits": 8,
       "calls": 2,
-      "monitored_calls": 2,
-      "escalations": 0,
-      "last_relative_error": 0.04784781957341949,
-      "max_relative_error": 0.04784781957341949,
-      "mean_relative_error": 0.04784781957341949,
+      "monitored_calls": 1,
+      "escalations": 1,
+      "last_relative_error": 0.0,
+      "max_relative_error": 0.0,
+      "mean_relative_error": 0.0,
       "relative_error_limit": 0.05,
-      "tile_evaluations": 4800,
+      "tile_evaluations": 9600,
       "mean_error_by_bits": {
-        "6": 0.04784781957341949
+        "6": 0.06043759986989676,
+        "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.04784781957341949
+        "6": 0.06043759986989676,
+        "8": 0.0
       }
     },
     {
@@ -1707,126 +313,138 @@
       "relative_error_limit": 0.05,
       "tile_evaluations": 9600,
       "mean_error_by_bits": {
-        "6": 0.0655824289944055,
+        "6": 0.06093303308793226,
         "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.0655824289944055,
+        "6": 0.06093303308793226,
         "8": 0.0
       }
     },
     {
       "operation": "fbcsp_spatial_projection_b3_c0",
       "policy": "fbcsp_projection",
-      "current_bits": 6,
+      "current_bits": 8,
       "calls": 2,
-      "monitored_calls": 2,
-      "escalations": 0,
+      "monitored_calls": 1,
+      "escalations": 1,
       "last_relative_error": 0.0,
       "max_relative_error": 0.0,
       "mean_relative_error": 0.0,
       "relative_error_limit": 0.05,
-      "tile_evaluations": 0,
+      "tile_evaluations": 7200,
       "mean_error_by_bits": {
-        "6": 0.0
+        "6": 0.05095163501456502,
+        "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.0
+        "6": 0.05095163501456502,
+        "8": 0.0
       }
     },
     {
       "operation": "fbcsp_spatial_projection_b3_c1",
       "policy": "fbcsp_projection",
-      "current_bits": 6,
+      "current_bits": 8,
       "calls": 2,
-      "monitored_calls": 2,
-      "escalations": 0,
+      "monitored_calls": 1,
+      "escalations": 1,
       "last_relative_error": 0.0,
       "max_relative_error": 0.0,
       "mean_relative_error": 0.0,
       "relative_error_limit": 0.05,
-      "tile_evaluations": 0,
+      "tile_evaluations": 7200,
       "mean_error_by_bits": {
-        "6": 0.0
+        "6": 0.07015806001596243,
+        "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.0
+        "6": 0.07015806001596243,
+        "8": 0.0
       }
     },
     {
       "operation": "fbcsp_spatial_projection_b3_c2",
       "policy": "fbcsp_projection",
-      "current_bits": 6,
+      "current_bits": 8,
       "calls": 2,
-      "monitored_calls": 2,
-      "escalations": 0,
+      "monitored_calls": 1,
+      "escalations": 1,
       "last_relative_error": 0.0,
       "max_relative_error": 0.0,
       "mean_relative_error": 0.0,
       "relative_error_limit": 0.05,
-      "tile_evaluations": 0,
+      "tile_evaluations": 9600,
       "mean_error_by_bits": {
-        "6": 0.0
+        "6": 0.05901371860964017,
+        "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.0
+        "6": 0.05901371860964017,
+        "8": 0.0
       }
     },
     {
       "operation": "fbcsp_spatial_projection_b4_c0",
       "policy": "fbcsp_projection",
-      "current_bits": 6,
+      "current_bits": 8,
       "calls": 2,
-      "monitored_calls": 2,
-      "escalations": 0,
+      "monitored_calls": 1,
+      "escalations": 1,
       "last_relative_error": 0.0,
       "max_relative_error": 0.0,
       "mean_relative_error": 0.0,
       "relative_error_limit": 0.05,
-      "tile_evaluations": 0,
+      "tile_evaluations": 9600,
       "mean_error_by_bits": {
-        "6": 0.0
+        "6": 0.05524265631445958,
+        "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.0
+        "6": 0.05524265631445958,
+        "8": 0.0
       }
     },
     {
       "operation": "fbcsp_spatial_projection_b4_c1",
       "policy": "fbcsp_projection",
-      "current_bits": 6,
+      "current_bits": 8,
       "calls": 2,
-      "monitored_calls": 2,
-      "escalations": 0,
+      "monitored_calls": 1,
+      "escalations": 1,
       "last_relative_error": 0.0,
       "max_relative_error": 0.0,
       "mean_relative_error": 0.0,
       "relative_error_limit": 0.05,
-      "tile_evaluations": 0,
+      "tile_evaluations": 7200,
       "mean_error_by_bits": {
-        "6": 0.0
+        "6": 0.05547032832136684,
+        "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.0
+        "6": 0.05547032832136684,
+        "8": 0.0
       }
     },
     {
       "operation": "fbcsp_spatial_projection_b4_c2",
       "policy": "fbcsp_projection",
-      "current_bits": 6,
+      "current_bits": 8,
       "calls": 2,
-      "monitored_calls": 2,
-      "escalations": 0,
+      "monitored_calls": 1,
+      "escalations": 1,
       "last_relative_error": 0.0,
       "max_relative_error": 0.0,
       "mean_relative_error": 0.0,
       "relative_error_limit": 0.05,
-      "tile_evaluations": 0,
+      "tile_evaluations": 7200,
       "mean_error_by_bits": {
-        "6": 0.0
+        "6": 0.05647522818948569,
+        "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.0
+        "6": 0.05647522818948569,
+        "8": 0.0
       }
     },
     {
@@ -1836,54 +454,58 @@
       "calls": 2,
       "monitored_calls": 2,
       "escalations": 0,
-      "last_relative_error": 0.036309182192656254,
-      "max_relative_error": 0.036309182192656254,
-      "mean_relative_error": 0.036309182192656254,
+      "last_relative_error": 0.04795990987592835,
+      "max_relative_error": 0.04795990987592835,
+      "mean_relative_error": 0.04795990987592835,
       "relative_error_limit": 0.05,
       "tile_evaluations": 4800,
       "mean_error_by_bits": {
-        "6": 0.036309182192656254
+        "6": 0.04795990987592835
       },
       "max_error_by_bits": {
-        "6": 0.036309182192656254
+        "6": 0.04795990987592835
       }
     },
     {
       "operation": "fbcsp_spatial_projection_b5_c1",
       "policy": "fbcsp_projection",
-      "current_bits": 6,
+      "current_bits": 8,
       "calls": 2,
-      "monitored_calls": 2,
-      "escalations": 0,
-      "last_relative_error": 0.03448011790667177,
-      "max_relative_error": 0.03448011790667177,
-      "mean_relative_error": 0.03448011790667177,
+      "monitored_calls": 1,
+      "escalations": 1,
+      "last_relative_error": 0.0,
+      "max_relative_error": 0.0,
+      "mean_relative_error": 0.0,
       "relative_error_limit": 0.05,
-      "tile_evaluations": 4800,
+      "tile_evaluations": 9600,
       "mean_error_by_bits": {
-        "6": 0.03448011790667177
+        "6": 0.05724518929636188,
+        "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.03448011790667177
+        "6": 0.05724518929636188,
+        "8": 0.0
       }
     },
     {
       "operation": "fbcsp_spatial_projection_b5_c2",
       "policy": "fbcsp_projection",
-      "current_bits": 6,
+      "current_bits": 8,
       "calls": 2,
-      "monitored_calls": 2,
-      "escalations": 0,
-      "last_relative_error": 0.037038563608427104,
-      "max_relative_error": 0.037038563608427104,
-      "mean_relative_error": 0.037038563608427104,
+      "monitored_calls": 1,
+      "escalations": 1,
+      "last_relative_error": 0.0,
+      "max_relative_error": 0.0,
+      "mean_relative_error": 0.0,
       "relative_error_limit": 0.05,
-      "tile_evaluations": 4800,
+      "tile_evaluations": 7200,
       "mean_error_by_bits": {
-        "6": 0.037038563608427104
+        "6": 0.05491628174550761,
+        "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.037038563608427104
+        "6": 0.05491628174550761,
+        "8": 0.0
       }
     },
     {
@@ -1899,11 +521,11 @@
       "relative_error_limit": 0.04,
       "tile_evaluations": 1280,
       "mean_error_by_bits": {
-        "6": 0.064945210812459,
+        "6": 0.08338969430031389,
         "8": 0.0
       },
       "max_error_by_bits": {
-        "6": 0.064945210812459,
+        "6": 0.08338969430031389,
         "8": 0.0
       }
     },

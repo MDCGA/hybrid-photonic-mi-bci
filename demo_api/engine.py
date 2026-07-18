@@ -1,4 +1,4 @@
-"""Multi-dataset subject-personalized single-window inference engine."""
+"""Multi-dataset single-window inference engine."""
 
 from __future__ import annotations
 
@@ -147,8 +147,8 @@ class RuntimeInputs:
     target: object
     train_trials: np.ndarray
     train_labels: np.ndarray
+    calibration_trials: np.ndarray
     target_labels: np.ndarray
-    calibration_indices: np.ndarray
     evaluation_indices: np.ndarray
     class_names: tuple[str, ...]
 
@@ -159,7 +159,7 @@ class PersonalizedRuntime:
     subject: str
     training_subjects: tuple[str, ...]
     prepared: PreparedRuntime
-    calibration_indices: np.ndarray
+    calibration_windows: int
     evaluation_indices: np.ndarray
     setup_timings: dict[str, float]
     training_summary: str
@@ -272,9 +272,13 @@ class LiveInferenceEngine:
         runtime = self.runtimes.get((dataset_key, selected_subject))
         backend = get_matrix_ops_backend()
         training_subjects = self._training_subjects(dataset_key, selected_subject)
+        calibration_windows = self._runtime_calibration_windows(
+            dataset_key,
+            len(calibration_indices),
+        )
         return {
             "service": "hybrid-photonic-mi-bci-demo",
-            "mode": "multi_dataset_subject_personalized_inference",
+            "mode": "multi_dataset_single_window_inference",
             "mode_label": definition.mode_label,
             "dataset_key": dataset_key,
             "dataset": definition.name,
@@ -288,9 +292,9 @@ class LiveInferenceEngine:
             "calibration_summary": self._calibration_summary(
                 dataset_key,
                 selected_subject,
-                len(calibration_indices),
+                calibration_windows,
             ),
-            "calibration_windows": int(len(calibration_indices)),
+            "calibration_windows": calibration_windows,
             "evaluation_count": int(len(evaluation_indices)),
             "default_evaluation_index": 0,
             "runtime_ready": runtime is not None,
@@ -418,7 +422,7 @@ class LiveInferenceEngine:
             "training_subjects": list(personalized.training_subjects),
             "training_summary": personalized.training_summary,
             "calibration_summary": personalized.calibration_summary,
-            "calibration_windows": int(len(personalized.calibration_indices)),
+            "calibration_windows": personalized.calibration_windows,
             "evaluation_index": evaluation_index,
             "subject_trial_index": trial_index,
             "true_label": true_label,
@@ -476,14 +480,13 @@ class LiveInferenceEngine:
     ) -> PersonalizedRuntime:
         inputs = self._build_runtime_inputs(dataset_key, subject)
         config = self._config(dataset_key)
-        calibration_trials = inputs.target.trials[inputs.calibration_indices]
         LOGGER.info(
             "personalized_runtime_prepare_started dataset=%s subject=%s training_subjects=%s train_windows=%d calibration_windows=%d evaluation_windows=%d class_names=%s channels=%s samples_per_window=%d",
             dataset_key,
             subject,
             inputs.training_subjects,
             len(inputs.train_trials),
-            len(inputs.calibration_indices),
+            len(inputs.calibration_trials),
             len(inputs.evaluation_indices),
             inputs.class_names,
             self._display_channel_names(dataset_key, inputs.target.channel_names),
@@ -513,7 +516,7 @@ class LiveInferenceEngine:
             subject,
             "transform_fbcsp_calibration",
             timings,
-            lambda: fbcsp.transform(calibration_trials),
+            lambda: fbcsp.transform(inputs.calibration_trials),
         )
         selected_indices = self._timed_step(
             dataset_key,
@@ -601,7 +604,11 @@ class LiveInferenceEngine:
             timings,
             lambda: calibrate_reject_threshold(
                 runtime,
-                train_embeddings=calibration_embeddings,
+                train_embeddings=(
+                    mlp.train_embeddings
+                    if dataset_key == BCICIV_DATASET_KEY
+                    else calibration_embeddings
+                ),
                 target_rate=config.reject_target_rate,
                 fixed_threshold=self._fixed_reject_threshold(dataset_key),
             ),
@@ -627,7 +634,7 @@ class LiveInferenceEngine:
             subject=subject,
             training_subjects=inputs.training_subjects,
             prepared=prepared,
-            calibration_indices=inputs.calibration_indices,
+            calibration_windows=len(inputs.calibration_trials),
             evaluation_indices=inputs.evaluation_indices,
             setup_timings=timings,
             training_summary=inputs.training_summary,
@@ -656,7 +663,7 @@ class LiveInferenceEngine:
         )
         if dataset_key == BCICIV_DATASET_KEY:
             config = self.bciciv_config
-            training_subjects = tuple(item for item in definition.subjects if item != subject)
+            training_subjects = definition.subjects
             train_trials = np.concatenate(
                 [
                     self._bciciv_trials[item].trials[: config.n_train_per_subject]
@@ -673,11 +680,22 @@ class LiveInferenceEngine:
                 ],
                 axis=0,
             )
+            calibration_trials = np.concatenate(
+                [
+                    self._bciciv_trials[item].trials[
+                        config.n_train_per_subject :
+                        config.n_train_per_subject + config.calibration_trials_per_subject
+                    ]
+                    for item in training_subjects
+                ],
+                axis=0,
+            )
         else:
             history, _target = self._ensure_bnci_subject_loaded(subject)
             training_subjects = self._training_subjects(dataset_key, subject)
             train_trials = history.trials
             train_labels = history.labels
+            calibration_trials = target.trials[calibration_indices]
         if not len(evaluation_indices):
             raise ValueError(f"{definition.name} subject {subject} has no evaluation windows")
         return RuntimeInputs(
@@ -691,13 +709,13 @@ class LiveInferenceEngine:
             calibration_summary=self._calibration_summary(
                 dataset_key,
                 subject,
-                len(calibration_indices),
+                len(calibration_trials),
             ),
             target=target,
             train_trials=np.asarray(train_trials, dtype=np.float64),
             train_labels=np.asarray(train_labels, dtype=int),
+            calibration_trials=np.asarray(calibration_trials, dtype=np.float64),
             target_labels=target_labels,
-            calibration_indices=calibration_indices,
             evaluation_indices=evaluation_indices,
             class_names=definition.class_names,
         )
@@ -794,56 +812,39 @@ class LiveInferenceEngine:
         labels: np.ndarray,
     ) -> tuple[np.ndarray, np.ndarray]:
         if dataset_key == BCICIV_DATASET_KEY:
-            return self._bciciv_personalized_indices(target, labels)
+            return self._bciciv_pooled_indices(target, labels)
         return calibration_eval_split(
             labels,
             trials_per_class=self.bnci_config.calibration_trials_per_class,
             n_classes=len(self.dataset_definitions[BNCI_DATASET_KEY].class_names),
         )
 
-    def _bciciv_personalized_indices(
+    def _bciciv_pooled_indices(
         self,
         target,
         labels: np.ndarray,
     ) -> tuple[np.ndarray, np.ndarray]:
+        del labels
         replay_indices = np.arange(
             self.bciciv_config.n_train_per_subject,
             len(target.trials),
             dtype=int,
         )
-        replay_classes = np.unique(labels[replay_indices])
         calibration_count = self.bciciv_config.calibration_trials_per_subject
-        per_class = calibration_count // len(replay_classes)
-        remainder = calibration_count % len(replay_classes)
-        calibration: list[int] = []
-        for class_offset, class_index in enumerate(replay_classes):
-            required = per_class + int(class_offset < remainder)
-            candidates = replay_indices[labels[replay_indices] == class_index]
-            if len(candidates) <= required:
-                raise ValueError(
-                    f"subject {target.subject} class {class_index} has too few replay trials"
-                )
-            calibration.extend(candidates[:required].tolist())
-        calibration_indices = np.asarray(sorted(calibration), dtype=int)
-        calibration_set = set(calibration_indices.tolist())
-        evaluation_indices = np.asarray(
-            [index for index in replay_indices if int(index) not in calibration_set],
-            dtype=int,
-        )
+        if len(replay_indices) <= calibration_count:
+            raise ValueError(f"subject {target.subject} has too few replay trials")
+        calibration_indices = replay_indices[:calibration_count]
+        evaluation_indices = replay_indices[calibration_count:]
         return calibration_indices, evaluation_indices
 
     def _training_subjects(self, dataset_key: str, subject: str) -> tuple[str, ...]:
         if dataset_key == BCICIV_DATASET_KEY:
-            return tuple(
-                item
-                for item in self.dataset_definitions[BCICIV_DATASET_KEY].subjects
-                if item != subject
-            )
+            return self.dataset_definitions[BCICIV_DATASET_KEY].subjects
         return (f"B{int(subject):02d}01T", f"B{int(subject):02d}02T")
 
     def _training_summary(self, dataset_key: str, subject: str) -> str:
         if dataset_key == BCICIV_DATASET_KEY:
-            return "基础训练：" + "、".join(self._training_subjects(dataset_key, subject))
+            return "池化训练：a-g（每位受试者前 120 个窗口）"
         return f"历史训练：B{int(subject):02d} session 01T-02T"
 
     def _calibration_summary(
@@ -853,8 +854,20 @@ class LiveInferenceEngine:
         calibration_windows: int,
     ) -> str:
         if dataset_key == BCICIV_DATASET_KEY:
-            return f"个体校准：受试者 {subject}（{calibration_windows} 个窗口）"
+            return f"池化校准：a-g（共 {calibration_windows} 个窗口）"
         return f"目标校准：B{int(subject):02d} session 03T（{calibration_windows} 个窗口）"
+
+    def _runtime_calibration_windows(
+        self,
+        dataset_key: str,
+        target_calibration_windows: int,
+    ) -> int:
+        if dataset_key == BCICIV_DATASET_KEY:
+            return (
+                len(self.dataset_definitions[BCICIV_DATASET_KEY].subjects)
+                * self.bciciv_config.calibration_trials_per_subject
+            )
+        return int(target_calibration_windows)
 
     def _subject_label(self, dataset_key: str, subject: str) -> str:
         if dataset_key == BCICIV_DATASET_KEY:
@@ -1147,7 +1160,7 @@ class LiveInferenceEngine:
                 key=BCICIV_DATASET_KEY,
                 name="BCICIV_1_asc",
                 label="数据集1 / BCICIV_1_asc",
-                mode_label="数据集1：跨受试者个体化单窗口推理",
+                mode_label="数据集1：池化多受试者单窗口推理",
                 subjects=tuple(str(subject) for subject in BCICIV_DEFAULT_SUBJECTS),
                 default_subject=str(BCICIV_DEFAULT_SUBJECTS[0]),
                 class_names=BCICIV_GLOBAL_CLASS_NAMES,

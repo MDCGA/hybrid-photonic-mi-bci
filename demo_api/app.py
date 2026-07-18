@@ -56,12 +56,12 @@ def health() -> dict[str, object]:
     datasets = ENGINE.dataset_options()
     LOGGER.info(
         "health_check mode=%s datasets=%s",
-        "multi_dataset_subject_personalized_inference",
+        "multi_dataset_single_window_inference",
         [item["key"] for item in datasets],
     )
     return {
         "status": "ok",
-        "mode": "multi_dataset_subject_personalized_inference",
+        "mode": "multi_dataset_single_window_inference",
         "datasets": datasets,
     }
 
@@ -149,7 +149,7 @@ async def inference_stream(
                 "run": {
                     **run_window,
                     "signal": None,
-                    "mode": "multi_dataset_subject_personalized_inference",
+                    "mode": "multi_dataset_single_window_inference",
                 },
             },
         )
